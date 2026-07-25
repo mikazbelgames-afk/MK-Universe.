@@ -18,15 +18,20 @@
         }
 
         :root {
-            --rosa-claro: #ffc5e8;
-            --rosa: #ff8fd1;
-            --morado: #7c4d9e;
+            --rosa-claro: #ffd0ea;
+            --rosa: #ff8fcf;
+            --morado: #7f4ba0;
             --panel: rgba(31, 21, 39, 0.97);
             --borde: rgba(255, 190, 230, 0.45);
         }
 
+        html,
         body {
             margin: 0;
+            min-height: 100%;
+        }
+
+        body {
             min-height: 100vh;
 
             background:
@@ -44,12 +49,12 @@
             justify-content: center;
             align-items: center;
 
-            gap: 25px;
+            gap: 24px;
             padding: 20px;
         }
 
         /* ========================================
-           ESCENARIO VERTICAL DE TIKTOK
+           ESCENARIO VERTICAL
         ======================================== */
 
         .escenario {
@@ -72,71 +77,203 @@
                 0 20px 50px rgba(0, 0, 0, 0.45);
         }
 
-        .capa {
+        /* CONTENEDOR DE CADA CAPA */
+
+        .capa-contenedor {
             position: absolute;
-            display: block;
+
+            left: 50%;
+            top: 50%;
+
+            transform:
+                translate(-50%, -50%)
+                rotate(var(--rotacion, 0deg));
+
             pointer-events: none;
             user-select: none;
         }
 
-        /* CAPA 00: GRADIENTE */
+        /* IMAGEN INTERIOR */
 
-        #gradiente {
+        .capa-imagen {
+            display: block;
+
+            width: 100%;
+            height: auto;
+
+            pointer-events: none;
+            user-select: none;
+
+            transform-origin: center center;
+        }
+
+        /* FONDO COMPLETO */
+
+        .capa-fondo {
             inset: 0;
 
             width: 100%;
             height: 100%;
 
+            transform: none;
+        }
+
+        .capa-fondo .capa-imagen {
+            width: 100%;
+            height: 100%;
+
             object-fit: cover;
-
-            z-index: 0;
-        }
-
-        /* CAPA 01: VOLCÁN */
-
-        #volcan {
-            width: 65%;
-
-            left: 50%;
-            top: 47%;
-
-            transform: translate(-50%, -50%);
-
-            opacity: 1;
-
-            mix-blend-mode: screen;
-
-            z-index: 1;
-        }
-
-        /* CAPA 02: RESPLANDOR */
-
-        #resplandor {
-            width: 70%;
-
-            left: 50%;
-            top: 47%;
-
-            transform: translate(-50%, -50%);
-
-            opacity: 0.7;
-
-            mix-blend-mode: screen;
-
-            z-index: 2;
         }
 
         /* ========================================
-           PANEL DE CONTROL
+           ANIMACIONES
+        ======================================== */
+
+        .animacion-ninguna {
+            animation: none;
+        }
+
+        .animacion-respirar {
+            animation:
+                respirar var(--velocidad, 6s)
+                ease-in-out infinite;
+        }
+
+        .animacion-flotar {
+            animation:
+                flotar var(--velocidad, 6s)
+                ease-in-out infinite;
+        }
+
+        .animacion-horizontal {
+            animation:
+                moverHorizontal var(--velocidad, 10s)
+                ease-in-out infinite;
+        }
+
+        .animacion-pulso {
+            animation:
+                pulsoLuz var(--velocidad, 5s)
+                ease-in-out infinite;
+        }
+
+        .animacion-niebla {
+            animation:
+                nieblaSuave var(--velocidad, 14s)
+                ease-in-out infinite;
+        }
+
+        @keyframes respirar {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform:
+                    scale(
+                        calc(
+                            1 + var(--intensidad-escala, 0.02)
+                        )
+                    );
+            }
+        }
+
+        @keyframes flotar {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform:
+                    translateY(
+                        calc(
+                            var(--intensidad-px, 5px) * -1
+                        )
+                    );
+            }
+        }
+
+        @keyframes moverHorizontal {
+
+            0%,
+            100% {
+                transform:
+                    translateX(
+                        calc(
+                            var(--intensidad-px, 5px) * -1
+                        )
+                    );
+            }
+
+            50% {
+                transform:
+                    translateX(
+                        var(--intensidad-px, 5px)
+                    );
+            }
+        }
+
+        @keyframes pulsoLuz {
+
+            0%,
+            100% {
+                opacity: 0.75;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+
+                transform:
+                    scale(
+                        calc(
+                            1 + var(--intensidad-escala, 0.03)
+                        )
+                    );
+            }
+        }
+
+        @keyframes nieblaSuave {
+
+            0%,
+            100% {
+                transform:
+                    translateX(
+                        calc(
+                            var(--intensidad-px, 8px) * -1
+                        )
+                    )
+                    scale(1.01);
+            }
+
+            50% {
+                transform:
+                    translateX(
+                        var(--intensidad-px, 8px)
+                    )
+                    scale(1.03);
+            }
+        }
+
+        body.animaciones-pausadas .capa-imagen {
+            animation-play-state: paused !important;
+        }
+
+        /* ========================================
+           PANEL
         ======================================== */
 
         .panel {
-            width: 315px;
+            width: 335px;
             max-height: 92vh;
 
             overflow-y: auto;
 
-            padding: 22px;
+            padding: 21px;
 
             background: var(--panel);
 
@@ -172,8 +309,8 @@
         }
 
         .seccion {
-            margin-bottom: 22px;
-            padding: 17px;
+            margin-bottom: 18px;
+            padding: 16px;
 
             background: rgba(255, 255, 255, 0.045);
 
@@ -182,7 +319,7 @@
         }
 
         .seccion h2 {
-            margin: 0 0 16px;
+            margin: 0 0 15px;
 
             color: var(--rosa-claro);
 
@@ -190,7 +327,7 @@
         }
 
         .control {
-            margin-bottom: 17px;
+            margin-bottom: 15px;
         }
 
         .control:last-child {
@@ -204,7 +341,7 @@
 
             gap: 12px;
 
-            margin-bottom: 8px;
+            margin-bottom: 7px;
 
             font-size: 13px;
             font-weight: bold;
@@ -222,12 +359,26 @@
             cursor: pointer;
         }
 
+        select {
+            width: 100%;
+
+            padding: 9px;
+
+            border: 1px solid rgba(255, 190, 230, 0.35);
+            border-radius: 9px;
+
+            background: #24172d;
+            color: white;
+
+            cursor: pointer;
+        }
+
         .interruptor {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 9px;
 
-            margin-bottom: 17px;
+            margin-bottom: 15px;
 
             font-size: 14px;
             font-weight: bold;
@@ -259,15 +410,10 @@
 
             font-weight: bold;
             cursor: pointer;
-
-            transition:
-                background 0.2s ease,
-                transform 0.2s ease;
         }
 
         .boton:hover {
             background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-1px);
         }
 
         .boton-principal {
@@ -281,24 +427,25 @@
             right: 18px;
             bottom: 18px;
 
-            z-index: 100;
+            z-index: 999;
 
             padding: 12px 16px;
 
             border: 1px solid var(--borde);
             border-radius: 999px;
 
-            background: rgba(31, 21, 39, 0.96);
+            background: rgba(31, 21, 39, 0.97);
             color: white;
-
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 
             font-weight: bold;
             cursor: pointer;
+
+            box-shadow:
+                0 8px 25px rgba(0, 0, 0, 0.4);
         }
 
         .nota {
-            margin: 18px 0 0;
+            margin: 17px 0 0;
 
             color: #bfaec5;
 
@@ -317,10 +464,6 @@
         body.modo-vista {
             gap: 0;
         }
-
-        /* ========================================
-           ADAPTACIÓN PARA PANTALLAS PEQUEÑAS
-        ======================================== */
 
         @media (max-width: 800px) {
 
@@ -342,7 +485,6 @@
             body.modo-vista {
                 justify-content: center;
             }
-
         }
 
     </style>
@@ -350,45 +492,11 @@
 
 <body>
 
-    <!-- ========================================
-         ESCENARIO
-    ======================================== -->
+    <main
+        id="escenario"
+        class="escenario"
+    ></main>
 
-    <main class="escenario">
-
-        <!-- CAPA 00: GRADIENTE -->
-
-        <img
-            id="gradiente"
-            class="capa"
-            src="Atardecer abstracto y suave.png"
-            alt="Gradiente del MK Universe"
-        >
-
-        <!-- CAPA 01: VOLCÁN -->
-
-        <img
-            id="volcan"
-            class="capa"
-            src="Montaña neón en niebla rosa.png"
-            alt="Volcán del MK Universe"
-        >
-
-        <!-- CAPA 02: RESPLANDOR -->
-
-        <img
-            id="resplandor"
-            class="capa"
-            src="Montaña silueteada con resplandor rosa.png"
-            alt="Resplandor del volcán"
-        >
-
-    </main>
-
-
-    <!-- ========================================
-         PANEL DE DESARROLLO
-    ======================================== -->
 
     <aside class="panel">
 
@@ -397,458 +505,36 @@
             <h1>🌸 MK Universe Studio</h1>
 
             <p>
-                Escena vertical para TikTok
+                Editor vertical para TikTok
             </p>
 
         </header>
 
 
-        <!-- CONTROLES DEL GRADIENTE -->
-
-        <section class="seccion">
-
-            <h2>🌅 Fondo degradado</h2>
-
-            <div class="interruptor">
-
-                <input
-                    type="checkbox"
-                    id="mostrarGradiente"
-                    checked
-                >
-
-                <label for="mostrarGradiente">
-                    Mostrar fondo
-                </label>
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="brilloGradiente">
-
-                    Brillo
-
-                    <span
-                        id="valorBrilloGradiente"
-                        class="valor"
-                    >
-                        80%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="brilloGradiente"
-                    min="20"
-                    max="150"
-                    value="80"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="contrasteGradiente">
-
-                    Contraste
-
-                    <span
-                        id="valorContrasteGradiente"
-                        class="valor"
-                    >
-                        100%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="contrasteGradiente"
-                    min="20"
-                    max="180"
-                    value="100"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="saturacionGradiente">
-
-                    Intensidad del color
-
-                    <span
-                        id="valorSaturacionGradiente"
-                        class="valor"
-                    >
-                        90%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="saturacionGradiente"
-                    min="0"
-                    max="200"
-                    value="90"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="opacidadGradiente">
-
-                    Opacidad
-
-                    <span
-                        id="valorOpacidadGradiente"
-                        class="valor"
-                    >
-                        100%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="opacidadGradiente"
-                    min="0"
-                    max="100"
-                    value="100"
-                >
-
-            </div>
-
-        </section>
-
-
-        <!-- CONTROLES DEL VOLCÁN -->
-
-        <section class="seccion">
-
-            <h2>🌋 Volcán</h2>
-
-            <div class="interruptor">
-
-                <input
-                    type="checkbox"
-                    id="mostrarVolcan"
-                    checked
-                >
-
-                <label for="mostrarVolcan">
-                    Mostrar volcán
-                </label>
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="tamanoVolcan">
-
-                    Tamaño
-
-                    <span
-                        id="valorTamanoVolcan"
-                        class="valor"
-                    >
-                        65%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="tamanoVolcan"
-                    min="15"
-                    max="130"
-                    value="65"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="posicionXVolcan">
-
-                    Posición horizontal
-
-                    <span
-                        id="valorXVolcan"
-                        class="valor"
-                    >
-                        50%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="posicionXVolcan"
-                    min="0"
-                    max="100"
-                    value="50"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="posicionYVolcan">
-
-                    Posición vertical
-
-                    <span
-                        id="valorYVolcan"
-                        class="valor"
-                    >
-                        47%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="posicionYVolcan"
-                    min="0"
-                    max="100"
-                    value="47"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="opacidadVolcan">
-
-                    Opacidad
-
-                    <span
-                        id="valorOpacidadVolcan"
-                        class="valor"
-                    >
-                        100%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="opacidadVolcan"
-                    min="0"
-                    max="100"
-                    value="100"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="brilloVolcan">
-
-                    Brillo
-
-                    <span
-                        id="valorBrilloVolcan"
-                        class="valor"
-                    >
-                        100%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="brilloVolcan"
-                    min="20"
-                    max="200"
-                    value="100"
-                >
-
-            </div>
-
-        </section>
-
-
-        <!-- CONTROLES DEL RESPLANDOR -->
-
-        <section class="seccion">
-
-            <h2>✨ Resplandor</h2>
-
-            <div class="interruptor">
-
-                <input
-                    type="checkbox"
-                    id="mostrarResplandor"
-                    checked
-                >
-
-                <label for="mostrarResplandor">
-                    Mostrar resplandor
-                </label>
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="tamanoResplandor">
-
-                    Tamaño
-
-                    <span
-                        id="valorTamanoResplandor"
-                        class="valor"
-                    >
-                        70%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="tamanoResplandor"
-                    min="15"
-                    max="150"
-                    value="70"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="posicionXResplandor">
-
-                    Posición horizontal
-
-                    <span
-                        id="valorXResplandor"
-                        class="valor"
-                    >
-                        50%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="posicionXResplandor"
-                    min="0"
-                    max="100"
-                    value="50"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="posicionYResplandor">
-
-                    Posición vertical
-
-                    <span
-                        id="valorYResplandor"
-                        class="valor"
-                    >
-                        47%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="posicionYResplandor"
-                    min="0"
-                    max="100"
-                    value="47"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="opacidadResplandor">
-
-                    Opacidad
-
-                    <span
-                        id="valorOpacidadResplandor"
-                        class="valor"
-                    >
-                        70%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="opacidadResplandor"
-                    min="0"
-                    max="100"
-                    value="70"
-                >
-
-            </div>
-
-
-            <div class="control">
-
-                <label for="brilloResplandor">
-
-                    Brillo
-
-                    <span
-                        id="valorBrilloResplandor"
-                        class="valor"
-                    >
-                        100%
-                    </span>
-
-                </label>
-
-                <input
-                    type="range"
-                    id="brilloResplandor"
-                    min="20"
-                    max="250"
-                    value="100"
-                >
-
-            </div>
-
-        </section>
+        <div id="panelCapas"></div>
 
 
         <div class="botones">
 
             <button
-                class="boton boton-principal"
+                id="pausarAnimaciones"
+                class="boton"
+                type="button"
+            >
+                ⏸️ Pausar animaciones
+            </button>
+
+            <button
                 id="ocultarPanel"
+                class="boton boton-principal"
                 type="button"
             >
                 👁️ Ver escena sin controles
             </button>
 
             <button
-                class="boton"
                 id="restablecer"
+                class="boton"
                 type="button"
             >
                 ↩️ Restablecer valores
@@ -859,9 +545,11 @@
 
         <p class="nota">
 
-            Los valores se guardan automáticamente en este navegador.
-            El fondo negro de las capas luminosas se mezcla usando
-            <strong>screen</strong>.
+            El halo tiene un orden inferior al volcán,
+            por lo que ahora se verá detrás.
+
+            Los valores se guardan automáticamente
+            en este navegador.
 
         </p>
 
@@ -869,8 +557,8 @@
 
 
     <button
-        class="boton-flotante"
         id="mostrarPanel"
+        class="boton-flotante"
         type="button"
     >
         🎛️ Mostrar controles
@@ -880,167 +568,501 @@
     <script>
 
         /* ========================================
-           ELEMENTOS
+           LISTA DE CAPAS
+        ========================================
+
+           ORDEN:
+           El número "orden" define qué queda delante.
+
+           Cuanto mayor sea el número,
+           más adelante aparecerá la capa.
         ======================================== */
 
-        const gradiente =
-            document.getElementById("gradiente");
+        const capas = [
 
-        const volcan =
-            document.getElementById("volcan");
+            {
+                id: "gradiente",
+                nombre: "🌅 Fondo degradado",
+                archivo: "Atardecer abstracto y suave.png",
 
-        const resplandor =
-            document.getElementById("resplandor");
+                tipo: "fondo",
+                orden: 0,
+                mezcla: "normal",
+
+                visible: true,
+
+                tamano: 100,
+                x: 50,
+                y: 50,
+                rotacion: 0,
+
+                opacidad: 100,
+                brillo: 80,
+                contraste: 100,
+                saturacion: 90,
+
+                animacion: "ninguna",
+                velocidad: 10,
+                intensidad: 2
+            },
+
+            {
+                id: "halo",
+                nombre: "✨ Halo del volcán",
+                archivo:
+                    "Montaña silueteada con resplandor rosa.png",
+
+                tipo: "elemento",
+                orden: 1,
+                mezcla: "screen",
+
+                visible: true,
+
+                tamano: 65,
+                x: 50,
+                y: 47,
+                rotacion: 0,
+
+                opacidad: 75,
+                brillo: 100,
+                contraste: 100,
+                saturacion: 100,
+
+                animacion: "pulso",
+                velocidad: 7,
+                intensidad: 2
+            },
+
+            {
+                id: "volcan",
+                nombre: "🌋 Volcán",
+                archivo:
+                    "Montaña neón en niebla rosa.png",
+
+                tipo: "elemento",
+                orden: 2,
+                mezcla: "screen",
+
+                visible: true,
+
+                tamano: 65,
+                x: 50,
+                y: 47,
+                rotacion: 0,
+
+                opacidad: 100,
+                brillo: 100,
+                contraste: 100,
+                saturacion: 100,
+
+                animacion: "ninguna",
+                velocidad: 8,
+                intensidad: 1
+            }
+
+        ];
 
 
-        /* GRADIENTE */
+        const escenario =
+            document.getElementById("escenario");
 
-        const mostrarGradiente =
-            document.getElementById("mostrarGradiente");
+        const panelCapas =
+            document.getElementById("panelCapas");
 
-        const brilloGradiente =
-            document.getElementById("brilloGradiente");
+        const botonPausar =
+            document.getElementById("pausarAnimaciones");
 
-        const contrasteGradiente =
-            document.getElementById("contrasteGradiente");
-
-        const saturacionGradiente =
-            document.getElementById("saturacionGradiente");
-
-        const opacidadGradiente =
-            document.getElementById("opacidadGradiente");
-
-
-        /* VOLCÁN */
-
-        const mostrarVolcan =
-            document.getElementById("mostrarVolcan");
-
-        const tamanoVolcan =
-            document.getElementById("tamanoVolcan");
-
-        const posicionXVolcan =
-            document.getElementById("posicionXVolcan");
-
-        const posicionYVolcan =
-            document.getElementById("posicionYVolcan");
-
-        const opacidadVolcan =
-            document.getElementById("opacidadVolcan");
-
-        const brilloVolcan =
-            document.getElementById("brilloVolcan");
-
-
-        /* RESPLANDOR */
-
-        const mostrarResplandor =
-            document.getElementById("mostrarResplandor");
-
-        const tamanoResplandor =
-            document.getElementById("tamanoResplandor");
-
-        const posicionXResplandor =
-            document.getElementById("posicionXResplandor");
-
-        const posicionYResplandor =
-            document.getElementById("posicionYResplandor");
-
-        const opacidadResplandor =
-            document.getElementById("opacidadResplandor");
-
-        const brilloResplandor =
-            document.getElementById("brilloResplandor");
-
-
-        /* BOTONES */
-
-        const ocultarPanel =
-            document.getElementById("ocultarPanel");
-
-        const mostrarPanel =
-            document.getElementById("mostrarPanel");
-
-        const restablecer =
-            document.getElementById("restablecer");
+        let animacionesPausadas = false;
 
 
         /* ========================================
-           VALORES VISIBLES
+           CREAR CAPAS
         ======================================== */
 
-        const valorBrilloGradiente =
-            document.getElementById("valorBrilloGradiente");
+        function crearCapas() {
 
-        const valorContrasteGradiente =
-            document.getElementById("valorContrasteGradiente");
+            escenario.innerHTML = "";
 
-        const valorSaturacionGradiente =
-            document.getElementById("valorSaturacionGradiente");
+            capas
+                .sort(function (a, b) {
+                    return a.orden - b.orden;
+                })
+                .forEach(function (capa) {
 
-        const valorOpacidadGradiente =
-            document.getElementById("valorOpacidadGradiente");
+                    const contenedor =
+                        document.createElement("div");
 
+                    contenedor.id =
+                        "contenedor-" + capa.id;
 
-        const valorTamanoVolcan =
-            document.getElementById("valorTamanoVolcan");
+                    contenedor.className =
+                        "capa-contenedor";
 
-        const valorXVolcan =
-            document.getElementById("valorXVolcan");
+                    if (capa.tipo === "fondo") {
+                        contenedor.classList.add(
+                            "capa-fondo"
+                        );
+                    }
 
-        const valorYVolcan =
-            document.getElementById("valorYVolcan");
+                    contenedor.style.zIndex =
+                        capa.orden;
 
-        const valorOpacidadVolcan =
-            document.getElementById("valorOpacidadVolcan");
+                    const imagen =
+                        document.createElement("img");
 
-        const valorBrilloVolcan =
-            document.getElementById("valorBrilloVolcan");
+                    imagen.id =
+                        "imagen-" + capa.id;
 
+                    imagen.className =
+                        "capa-imagen";
 
-        const valorTamanoResplandor =
-            document.getElementById("valorTamanoResplandor");
+                    imagen.src =
+                        capa.archivo;
 
-        const valorXResplandor =
-            document.getElementById("valorXResplandor");
+                    imagen.alt =
+                        capa.nombre;
 
-        const valorYResplandor =
-            document.getElementById("valorYResplandor");
+                    contenedor.appendChild(imagen);
+                    escenario.appendChild(contenedor);
 
-        const valorOpacidadResplandor =
-            document.getElementById("valorOpacidadResplandor");
+                });
 
-        const valorBrilloResplandor =
-            document.getElementById("valorBrilloResplandor");
+        }
 
 
         /* ========================================
-           VALORES PREDETERMINADOS
+           CREAR CONTROLES AUTOMÁTICAMENTE
         ======================================== */
 
-        const valoresIniciales = {
+        function crearPanel() {
 
-            mostrarGradiente: true,
-            brilloGradiente: 80,
-            contrasteGradiente: 100,
-            saturacionGradiente: 90,
-            opacidadGradiente: 100,
+            panelCapas.innerHTML = "";
 
-            mostrarVolcan: true,
-            tamanoVolcan: 65,
-            posicionXVolcan: 50,
-            posicionYVolcan: 47,
-            opacidadVolcan: 100,
-            brilloVolcan: 100,
+            capas.forEach(function (capa) {
 
-            mostrarResplandor: true,
-            tamanoResplandor: 70,
-            posicionXResplandor: 50,
-            posicionYResplandor: 47,
-            opacidadResplandor: 70,
-            brilloResplandor: 100
+                const seccion =
+                    document.createElement("section");
 
-        };
+                seccion.className = "seccion";
+
+                seccion.innerHTML = `
+
+                    <h2>${capa.nombre}</h2>
+
+                    <div class="interruptor">
+
+                        <input
+                            type="checkbox"
+                            id="${capa.id}-visible"
+                        >
+
+                        <label for="${capa.id}-visible">
+                            Mostrar capa
+                        </label>
+
+                    </div>
+
+                    ${
+                        capa.tipo !== "fondo"
+                        ? crearControlRango(
+                            capa.id,
+                            "tamano",
+                            "Tamaño",
+                            10,
+                            160,
+                            "%"
+                        )
+                        : ""
+                    }
+
+                    ${
+                        capa.tipo !== "fondo"
+                        ? crearControlRango(
+                            capa.id,
+                            "x",
+                            "Posición horizontal",
+                            0,
+                            100,
+                            "%"
+                        )
+                        : ""
+                    }
+
+                    ${
+                        capa.tipo !== "fondo"
+                        ? crearControlRango(
+                            capa.id,
+                            "y",
+                            "Posición vertical",
+                            0,
+                            100,
+                            "%"
+                        )
+                        : ""
+                    }
+
+                    ${
+                        capa.tipo !== "fondo"
+                        ? crearControlRango(
+                            capa.id,
+                            "rotacion",
+                            "Rotación",
+                            -30,
+                            30,
+                            "°"
+                        )
+                        : ""
+                    }
+
+                    ${crearControlRango(
+                        capa.id,
+                        "opacidad",
+                        "Opacidad",
+                        0,
+                        100,
+                        "%"
+                    )}
+
+                    ${crearControlRango(
+                        capa.id,
+                        "brillo",
+                        "Brillo",
+                        20,
+                        200,
+                        "%"
+                    )}
+
+                    ${crearControlRango(
+                        capa.id,
+                        "contraste",
+                        "Contraste",
+                        20,
+                        180,
+                        "%"
+                    )}
+
+                    ${crearControlRango(
+                        capa.id,
+                        "saturacion",
+                        "Intensidad del color",
+                        0,
+                        200,
+                        "%"
+                    )}
+
+                    <div class="control">
+
+                        <label for="${capa.id}-animacion">
+                            Animación
+                        </label>
+
+                        <select id="${capa.id}-animacion">
+
+                            <option value="ninguna">
+                                Sin animación
+                            </option>
+
+                            <option value="respirar">
+                                Respirar suavemente
+                            </option>
+
+                            <option value="flotar">
+                                Flotar verticalmente
+                            </option>
+
+                            <option value="horizontal">
+                                Movimiento horizontal
+                            </option>
+
+                            <option value="pulso">
+                                Pulso de luz
+                            </option>
+
+                            <option value="niebla">
+                                Niebla suave
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    ${crearControlRango(
+                        capa.id,
+                        "velocidad",
+                        "Duración de animación",
+                        2,
+                        30,
+                        " s"
+                    )}
+
+                    ${crearControlRango(
+                        capa.id,
+                        "intensidad",
+                        "Intensidad de movimiento",
+                        0,
+                        20,
+                        ""
+                    )}
+
+                `;
+
+                panelCapas.appendChild(seccion);
+
+            });
+
+        }
+
+
+        function crearControlRango(
+            id,
+            propiedad,
+            texto,
+            minimo,
+            maximo,
+            unidad
+        ) {
+
+            return `
+
+                <div class="control">
+
+                    <label for="${id}-${propiedad}">
+
+                        ${texto}
+
+                        <span
+                            id="${id}-${propiedad}-valor"
+                            class="valor"
+                        >
+                        </span>
+
+                    </label>
+
+                    <input
+                        type="range"
+                        id="${id}-${propiedad}"
+                        min="${minimo}"
+                        max="${maximo}"
+                    >
+
+                    <span
+                        id="${id}-${propiedad}-unidad"
+                        hidden
+                    >
+                        ${unidad}
+                    </span>
+
+                </div>
+
+            `;
+
+        }
+
+
+        /* ========================================
+           COLOCAR VALORES EN LOS CONTROLES
+        ======================================== */
+
+        function cargarControles() {
+
+            capas.forEach(function (capa) {
+
+                document.getElementById(
+                    capa.id + "-visible"
+                ).checked = capa.visible;
+
+
+                const propiedades = [
+                    "tamano",
+                    "x",
+                    "y",
+                    "rotacion",
+                    "opacidad",
+                    "brillo",
+                    "contraste",
+                    "saturacion",
+                    "velocidad",
+                    "intensidad"
+                ];
+
+
+                propiedades.forEach(function (propiedad) {
+
+                    const control =
+                        document.getElementById(
+                            capa.id + "-" + propiedad
+                        );
+
+                    if (control) {
+                        control.value =
+                            capa[propiedad];
+                    }
+
+                });
+
+
+                document.getElementById(
+                    capa.id + "-animacion"
+                ).value = capa.animacion;
+
+            });
+
+        }
+
+
+        /* ========================================
+           LEER CONTROLES
+        ======================================== */
+
+        function leerControles() {
+
+            capas.forEach(function (capa) {
+
+                capa.visible =
+                    document.getElementById(
+                        capa.id + "-visible"
+                    ).checked;
+
+
+                const propiedades = [
+                    "tamano",
+                    "x",
+                    "y",
+                    "rotacion",
+                    "opacidad",
+                    "brillo",
+                    "contraste",
+                    "saturacion",
+                    "velocidad",
+                    "intensidad"
+                ];
+
+
+                propiedades.forEach(function (propiedad) {
+
+                    const control =
+                        document.getElementById(
+                            capa.id + "-" + propiedad
+                        );
+
+                    if (control) {
+
+                        capa[propiedad] =
+                            Number(control.value);
+
+                    }
+
+                });
+
+
+                capa.animacion =
+                    document.getElementById(
+                        capa.id + "-animacion"
+                    ).value;
+
+            });
+
+        }
 
 
         /* ========================================
@@ -1049,259 +1071,205 @@
 
         function actualizarEscena() {
 
-            /* GRADIENTE */
-
-            gradiente.style.display =
-                mostrarGradiente.checked ? "block" : "none";
-
-            gradiente.style.opacity =
-                opacidadGradiente.value / 100;
-
-            gradiente.style.filter =
-                "brightness(" + brilloGradiente.value + "%) " +
-                "contrast(" + contrasteGradiente.value + "%) " +
-                "saturate(" + saturacionGradiente.value + "%)";
+            leerControles();
 
 
-            /* VOLCÁN */
+            capas.forEach(function (capa) {
 
-            volcan.style.display =
-                mostrarVolcan.checked ? "block" : "none";
+                const contenedor =
+                    document.getElementById(
+                        "contenedor-" + capa.id
+                    );
 
-            volcan.style.width =
-                tamanoVolcan.value + "%";
-
-            volcan.style.left =
-                posicionXVolcan.value + "%";
-
-            volcan.style.top =
-                posicionYVolcan.value + "%";
-
-            volcan.style.opacity =
-                opacidadVolcan.value / 100;
-
-            volcan.style.filter =
-                "brightness(" + brilloVolcan.value + "%)";
+                const imagen =
+                    document.getElementById(
+                        "imagen-" + capa.id
+                    );
 
 
-            /* RESPLANDOR */
-
-            resplandor.style.display =
-                mostrarResplandor.checked ? "block" : "none";
-
-            resplandor.style.width =
-                tamanoResplandor.value + "%";
-
-            resplandor.style.left =
-                posicionXResplandor.value + "%";
-
-            resplandor.style.top =
-                posicionYResplandor.value + "%";
-
-            resplandor.style.opacity =
-                opacidadResplandor.value / 100;
-
-            resplandor.style.filter =
-                "brightness(" + brilloResplandor.value + "%)";
+                contenedor.style.display =
+                    capa.visible
+                        ? "block"
+                        : "none";
 
 
-            /* MOSTRAR NÚMEROS */
+                if (capa.tipo !== "fondo") {
 
-            valorBrilloGradiente.textContent =
-                brilloGradiente.value + "%";
+                    contenedor.style.width =
+                        capa.tamano + "%";
 
-            valorContrasteGradiente.textContent =
-                contrasteGradiente.value + "%";
+                    contenedor.style.left =
+                        capa.x + "%";
 
-            valorSaturacionGradiente.textContent =
-                saturacionGradiente.value + "%";
+                    contenedor.style.top =
+                        capa.y + "%";
 
-            valorOpacidadGradiente.textContent =
-                opacidadGradiente.value + "%";
+                    contenedor.style.setProperty(
+                        "--rotacion",
+                        capa.rotacion + "deg"
+                    );
 
-
-            valorTamanoVolcan.textContent =
-                tamanoVolcan.value + "%";
-
-            valorXVolcan.textContent =
-                posicionXVolcan.value + "%";
-
-            valorYVolcan.textContent =
-                posicionYVolcan.value + "%";
-
-            valorOpacidadVolcan.textContent =
-                opacidadVolcan.value + "%";
-
-            valorBrilloVolcan.textContent =
-                brilloVolcan.value + "%";
+                }
 
 
-            valorTamanoResplandor.textContent =
-                tamanoResplandor.value + "%";
-
-            valorXResplandor.textContent =
-                posicionXResplandor.value + "%";
-
-            valorYResplandor.textContent =
-                posicionYResplandor.value + "%";
-
-            valorOpacidadResplandor.textContent =
-                opacidadResplandor.value + "%";
-
-            valorBrilloResplandor.textContent =
-                brilloResplandor.value + "%";
+                imagen.style.opacity =
+                    capa.opacidad / 100;
 
 
-            guardarValores();
+                imagen.style.filter =
+                    "brightness(" +
+                    capa.brillo +
+                    "%) " +
+
+                    "contrast(" +
+                    capa.contraste +
+                    "%) " +
+
+                    "saturate(" +
+                    capa.saturacion +
+                    "%)";
+
+
+                imagen.style.mixBlendMode =
+                    capa.mezcla;
+
+
+                imagen.className =
+                    "capa-imagen animacion-" +
+                    capa.animacion;
+
+
+                imagen.style.setProperty(
+                    "--velocidad",
+                    capa.velocidad + "s"
+                );
+
+
+                imagen.style.setProperty(
+                    "--intensidad-px",
+                    capa.intensidad + "px"
+                );
+
+
+                imagen.style.setProperty(
+                    "--intensidad-escala",
+                    capa.intensidad / 100
+                );
+
+            });
+
+
+            actualizarNumeros();
+            guardarConfiguracion();
 
         }
 
 
         /* ========================================
-           GUARDAR VALORES
+           MOSTRAR NÚMEROS
         ======================================== */
 
-        function guardarValores() {
+        function actualizarNumeros() {
 
-            const valores = {
+            capas.forEach(function (capa) {
 
-                mostrarGradiente:
-                    mostrarGradiente.checked,
+                const unidades = {
 
-                brilloGradiente:
-                    brilloGradiente.value,
+                    tamano: "%",
+                    x: "%",
+                    y: "%",
+                    rotacion: "°",
+                    opacidad: "%",
+                    brillo: "%",
+                    contraste: "%",
+                    saturacion: "%",
+                    velocidad: " s",
+                    intensidad: ""
 
-                contrasteGradiente:
-                    contrasteGradiente.value,
-
-                saturacionGradiente:
-                    saturacionGradiente.value,
-
-                opacidadGradiente:
-                    opacidadGradiente.value,
-
-
-                mostrarVolcan:
-                    mostrarVolcan.checked,
-
-                tamanoVolcan:
-                    tamanoVolcan.value,
-
-                posicionXVolcan:
-                    posicionXVolcan.value,
-
-                posicionYVolcan:
-                    posicionYVolcan.value,
-
-                opacidadVolcan:
-                    opacidadVolcan.value,
-
-                brilloVolcan:
-                    brilloVolcan.value,
+                };
 
 
-                mostrarResplandor:
-                    mostrarResplandor.checked,
+                Object.keys(unidades)
+                    .forEach(function (propiedad) {
 
-                tamanoResplandor:
-                    tamanoResplandor.value,
+                        const valor =
+                            document.getElementById(
+                                capa.id +
+                                "-" +
+                                propiedad +
+                                "-valor"
+                            );
 
-                posicionXResplandor:
-                    posicionXResplandor.value,
+                        if (valor) {
 
-                posicionYResplandor:
-                    posicionYResplandor.value,
+                            valor.textContent =
+                                capa[propiedad] +
+                                unidades[propiedad];
 
-                opacidadResplandor:
-                    opacidadResplandor.value,
+                        }
 
-                brilloResplandor:
-                    brilloResplandor.value
+                    });
 
-            };
+            });
+
+        }
+
+
+        /* ========================================
+           GUARDAR Y CARGAR
+        ======================================== */
+
+        function guardarConfiguracion() {
 
             localStorage.setItem(
-                "mkUniverseValores",
-                JSON.stringify(valores)
+                "mkUniverseCapasV2",
+                JSON.stringify(capas)
             );
 
         }
 
 
-        /* ========================================
-           CARGAR VALORES GUARDADOS
-        ======================================== */
+        function cargarConfiguracion() {
 
-        function cargarValores() {
+            const guardado =
+                localStorage.getItem(
+                    "mkUniverseCapasV2"
+                );
 
-            const guardados =
-                localStorage.getItem("mkUniverseValores");
-
-            if (!guardados) {
+            if (!guardado) {
                 return;
             }
 
+
             try {
 
-                const valores = JSON.parse(guardados);
-
-                mostrarGradiente.checked =
-                    valores.mostrarGradiente ?? true;
-
-                brilloGradiente.value =
-                    valores.brilloGradiente ?? 80;
-
-                contrasteGradiente.value =
-                    valores.contrasteGradiente ?? 100;
-
-                saturacionGradiente.value =
-                    valores.saturacionGradiente ?? 90;
-
-                opacidadGradiente.value =
-                    valores.opacidadGradiente ?? 100;
+                const valores =
+                    JSON.parse(guardado);
 
 
-                mostrarVolcan.checked =
-                    valores.mostrarVolcan ?? true;
+                valores.forEach(function (guardada) {
 
-                tamanoVolcan.value =
-                    valores.tamanoVolcan ?? 65;
-
-                posicionXVolcan.value =
-                    valores.posicionXVolcan ?? 50;
-
-                posicionYVolcan.value =
-                    valores.posicionYVolcan ?? 47;
-
-                opacidadVolcan.value =
-                    valores.opacidadVolcan ?? 100;
-
-                brilloVolcan.value =
-                    valores.brilloVolcan ?? 100;
+                    const capa =
+                        capas.find(function (item) {
+                            return item.id === guardada.id;
+                        });
 
 
-                mostrarResplandor.checked =
-                    valores.mostrarResplandor ?? true;
+                    if (capa) {
 
-                tamanoResplandor.value =
-                    valores.tamanoResplandor ?? 70;
+                        Object.assign(
+                            capa,
+                            guardada
+                        );
 
-                posicionXResplandor.value =
-                    valores.posicionXResplandor ?? 50;
+                    }
 
-                posicionYResplandor.value =
-                    valores.posicionYResplandor ?? 47;
-
-                opacidadResplandor.value =
-                    valores.opacidadResplandor ?? 70;
-
-                brilloResplandor.value =
-                    valores.brilloResplandor ?? 100;
+                });
 
             } catch (error) {
 
                 console.error(
-                    "No se pudieron cargar los valores:",
+                    "No se pudo cargar la configuración.",
                     error
                 );
 
@@ -1311,123 +1279,92 @@
 
 
         /* ========================================
-           RESTABLECER
-        ======================================== */
-
-        function restablecerValores() {
-
-            mostrarGradiente.checked =
-                valoresIniciales.mostrarGradiente;
-
-            brilloGradiente.value =
-                valoresIniciales.brilloGradiente;
-
-            contrasteGradiente.value =
-                valoresIniciales.contrasteGradiente;
-
-            saturacionGradiente.value =
-                valoresIniciales.saturacionGradiente;
-
-            opacidadGradiente.value =
-                valoresIniciales.opacidadGradiente;
-
-
-            mostrarVolcan.checked =
-                valoresIniciales.mostrarVolcan;
-
-            tamanoVolcan.value =
-                valoresIniciales.tamanoVolcan;
-
-            posicionXVolcan.value =
-                valoresIniciales.posicionXVolcan;
-
-            posicionYVolcan.value =
-                valoresIniciales.posicionYVolcan;
-
-            opacidadVolcan.value =
-                valoresIniciales.opacidadVolcan;
-
-            brilloVolcan.value =
-                valoresIniciales.brilloVolcan;
-
-
-            mostrarResplandor.checked =
-                valoresIniciales.mostrarResplandor;
-
-            tamanoResplandor.value =
-                valoresIniciales.tamanoResplandor;
-
-            posicionXResplandor.value =
-                valoresIniciales.posicionXResplandor;
-
-            posicionYResplandor.value =
-                valoresIniciales.posicionYResplandor;
-
-            opacidadResplandor.value =
-                valoresIniciales.opacidadResplandor;
-
-            brilloResplandor.value =
-                valoresIniciales.brilloResplandor;
-
-
-            actualizarEscena();
-
-        }
-
-
-        /* ========================================
            EVENTOS
         ======================================== */
 
-        const controles = document.querySelectorAll(
-            'input[type="range"], input[type="checkbox"]'
-        );
-
-        controles.forEach(function (control) {
-
-            control.addEventListener(
-                "input",
-                actualizarEscena
-            );
-
-            control.addEventListener(
-                "change",
-                actualizarEscena
-            );
-
-        });
-
-
-        ocultarPanel.addEventListener(
-            "click",
-            function () {
-
-                document.body.classList.add("modo-vista");
-
-            }
+        panelCapas.addEventListener(
+            "input",
+            actualizarEscena
         );
 
 
-        mostrarPanel.addEventListener(
-            "click",
-            function () {
-
-                document.body.classList.remove("modo-vista");
-
-            }
+        panelCapas.addEventListener(
+            "change",
+            actualizarEscena
         );
 
 
-        restablecer.addEventListener(
+        document.getElementById(
+            "ocultarPanel"
+        ).addEventListener(
             "click",
             function () {
 
-                const confirmar = window.confirm(
-                    "¿Quieres devolver todos los controles a sus valores iniciales?"
+                document.body.classList.add(
+                    "modo-vista"
                 );
 
+            }
+        );
+
+
+        document.getElementById(
+            "mostrarPanel"
+        ).addEventListener(
+            "click",
+            function () {
+
+                document.body.classList.remove(
+                    "modo-vista"
+                );
+
+            }
+        );
+
+
+        botonPausar.addEventListener(
+            "click",
+            function () {
+
+                animacionesPausadas =
+                    !animacionesPausadas;
+
+
+                document.body.classList.toggle(
+                    "animaciones-pausadas",
+                    animacionesPausadas
+                );
+
+
+                botonPausar.textContent =
+                    animacionesPausadas
+                        ? "▶️ Reanudar animaciones"
+                        : "⏸️ Pausar animaciones";
+
+            }
+        );
+
+
+        document.getElementById(
+            "restablecer"
+        ).addEventListener(
+            "click",
+            function () {
+
+                const confirmar =
+                    window.confirm(
+                        "¿Quieres eliminar los ajustes guardados y volver a los valores iniciales?"
+                    );
+
+
                 if (confirmar) {
-                    restablecerValores();
+
+                    localStorage.removeItem(
+                        "mkUniverseCapasV2"
+                    );
+
+                    location.reload();
+
                 }
 
             }
@@ -1438,7 +1375,10 @@
            INICIAR
         ======================================== */
 
-        cargarValores();
+        cargarConfiguracion();
+        crearCapas();
+        crearPanel();
+        cargarControles();
         actualizarEscena();
 
     </script>

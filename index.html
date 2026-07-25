@@ -1,11 +1,9 @@
-from pathlib import Path
-
-html = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MK Universe — Motor 2D</title>
+  <title>MK Universe 2.0 — Motor de Overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -151,9 +149,61 @@ html = r'''<!DOCTYPE html>
     }
 
     .layer > .motion {
+      position: relative;
       width: 100%;
       height: 100%;
       transform-origin: center;
+      will-change: transform, opacity;
+    }
+
+    .metal-shine {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: var(--shine-opacity, .72);
+      background: linear-gradient(
+        115deg,
+        transparent 15%,
+        rgba(255,255,255,0) 35%,
+        rgba(255,255,255,.95) 48%,
+        rgba(255,221,238,.85) 53%,
+        rgba(255,255,255,0) 66%,
+        transparent 85%
+      );
+      background-size: 240% 100%;
+      mix-blend-mode: screen;
+      animation: metalSweep var(--shine-speed, 5s) ease-in-out infinite;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+    }
+
+    .firefly-field {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .firefly {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      left: var(--left);
+      top: var(--top);
+      border-radius: 999px;
+      background: radial-gradient(circle, #fffde8 0 18%, #fff3a8 28%, rgba(255,235,116,.38) 55%, transparent 74%);
+      box-shadow:
+        0 0 calc(var(--size) * .8) rgba(255,247,177,.95),
+        0 0 calc(var(--size) * 2.2) rgba(216,255,151,.72);
+      opacity: .2;
+      animation:
+        fireflyMove var(--fly-duration) ease-in-out infinite alternate,
+        fireflyBlink var(--blink-duration) ease-in-out infinite;
+      animation-delay: var(--delay);
       will-change: transform, opacity;
     }
 
@@ -237,6 +287,7 @@ html = r'''<!DOCTYPE html>
 
     input[type="text"],
     input[type="number"],
+    input[type="color"],
     select {
       width: 100%;
       border: 1px solid var(--border);
@@ -358,6 +409,16 @@ html = r'''<!DOCTYPE html>
       animation: twinkle var(--duration, 4s) ease-in-out infinite;
     }
 
+    .anim-plant {
+      transform-origin: 50% 100%;
+      animation: plantWind var(--duration, 7s) var(--easing, ease-in-out) infinite alternate;
+    }
+
+    .anim-ripple {
+      transform-origin: 50% 60%;
+      animation: ripple var(--duration, 6s) var(--easing, ease-in-out) infinite;
+    }
+
     @keyframes float {
       from { transform: translateY(calc(var(--intensity, 8px) * -1)); }
       to { transform: translateY(var(--intensity, 8px)); }
@@ -398,6 +459,40 @@ html = r'''<!DOCTYPE html>
     @keyframes twinkle {
       0%,100% { opacity: .35; transform: scale(.98); }
       50% { opacity: 1; transform: scale(calc(1 + var(--intensity-scale, .04))); }
+    }
+
+    @keyframes plantWind {
+      0% { transform: rotate(calc(var(--intensity-deg, 2deg) * -.55)) skewX(-.35deg) scaleY(1); }
+      45% { transform: rotate(calc(var(--intensity-deg, 2deg) * .25)) skewX(.25deg) scaleY(1.003); }
+      100% { transform: rotate(var(--intensity-deg, 2deg)) skewX(.55deg) scaleY(.998); }
+    }
+
+    @keyframes ripple {
+      0%,100% { transform: translateX(calc(var(--intensity, 8px) * -.45)) skewX(-.3deg) scaleY(1); }
+      25% { transform: translateX(0) skewX(.25deg) scaleY(calc(1 + var(--intensity-scale, .015))); }
+      50% { transform: translateX(calc(var(--intensity, 8px) * .45)) skewX(-.15deg) scaleY(.996); }
+      75% { transform: translateX(0) skewX(.3deg) scaleY(calc(1 + var(--intensity-scale, .01))); }
+    }
+
+    @keyframes metalSweep {
+      0%, 18% { background-position: 160% 0; opacity: 0; }
+      34% { opacity: var(--shine-opacity, .72); }
+      58% { background-position: -80% 0; opacity: var(--shine-opacity, .72); }
+      72%, 100% { background-position: -80% 0; opacity: 0; }
+    }
+
+    @keyframes fireflyMove {
+      0% { transform: translate3d(-8px, 8px, 0) scale(.75); }
+      35% { transform: translate3d(16px, -12px, 0) scale(1); }
+      70% { transform: translate3d(-13px, -23px, 0) scale(.86); }
+      100% { transform: translate3d(24px, 10px, 0) scale(1.08); }
+    }
+
+    @keyframes fireflyBlink {
+      0%,100% { opacity: .08; }
+      38% { opacity: .92; }
+      55% { opacity: .28; }
+      75% { opacity: 1; }
     }
 
     body.paused .motion {
@@ -444,12 +539,13 @@ html = r'''<!DOCTYPE html>
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 2D</h1>
-    <p class="subtitle">Capas, composición, partículas y animación.</p>
+    <h1>🌸 MK Universe 2.0</h1>
+    <p class="subtitle">Overlays vivos: neón, brillo metálico, plantas, agua y luciérnagas.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
       <button id="addParticleBtn" class="btn" type="button">✨ Partículas</button>
+      <button id="addFirefliesBtn" class="btn" type="button">🪲 Luciérnagas</button>
       <button id="pauseBtn" class="btn" type="button">⏸️ Pausar</button>
       <button id="previewBtn" class="btn" type="button">👁️ Vista limpia</button>
     </div>
@@ -551,6 +647,50 @@ html = r'''<!DOCTYPE html>
           <input id="propSaturation" type="range" min="0" max="250" step="1" />
         </div>
 
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:12px">✨ Luz y materiales</h3>
+
+          <div class="check-row">
+            <input id="propGlowEnabled" type="checkbox" />
+            <label for="propGlowEnabled">Activar resplandor neón</label>
+          </div>
+
+          <div class="control">
+            <label for="propGlowColor">Color del resplandor</label>
+            <input id="propGlowColor" type="color" />
+          </div>
+
+          <div class="control">
+            <label for="propGlowIntensity">Intensidad <span id="propGlowIntensityValue" class="value"></span></label>
+            <input id="propGlowIntensity" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propGlowBlur">Difuminado <span id="propGlowBlurValue" class="value"></span></label>
+            <input id="propGlowBlur" type="range" min="0" max="80" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propEdgeThickness">Borde luminoso <span id="propEdgeThicknessValue" class="value"></span></label>
+            <input id="propEdgeThickness" type="range" min="0" max="20" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propEmission">Emisión / núcleo de luz <span id="propEmissionValue" class="value"></span></label>
+            <input id="propEmission" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="check-row">
+            <input id="propMetalShine" type="checkbox" />
+            <label for="propMetalShine">Brillo metálico animado</label>
+          </div>
+
+          <div class="control">
+            <label for="propShineSpeed">Velocidad del brillo <span id="propShineSpeedValue" class="value"></span></label>
+            <input id="propShineSpeed" type="range" min="1" max="20" step=".5" />
+          </div>
+        </div>
+
         <div class="control">
           <label for="propBlend">Modo de mezcla</label>
           <select id="propBlend">
@@ -592,6 +732,8 @@ html = r'''<!DOCTYPE html>
             <option value="fall">Caída</option>
             <option value="water">Agua</option>
             <option value="twinkle">Destello</option>
+            <option value="plant">Hojas / planta con viento</option>
+            <option value="ripple">Agua con olitas</option>
           </select>
         </div>
 
@@ -629,6 +771,10 @@ html = r'''<!DOCTYPE html>
     };
 
     let project = loadProject() || structuredClone(defaultProject);
+    project.layers = (project.layers || []).map(layer => defaultLayer(layer));
+    if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
+      project.selectedId = null;
+    }
     let dragId = null;
 
     const stage = document.getElementById("stage");
@@ -658,7 +804,15 @@ html = r'''<!DOCTYPE html>
       animation: document.getElementById("propAnimation"),
       duration: document.getElementById("propDuration"),
       intensity: document.getElementById("propIntensity"),
-      plasticity: document.getElementById("propPlasticity")
+      plasticity: document.getElementById("propPlasticity"),
+      glowEnabled: document.getElementById("propGlowEnabled"),
+      glowColor: document.getElementById("propGlowColor"),
+      glowIntensity: document.getElementById("propGlowIntensity"),
+      glowBlur: document.getElementById("propGlowBlur"),
+      edgeThickness: document.getElementById("propEdgeThickness"),
+      emission: document.getElementById("propEmission"),
+      metalShine: document.getElementById("propMetalShine"),
+      shineSpeed: document.getElementById("propShineSpeed")
     };
 
     function newId(prefix = "layer") {
@@ -689,6 +843,14 @@ html = r'''<!DOCTYPE html>
         duration: 10,
         intensity: 8,
         plasticity: 80,
+        glowEnabled: false,
+        glowColor: "#ff8fd1",
+        glowIntensity: 35,
+        glowBlur: 22,
+        edgeThickness: 2,
+        emission: 0,
+        metalShine: false,
+        shineSpeed: 6,
         ...overrides
       };
     }
@@ -770,6 +932,7 @@ html = r'''<!DOCTYPE html>
         const visual = processImage(layer, img);
         styleVisual(layer, visual);
         motion.replaceChildren(visual);
+        addMetalShine(layer, motion);
       };
       img.onerror = () => {
         const msg = document.createElement("div");
@@ -808,13 +971,68 @@ html = r'''<!DOCTYPE html>
       return canvas;
     }
 
+    function hexToRgba(hex, alpha = 1) {
+      const clean = String(hex || "#ffffff").replace("#", "");
+      const full = clean.length === 3
+        ? clean.split("").map(char => char + char).join("")
+        : clean.padEnd(6, "f").slice(0, 6);
+      const value = Number.parseInt(full, 16);
+      const r = (value >> 16) & 255;
+      const g = (value >> 8) & 255;
+      const b = value & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
     function styleVisual(layer, element) {
       element.style.opacity = layer.opacity / 100;
-      element.style.filter =
-        `brightness(${layer.brightness}%) contrast(${layer.contrast}%) saturate(${layer.saturation}%)`;
+
+      const filters = [
+        `brightness(${layer.brightness + (layer.emission || 0) * .45}%)`,
+        `contrast(${layer.contrast}%)`,
+        `saturate(${layer.saturation + (layer.emission || 0) * .25}%)`
+      ];
+
+      if (layer.glowEnabled) {
+        const intensity = Math.max(0, Number(layer.glowIntensity || 0)) / 100;
+        const blur = Math.max(0, Number(layer.glowBlur || 0));
+        const edge = Math.max(0, Number(layer.edgeThickness || 0));
+        const colorStrong = hexToRgba(layer.glowColor, Math.min(.98, .35 + intensity * .65));
+        const colorSoft = hexToRgba(layer.glowColor, Math.min(.8, .12 + intensity * .58));
+
+        if (edge > 0) {
+          filters.push(`drop-shadow(${edge}px 0 0 ${colorStrong})`);
+          filters.push(`drop-shadow(${-edge}px 0 0 ${colorStrong})`);
+          filters.push(`drop-shadow(0 ${edge}px 0 ${colorStrong})`);
+          filters.push(`drop-shadow(0 ${-edge}px 0 ${colorStrong})`);
+        }
+
+        if (blur > 0) {
+          filters.push(`drop-shadow(0 0 ${Math.max(1, blur * .35)}px ${colorStrong})`);
+          filters.push(`drop-shadow(0 0 ${Math.max(2, blur)}px ${colorSoft})`);
+        }
+      }
+
+      element.style.filter = filters.join(" ");
+    }
+
+    function addMetalShine(layer, motion) {
+      if (!layer.metalShine || layer.kind !== "image" || !layer.src) return;
+
+      const shine = document.createElement("div");
+      shine.className = "metal-shine";
+      shine.style.setProperty("--shine-speed", `${Math.max(1, layer.shineSpeed || 6)}s`);
+      shine.style.setProperty("--shine-opacity", Math.min(.95, .35 + (layer.emission || 0) / 150));
+      shine.style.webkitMaskImage = `url("${layer.src}")`;
+      shine.style.maskImage = `url("${layer.src}")`;
+      motion.appendChild(shine);
     }
 
     function drawParticleLayer(layer, motion) {
+      if ((layer.particleType || "") === "fireflies") {
+        drawFireflies(layer, motion);
+        return;
+      }
+
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
       canvas.height = 1920;
@@ -874,6 +1092,33 @@ html = r'''<!DOCTYPE html>
 
       styleVisual(layer, canvas);
       motion.appendChild(canvas);
+    }
+
+
+    function drawFireflies(layer, motion) {
+      const field = document.createElement("div");
+      field.className = "firefly-field";
+
+      const count = Math.max(4, Math.min(90, Number(layer.particleCount || 24)));
+      const baseSize = Math.max(3, Number(layer.particleSize || 10));
+
+      for (let i = 0; i < count; i++) {
+        const dot = document.createElement("span");
+        dot.className = "firefly";
+        const size = baseSize * (.45 + Math.random() * 1.15);
+        dot.style.setProperty("--size", `${size}px`);
+        dot.style.setProperty("--left", `${4 + Math.random() * 92}%`);
+        dot.style.setProperty("--top", `${8 + Math.random() * 84}%`);
+        dot.style.setProperty("--fly-duration", `${4 + Math.random() * 7}s`);
+        dot.style.setProperty("--blink-duration", `${1.6 + Math.random() * 3.6}s`);
+        dot.style.setProperty("--delay", `${-Math.random() * 8}s`);
+        field.appendChild(dot);
+      }
+
+      field.style.opacity = layer.opacity / 100;
+      field.style.filter =
+        `brightness(${layer.brightness}%) contrast(${layer.contrast}%) saturate(${layer.saturation}%)`;
+      motion.appendChild(field);
     }
 
     function renderLayersList() {
@@ -993,6 +1238,14 @@ html = r'''<!DOCTYPE html>
       controls.duration.value = layer.duration;
       controls.intensity.value = layer.intensity;
       controls.plasticity.value = layer.plasticity;
+      controls.glowEnabled.checked = Boolean(layer.glowEnabled);
+      controls.glowColor.value = layer.glowColor || "#ff8fd1";
+      controls.glowIntensity.value = layer.glowIntensity ?? 35;
+      controls.glowBlur.value = layer.glowBlur ?? 22;
+      controls.edgeThickness.value = layer.edgeThickness ?? 2;
+      controls.emission.value = layer.emission ?? 0;
+      controls.metalShine.checked = Boolean(layer.metalShine);
+      controls.shineSpeed.value = layer.shineSpeed ?? 6;
 
       updateValueLabels(layer);
     }
@@ -1011,7 +1264,12 @@ html = r'''<!DOCTYPE html>
         propFeatherValue: `${layer.feather}`,
         propDurationValue: `${layer.duration}s`,
         propIntensityValue: `${layer.intensity}`,
-        propPlasticityValue: `${layer.plasticity}%`
+        propPlasticityValue: `${layer.plasticity}%`,
+        propGlowIntensityValue: `${layer.glowIntensity ?? 35}%`,
+        propGlowBlurValue: `${layer.glowBlur ?? 22}px`,
+        propEdgeThicknessValue: `${layer.edgeThickness ?? 2}px`,
+        propEmissionValue: `${layer.emission ?? 0}%`,
+        propShineSpeedValue: `${layer.shineSpeed ?? 6}s`
       };
 
       Object.entries(values).forEach(([id, text]) => {
@@ -1056,7 +1314,15 @@ html = r'''<!DOCTYPE html>
         animation: "animation",
         duration: "duration",
         intensity: "intensity",
-        plasticity: "plasticity"
+        plasticity: "plasticity",
+        glowEnabled: "glowEnabled",
+        glowColor: "glowColor",
+        glowIntensity: "glowIntensity",
+        glowBlur: "glowBlur",
+        edgeThickness: "edgeThickness",
+        emission: "emission",
+        metalShine: "metalShine",
+        shineSpeed: "shineSpeed"
       };
 
       Object.entries(controls).forEach(([key, control]) => {
@@ -1101,10 +1367,10 @@ html = r'''<!DOCTYPE html>
     }
 
     function addParticleLayer() {
-      const type = prompt("Tipo de partícula: stars, lights o petals", "stars");
+      const type = prompt("Tipo de partícula: stars, lights, petals o fireflies", "stars");
       if (!type) return;
 
-      const cleanType = ["stars", "lights", "petals"].includes(type.toLowerCase())
+      const cleanType = ["stars", "lights", "petals", "fireflies"].includes(type.toLowerCase())
         ? type.toLowerCase()
         : "stars";
 
@@ -1112,19 +1378,22 @@ html = r'''<!DOCTYPE html>
         name:
           cleanType === "stars" ? "Estrellas" :
           cleanType === "lights" ? "Luces" :
+          cleanType === "fireflies" ? "Luciérnagas" :
           "Pétalos",
         kind: "particles",
         particleType: cleanType,
-        particleCount: cleanType === "petals" ? 36 : 70,
-        particleSize: cleanType === "lights" ? 14 : 8,
+        particleCount: cleanType === "petals" ? 36 : cleanType === "fireflies" ? 24 : 70,
+        particleSize: cleanType === "lights" ? 14 : cleanType === "fireflies" ? 11 : 8,
         background: true,
         animation:
           cleanType === "stars" ? "twinkle" :
           cleanType === "lights" ? "pulse" :
+          cleanType === "fireflies" ? "none" :
           "fall",
         duration:
           cleanType === "petals" ? 16 :
           cleanType === "lights" ? 8 :
+          cleanType === "fireflies" ? 6 :
           5,
         intensity:
           cleanType === "petals" ? 28 :
@@ -1134,6 +1403,30 @@ html = r'''<!DOCTYPE html>
         blend: cleanType === "lights" ? "screen" : "normal"
       });
 
+      project.layers.push(layer);
+      project.selectedId = layer.id;
+      renderAll();
+    }
+
+
+    function addFirefliesLayer() {
+      const layer = defaultLayer({
+        name: "Luciérnagas",
+        kind: "particles",
+        particleType: "fireflies",
+        particleCount: 24,
+        particleSize: 11,
+        background: true,
+        animation: "none",
+        duration: 6,
+        intensity: 12,
+        opacity: 88,
+        blend: "screen",
+        glowEnabled: true,
+        glowColor: "#eaff9a",
+        glowIntensity: 55,
+        glowBlur: 18
+      });
       project.layers.push(layer);
       project.selectedId = layer.id;
       renderAll();
@@ -1181,6 +1474,7 @@ html = r'''<!DOCTYPE html>
     });
 
     document.getElementById("addParticleBtn").addEventListener("click", addParticleLayer);
+    document.getElementById("addFirefliesBtn").addEventListener("click", addFirefliesLayer);
 
     document.getElementById("pauseBtn").addEventListener("click", event => {
       document.body.classList.toggle("paused");
@@ -1229,8 +1523,3 @@ html = r'''<!DOCTYPE html>
   </script>
 </body>
 </html>
-'''
-
-path = Path("/mnt/data/index.html")
-path.write_text(html, encoding="utf-8")
-print(path)

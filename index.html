@@ -2,6 +2,7 @@
 <html lang="es">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -18,11 +19,11 @@
         }
 
         :root {
-            --rosa-claro: #ffd0ea;
-            --rosa: #ff8fcf;
-            --morado: #7f4ba0;
-            --panel: rgba(31, 21, 39, 0.97);
-            --borde: rgba(255, 190, 230, 0.45);
+            --rosa: #ff91ce;
+            --rosa-claro: #ffd1ea;
+            --panel: rgba(30, 20, 38, 0.97);
+            --borde: rgba(255, 196, 231, 0.38);
+            --texto-secundario: #c9b6cf;
         }
 
         html,
@@ -34,28 +35,37 @@
         body {
             min-height: 100vh;
 
-            background:
-                radial-gradient(
-                    circle at top,
-                    #291a35 0%,
-                    #100b14 60%,
-                    #08060a 100%
-                );
-
-            color: white;
-            font-family: Arial, Helvetica, sans-serif;
+            padding: 20px;
 
             display: flex;
             justify-content: center;
             align-items: center;
-
             gap: 24px;
-            padding: 20px;
+
+            overflow-x: hidden;
+
+            color: white;
+            font-family: Arial, Helvetica, sans-serif;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #2d1d39 0%,
+                    #120c18 62%,
+                    #08060b 100%
+                );
         }
 
-        /* ========================================
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+
+        /* =========================================
            ESCENARIO VERTICAL
-        ======================================== */
+        ========================================= */
 
         .escenario {
             position: relative;
@@ -66,51 +76,41 @@
             aspect-ratio: 9 / 16;
 
             overflow: hidden;
+            isolation: isolate;
 
             background: #000;
 
-            border: 2px solid rgba(255, 190, 230, 0.65);
+            border: 2px solid rgba(255, 194, 229, 0.65);
             border-radius: 18px;
 
             box-shadow:
-                0 0 25px rgba(255, 105, 190, 0.25),
-                0 20px 50px rgba(0, 0, 0, 0.45);
+                0 18px 50px rgba(0, 0, 0, 0.45),
+                0 0 24px rgba(255, 111, 196, 0.20);
         }
 
-        /* CONTENEDOR DE CADA CAPA */
-
-        .capa-contenedor {
+        .capa {
             position: absolute;
 
             left: 50%;
             top: 50%;
 
+            width: 60%;
+
             transform:
                 translate(-50%, -50%)
                 rotate(var(--rotacion, 0deg));
 
-            pointer-events: none;
-            user-select: none;
-        }
-
-        /* IMAGEN INTERIOR */
-
-        .capa-imagen {
-            display: block;
-
-            width: 100%;
-            height: auto;
+            transform-origin: center;
 
             pointer-events: none;
             user-select: none;
-
-            transform-origin: center center;
         }
-
-        /* FONDO COMPLETO */
 
         .capa-fondo {
             inset: 0;
+
+            left: 0;
+            top: 0;
 
             width: 100%;
             height: 100%;
@@ -118,16 +118,36 @@
             transform: none;
         }
 
-        .capa-fondo .capa-imagen {
+        .movimiento {
+            width: 100%;
+            height: 100%;
+
+            transform-origin: center;
+        }
+
+        .capa canvas,
+        .capa img {
+            display: block;
+
+            width: 100%;
+            height: auto;
+
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .capa-fondo canvas,
+        .capa-fondo img {
             width: 100%;
             height: 100%;
 
             object-fit: cover;
         }
 
-        /* ========================================
+
+        /* =========================================
            ANIMACIONES
-        ======================================== */
+        ========================================= */
 
         .animacion-ninguna {
             animation: none;
@@ -135,32 +155,51 @@
 
         .animacion-respirar {
             animation:
-                respirar var(--velocidad, 6s)
-                ease-in-out infinite;
-        }
-
-        .animacion-flotar {
-            animation:
-                flotar var(--velocidad, 6s)
-                ease-in-out infinite;
-        }
-
-        .animacion-horizontal {
-            animation:
-                moverHorizontal var(--velocidad, 10s)
-                ease-in-out infinite;
+                respirar var(--duracion, 8s)
+                var(--curva, ease-in-out)
+                infinite;
         }
 
         .animacion-pulso {
             animation:
-                pulsoLuz var(--velocidad, 5s)
-                ease-in-out infinite;
+                pulso var(--duracion, 7s)
+                var(--curva, ease-in-out)
+                infinite;
+        }
+
+        .animacion-flotar {
+            animation:
+                flotar var(--duracion, 8s)
+                var(--curva, ease-in-out)
+                infinite;
         }
 
         .animacion-niebla {
             animation:
-                nieblaSuave var(--velocidad, 14s)
-                ease-in-out infinite;
+                niebla var(--duracion, 16s)
+                var(--curva, ease-in-out)
+                infinite;
+        }
+
+        .animacion-agua {
+            animation:
+                agua var(--duracion, 10s)
+                var(--curva, ease-in-out)
+                infinite;
+        }
+
+        .animacion-caer {
+            animation:
+                caer var(--duracion, 12s)
+                linear
+                infinite;
+        }
+
+        .animacion-balanceo {
+            animation:
+                balanceo var(--duracion, 7s)
+                var(--curva, ease-in-out)
+                infinite;
         }
 
         @keyframes respirar {
@@ -174,7 +213,31 @@
                 transform:
                     scale(
                         calc(
-                            1 + var(--intensidad-escala, 0.02)
+                            1 + var(--escala-intensidad, 0.02)
+                        )
+                    );
+            }
+        }
+
+        @keyframes pulso {
+
+            0%,
+            100% {
+                opacity:
+                    calc(
+                        1 - var(--opacidad-intensidad, 0.12)
+                    );
+
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+
+                transform:
+                    scale(
+                        calc(
+                            1 + var(--escala-intensidad, 0.02)
                         )
                     );
             }
@@ -191,60 +254,20 @@
                 transform:
                     translateY(
                         calc(
-                            var(--intensidad-px, 5px) * -1
+                            var(--movimiento-px, 6px) * -1
                         )
                     );
             }
         }
 
-        @keyframes moverHorizontal {
+        @keyframes niebla {
 
             0%,
             100% {
                 transform:
                     translateX(
                         calc(
-                            var(--intensidad-px, 5px) * -1
-                        )
-                    );
-            }
-
-            50% {
-                transform:
-                    translateX(
-                        var(--intensidad-px, 5px)
-                    );
-            }
-        }
-
-        @keyframes pulsoLuz {
-
-            0%,
-            100% {
-                opacity: 0.75;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 1;
-
-                transform:
-                    scale(
-                        calc(
-                            1 + var(--intensidad-escala, 0.03)
-                        )
-                    );
-            }
-        }
-
-        @keyframes nieblaSuave {
-
-            0%,
-            100% {
-                transform:
-                    translateX(
-                        calc(
-                            var(--intensidad-px, 8px) * -1
+                            var(--movimiento-px, 10px) * -1
                         )
                     )
                     scale(1.01);
@@ -253,27 +276,110 @@
             50% {
                 transform:
                     translateX(
-                        var(--intensidad-px, 8px)
+                        var(--movimiento-px, 10px)
                     )
-                    scale(1.03);
+                    scale(
+                        calc(
+                            1 + var(--escala-intensidad, 0.02)
+                        )
+                    );
             }
         }
 
-        body.animaciones-pausadas .capa-imagen {
+        @keyframes agua {
+
+            0%,
+            100% {
+                transform:
+                    translateX(
+                        calc(
+                            var(--movimiento-px, 5px) * -1
+                        )
+                    )
+                    scaleY(1);
+            }
+
+            50% {
+                transform:
+                    translateX(
+                        var(--movimiento-px, 5px)
+                    )
+                    scaleY(
+                        calc(
+                            1 + var(--escala-intensidad, 0.015)
+                        )
+                    );
+            }
+        }
+
+        @keyframes caer {
+
+            0% {
+                transform:
+                    translateY(
+                        calc(
+                            var(--movimiento-px, 12px) * -3
+                        )
+                    )
+                    rotate(-2deg);
+
+                opacity: 0;
+            }
+
+            12% {
+                opacity: 1;
+            }
+
+            88% {
+                opacity: 1;
+            }
+
+            100% {
+                transform:
+                    translateY(
+                        calc(
+                            var(--movimiento-px, 12px) * 4
+                        )
+                    )
+                    rotate(3deg);
+
+                opacity: 0;
+            }
+        }
+
+        @keyframes balanceo {
+
+            0%,
+            100% {
+                transform: rotate(-1deg);
+            }
+
+            50% {
+                transform:
+                    rotate(
+                        calc(
+                            var(--rotacion-intensidad, 2deg)
+                        )
+                    );
+            }
+        }
+
+        body.animaciones-pausadas .movimiento {
             animation-play-state: paused !important;
         }
 
-        /* ========================================
+
+        /* =========================================
            PANEL
-        ======================================== */
+        ========================================= */
 
         .panel {
-            width: 335px;
+            width: 360px;
             max-height: 92vh;
 
             overflow-y: auto;
 
-            padding: 21px;
+            padding: 20px;
 
             background: var(--panel);
 
@@ -281,7 +387,7 @@
             border-radius: 18px;
 
             box-shadow:
-                0 0 25px rgba(0, 0, 0, 0.45);
+                0 18px 45px rgba(0, 0, 0, 0.40);
         }
 
         .panel::-webkit-scrollbar {
@@ -289,28 +395,26 @@
         }
 
         .panel::-webkit-scrollbar-thumb {
-            background: rgba(255, 190, 230, 0.25);
+            background: rgba(255, 194, 229, 0.23);
             border-radius: 20px;
         }
 
-        .encabezado-panel {
-            margin-bottom: 20px;
+        .cabecera h1 {
+            margin: 0 0 5px;
+            font-size: 23px;
         }
 
-        .encabezado-panel h1 {
-            margin: 0 0 6px;
-            font-size: 22px;
-        }
+        .cabecera p {
+            margin: 0 0 18px;
 
-        .encabezado-panel p {
-            margin: 0;
-            color: #d8c6dd;
+            color: var(--texto-secundario);
             font-size: 14px;
         }
 
-        .seccion {
-            margin-bottom: 18px;
-            padding: 16px;
+        .capa-panel,
+        .agregar-panel {
+            margin-bottom: 16px;
+            padding: 15px;
 
             background: rgba(255, 255, 255, 0.045);
 
@@ -318,16 +422,44 @@
             border-radius: 14px;
         }
 
-        .seccion h2 {
-            margin: 0 0 15px;
+        .titulo-capa {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 10px;
+
+            margin-bottom: 13px;
+        }
+
+        .titulo-capa h2 {
+            margin: 0;
 
             color: var(--rosa-claro);
+            font-size: 16px;
+        }
 
-            font-size: 17px;
+        .orden {
+            display: flex;
+            gap: 5px;
+        }
+
+        .boton-mini {
+            min-width: 34px;
+
+            padding: 6px 8px;
+
+            border: 1px solid rgba(255, 194, 229, 0.35);
+            border-radius: 8px;
+
+            background: rgba(255, 255, 255, 0.07);
+            color: white;
+
+            cursor: pointer;
         }
 
         .control {
-            margin-bottom: 15px;
+            margin-bottom: 14px;
         }
 
         .control:last-child {
@@ -337,9 +469,8 @@
         .control label {
             display: flex;
             justify-content: space-between;
-            align-items: center;
 
-            gap: 12px;
+            gap: 10px;
 
             margin-bottom: 7px;
 
@@ -350,7 +481,6 @@
         .valor {
             color: var(--rosa-claro);
             font-weight: normal;
-            white-space: nowrap;
         }
 
         input[type="range"] {
@@ -359,18 +489,17 @@
             cursor: pointer;
         }
 
+        input[type="text"],
         select {
             width: 100%;
 
-            padding: 9px;
+            padding: 9px 10px;
 
-            border: 1px solid rgba(255, 190, 230, 0.35);
+            border: 1px solid rgba(255, 194, 229, 0.30);
             border-radius: 9px;
 
-            background: #24172d;
+            background: #25182e;
             color: white;
-
-            cursor: pointer;
         }
 
         .interruptor {
@@ -378,9 +507,9 @@
             align-items: center;
             gap: 9px;
 
-            margin-bottom: 15px;
+            margin-bottom: 14px;
 
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
         }
 
@@ -389,35 +518,51 @@
             height: 18px;
 
             accent-color: var(--rosa);
-            cursor: pointer;
         }
 
-        .botones {
+        .botones-generales {
             display: grid;
-            gap: 10px;
+            gap: 9px;
         }
 
         .boton {
             width: 100%;
 
-            padding: 11px 14px;
+            padding: 11px 13px;
 
-            border: 1px solid rgba(255, 190, 230, 0.55);
+            border: 1px solid rgba(255, 194, 229, 0.48);
             border-radius: 10px;
 
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.075);
             color: white;
 
             font-weight: bold;
             cursor: pointer;
         }
 
-        .boton:hover {
-            background: rgba(255, 255, 255, 0.15);
+        .boton:hover,
+        .boton-mini:hover {
+            background: rgba(255, 255, 255, 0.14);
         }
 
         .boton-principal {
-            background: rgba(255, 105, 190, 0.18);
+            background: rgba(255, 117, 194, 0.17);
+        }
+
+        .nota {
+            margin: 15px 0 0;
+
+            color: var(--texto-secundario);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .aviso {
+            min-height: 18px;
+            margin-top: 8px;
+
+            color: var(--rosa-claro);
+            font-size: 12px;
         }
 
         .boton-flotante {
@@ -427,30 +572,18 @@
             right: 18px;
             bottom: 18px;
 
-            z-index: 999;
+            z-index: 9999;
 
-            padding: 12px 16px;
+            padding: 11px 15px;
 
             border: 1px solid var(--borde);
             border-radius: 999px;
 
-            background: rgba(31, 21, 39, 0.97);
+            background: var(--panel);
             color: white;
 
             font-weight: bold;
             cursor: pointer;
-
-            box-shadow:
-                0 8px 25px rgba(0, 0, 0, 0.4);
-        }
-
-        .nota {
-            margin: 17px 0 0;
-
-            color: #bfaec5;
-
-            font-size: 12px;
-            line-height: 1.5;
         }
 
         body.modo-vista .panel {
@@ -465,7 +598,12 @@
             gap: 0;
         }
 
-        @media (max-width: 800px) {
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 850px) {
 
             body {
                 flex-direction: column;
@@ -473,39 +611,38 @@
             }
 
             .escenario {
-                width: min(92vw, 420px);
+                width: min(92vw, 430px);
                 height: auto;
             }
 
             .panel {
-                width: min(92vw, 420px);
+                width: min(92vw, 430px);
                 max-height: none;
-            }
-
-            body.modo-vista {
-                justify-content: center;
             }
         }
 
     </style>
+
 </head>
+
 
 <body>
 
     <main
         id="escenario"
         class="escenario"
+        aria-label="Escena vertical del MK Universe"
     ></main>
 
 
     <aside class="panel">
 
-        <header class="encabezado-panel">
+        <header class="cabecera">
 
             <h1>🌸 MK Universe Studio</h1>
 
             <p>
-                Editor vertical para TikTok
+                Limpieza, orden y animaciones de capas
             </p>
 
         </header>
@@ -514,10 +651,83 @@
         <div id="panelCapas"></div>
 
 
-        <div class="botones">
+        <section class="agregar-panel">
+
+            <div class="titulo-capa">
+
+                <h2>➕ Agregar imagen</h2>
+
+            </div>
+
+            <div class="control">
+
+                <label for="nuevoNombre">
+                    Nombre visible
+                </label>
+
+                <input
+                    id="nuevoNombre"
+                    type="text"
+                    placeholder="Ejemplo: Niebla frontal"
+                >
+
+            </div>
+
+            <div class="control">
+
+                <label for="nuevoArchivo">
+                    Nombre exacto del archivo
+                </label>
+
+                <input
+                    id="nuevoArchivo"
+                    type="text"
+                    placeholder="Ejemplo: Niebla rosa.png"
+                >
+
+            </div>
+
+            <div class="control">
+
+                <label for="nuevoTipo">
+                    Tipo de capa
+                </label>
+
+                <select id="nuevoTipo">
+
+                    <option value="elemento">
+                        Elemento con transparencia
+                    </option>
+
+                    <option value="fondo">
+                        Fondo completo
+                    </option>
+
+                </select>
+
+            </div>
 
             <button
-                id="pausarAnimaciones"
+                id="agregarCapa"
+                class="boton boton-principal"
+                type="button"
+            >
+                Añadir al editor
+            </button>
+
+            <div
+                id="avisoAgregar"
+                class="aviso"
+                aria-live="polite"
+            ></div>
+
+        </section>
+
+
+        <div class="botones-generales">
+
+            <button
+                id="pausar"
                 class="boton"
                 type="button"
             >
@@ -537,7 +747,7 @@
                 class="boton"
                 type="button"
             >
-                ↩️ Restablecer valores
+                ↩️ Restablecer proyecto
             </button>
 
         </div>
@@ -545,11 +755,9 @@
 
         <p class="nota">
 
-            El halo tiene un orden inferior al volcán,
-            por lo que ahora se verá detrás.
-
-            Los valores se guardan automáticamente
-            en este navegador.
+            La limpieza de negro genera transparencia real mediante
+            un canvas. “Umbral” elimina los tonos más oscuros y
+            “Suavidad” conserva los bordes del humo y las luces.
 
         </p>
 
@@ -567,28 +775,18 @@
 
     <script>
 
-        /* ========================================
-           LISTA DE CAPAS
-        ========================================
+        /* =========================================
+           CAPAS PREDETERMINADAS
+        ========================================= */
 
-           ORDEN:
-           El número "orden" define qué queda delante.
-
-           Cuanto mayor sea el número,
-           más adelante aparecerá la capa.
-        ======================================== */
-
-        const capas = [
+        const capasIniciales = [
 
             {
-                id: "gradiente",
+                id: "fondo",
                 nombre: "🌅 Fondo degradado",
                 archivo: "Atardecer abstracto y suave.png",
 
                 tipo: "fondo",
-                orden: 0,
-                mezcla: "normal",
-
                 visible: true,
 
                 tamano: 100,
@@ -601,9 +799,14 @@
                 contraste: 100,
                 saturacion: 90,
 
+                limpiarNegro: false,
+                umbral: 8,
+                suavidad: 32,
+
                 animacion: "ninguna",
-                velocidad: 10,
-                intensidad: 2
+                velocidad: 12,
+                intensidad: 2,
+                plasticidad: 75
             },
 
             {
@@ -613,9 +816,6 @@
                     "Montaña silueteada con resplandor rosa.png",
 
                 tipo: "elemento",
-                orden: 1,
-                mezcla: "screen",
-
                 visible: true,
 
                 tamano: 65,
@@ -628,9 +828,14 @@
                 contraste: 100,
                 saturacion: 100,
 
+                limpiarNegro: true,
+                umbral: 10,
+                suavidad: 45,
+
                 animacion: "pulso",
-                velocidad: 7,
-                intensidad: 2
+                velocidad: 8,
+                intensidad: 2,
+                plasticidad: 90
             },
 
             {
@@ -640,9 +845,6 @@
                     "Montaña neón en niebla rosa.png",
 
                 tipo: "elemento",
-                orden: 2,
-                mezcla: "screen",
-
                 visible: true,
 
                 tamano: 65,
@@ -655,12 +857,24 @@
                 contraste: 100,
                 saturacion: 100,
 
+                limpiarNegro: true,
+                umbral: 7,
+                suavidad: 30,
+
                 animacion: "ninguna",
-                velocidad: 8,
-                intensidad: 1
+                velocidad: 10,
+                intensidad: 1,
+                plasticidad: 85
             }
 
         ];
+
+
+        let capas = JSON.parse(
+            JSON.stringify(capasIniciales)
+        );
+
+        let animacionesPausadas = false;
 
 
         const escenario =
@@ -669,254 +883,469 @@
         const panelCapas =
             document.getElementById("panelCapas");
 
-        const botonPausar =
-            document.getElementById("pausarAnimaciones");
-
-        let animacionesPausadas = false;
+        const avisoAgregar =
+            document.getElementById("avisoAgregar");
 
 
-        /* ========================================
-           CREAR CAPAS
-        ======================================== */
+        /* =========================================
+           HERRAMIENTAS
+        ========================================= */
 
-        function crearCapas() {
+        function limitar(numero, minimo, maximo) {
+
+            return Math.min(
+                Math.max(numero, minimo),
+                maximo
+            );
+
+        }
+
+
+        function crearId(texto) {
+
+            return (
+                texto
+                    .toLowerCase()
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/^-+|-+$/g, "")
+                +
+                "-"
+                +
+                Date.now()
+            );
+
+        }
+
+
+        function curvaSegunPlasticidad(valor) {
+
+            const plasticidad =
+                limitar(Number(valor), 0, 100);
+
+            if (plasticidad >= 80) {
+                return "cubic-bezier(0.45, 0, 0.55, 1)";
+            }
+
+            if (plasticidad >= 55) {
+                return "ease-in-out";
+            }
+
+            if (plasticidad >= 30) {
+                return "ease";
+            }
+
+            return "linear";
+
+        }
+
+
+        /* =========================================
+           LIMPIAR FONDO NEGRO
+        ========================================= */
+
+        function crearCanvasProcesado(capa, imagen) {
+
+            const canvas =
+                document.createElement("canvas");
+
+            const contexto =
+                canvas.getContext(
+                    "2d",
+                    {
+                        willReadFrequently: true
+                    }
+                );
+
+            canvas.width =
+                imagen.naturalWidth;
+
+            canvas.height =
+                imagen.naturalHeight;
+
+            contexto.drawImage(
+                imagen,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+
+            if (!capa.limpiarNegro) {
+                return canvas;
+            }
+
+
+            try {
+
+                const datosImagen =
+                    contexto.getImageData(
+                        0,
+                        0,
+                        canvas.width,
+                        canvas.height
+                    );
+
+                const datos =
+                    datosImagen.data;
+
+                const umbral =
+                    Number(capa.umbral);
+
+                const suavidad =
+                    Math.max(
+                        Number(capa.suavidad),
+                        1
+                    );
+
+
+                for (
+                    let indice = 0;
+                    indice < datos.length;
+                    indice += 4
+                ) {
+
+                    const rojo =
+                        datos[indice];
+
+                    const verde =
+                        datos[indice + 1];
+
+                    const azul =
+                        datos[indice + 2];
+
+                    const alfaOriginal =
+                        datos[indice + 3];
+
+
+                    const luminosidad =
+                        Math.max(
+                            rojo,
+                            verde,
+                            azul
+                        );
+
+
+                    let factorAlfa =
+                        (
+                            luminosidad - umbral
+                        )
+                        /
+                        suavidad;
+
+
+                    factorAlfa =
+                        limitar(
+                            factorAlfa,
+                            0,
+                            1
+                        );
+
+
+                    factorAlfa =
+                        factorAlfa
+                        *
+                        factorAlfa
+                        *
+                        (
+                            3
+                            -
+                            2
+                            *
+                            factorAlfa
+                        );
+
+
+                    datos[indice + 3] =
+                        Math.round(
+                            alfaOriginal
+                            *
+                            factorAlfa
+                        );
+
+                }
+
+
+                contexto.putImageData(
+                    datosImagen,
+                    0,
+                    0
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "No se pudo limpiar el fondo:",
+                    capa.archivo,
+                    error
+                );
+
+            }
+
+
+            return canvas;
+
+        }
+
+
+        /* =========================================
+           CREAR ESCENA
+        ========================================= */
+
+        function crearEscena() {
 
             escenario.innerHTML = "";
 
-            capas
-                .sort(function (a, b) {
-                    return a.orden - b.orden;
-                })
-                .forEach(function (capa) {
 
-                    const contenedor =
-                        document.createElement("div");
+            capas.forEach(function (capa, indice) {
 
-                    contenedor.id =
-                        "contenedor-" + capa.id;
+                const contenedor =
+                    document.createElement("div");
 
-                    contenedor.className =
-                        "capa-contenedor";
+                contenedor.id =
+                    "capa-" + capa.id;
 
-                    if (capa.tipo === "fondo") {
-                        contenedor.classList.add(
-                            "capa-fondo"
-                        );
+                contenedor.className =
+                    capa.tipo === "fondo"
+                        ? "capa capa-fondo"
+                        : "capa";
+
+                contenedor.style.zIndex =
+                    indice;
+
+
+                const movimiento =
+                    document.createElement("div");
+
+                movimiento.id =
+                    "movimiento-" + capa.id;
+
+                movimiento.className =
+                    "movimiento animacion-" +
+                    capa.animacion;
+
+
+                const imagen =
+                    new Image();
+
+                imagen.alt =
+                    capa.nombre;
+
+
+                imagen.addEventListener(
+                    "load",
+                    function () {
+
+                        const canvas =
+                            crearCanvasProcesado(
+                                capa,
+                                imagen
+                            );
+
+                        canvas.id =
+                            "visual-" + capa.id;
+
+                        movimiento.innerHTML = "";
+                        movimiento.appendChild(canvas);
+
+                        actualizarCapaVisual(capa);
+
                     }
-
-                    contenedor.style.zIndex =
-                        capa.orden;
-
-                    const imagen =
-                        document.createElement("img");
-
-                    imagen.id =
-                        "imagen-" + capa.id;
-
-                    imagen.className =
-                        "capa-imagen";
-
-                    imagen.src =
-                        capa.archivo;
-
-                    imagen.alt =
-                        capa.nombre;
-
-                    contenedor.appendChild(imagen);
-                    escenario.appendChild(contenedor);
-
-                });
-
-        }
+                );
 
 
-        /* ========================================
-           CREAR CONTROLES AUTOMÁTICAMENTE
-        ======================================== */
+                imagen.addEventListener(
+                    "error",
+                    function () {
 
-        function crearPanel() {
+                        movimiento.innerHTML = "";
 
-            panelCapas.innerHTML = "";
+                        const mensaje =
+                            document.createElement("div");
 
-            capas.forEach(function (capa) {
+                        mensaje.style.padding =
+                            "12px";
 
-                const seccion =
-                    document.createElement("section");
+                        mensaje.style.color =
+                            "white";
 
-                seccion.className = "seccion";
+                        mensaje.style.background =
+                            "rgba(150, 20, 70, 0.75)";
 
-                seccion.innerHTML = `
+                        mensaje.textContent =
+                            "No se encontró: "
+                            +
+                            capa.archivo;
 
-                    <h2>${capa.nombre}</h2>
+                        movimiento.appendChild(mensaje);
 
-                    <div class="interruptor">
-
-                        <input
-                            type="checkbox"
-                            id="${capa.id}-visible"
-                        >
-
-                        <label for="${capa.id}-visible">
-                            Mostrar capa
-                        </label>
-
-                    </div>
-
-                    ${
-                        capa.tipo !== "fondo"
-                        ? crearControlRango(
-                            capa.id,
-                            "tamano",
-                            "Tamaño",
-                            10,
-                            160,
-                            "%"
-                        )
-                        : ""
                     }
+                );
 
-                    ${
-                        capa.tipo !== "fondo"
-                        ? crearControlRango(
-                            capa.id,
-                            "x",
-                            "Posición horizontal",
-                            0,
-                            100,
-                            "%"
-                        )
-                        : ""
-                    }
 
-                    ${
-                        capa.tipo !== "fondo"
-                        ? crearControlRango(
-                            capa.id,
-                            "y",
-                            "Posición vertical",
-                            0,
-                            100,
-                            "%"
-                        )
-                        : ""
-                    }
+                imagen.src =
+                    capa.archivo;
 
-                    ${
-                        capa.tipo !== "fondo"
-                        ? crearControlRango(
-                            capa.id,
-                            "rotacion",
-                            "Rotación",
-                            -30,
-                            30,
-                            "°"
-                        )
-                        : ""
-                    }
 
-                    ${crearControlRango(
-                        capa.id,
-                        "opacidad",
-                        "Opacidad",
-                        0,
-                        100,
-                        "%"
-                    )}
-
-                    ${crearControlRango(
-                        capa.id,
-                        "brillo",
-                        "Brillo",
-                        20,
-                        200,
-                        "%"
-                    )}
-
-                    ${crearControlRango(
-                        capa.id,
-                        "contraste",
-                        "Contraste",
-                        20,
-                        180,
-                        "%"
-                    )}
-
-                    ${crearControlRango(
-                        capa.id,
-                        "saturacion",
-                        "Intensidad del color",
-                        0,
-                        200,
-                        "%"
-                    )}
-
-                    <div class="control">
-
-                        <label for="${capa.id}-animacion">
-                            Animación
-                        </label>
-
-                        <select id="${capa.id}-animacion">
-
-                            <option value="ninguna">
-                                Sin animación
-                            </option>
-
-                            <option value="respirar">
-                                Respirar suavemente
-                            </option>
-
-                            <option value="flotar">
-                                Flotar verticalmente
-                            </option>
-
-                            <option value="horizontal">
-                                Movimiento horizontal
-                            </option>
-
-                            <option value="pulso">
-                                Pulso de luz
-                            </option>
-
-                            <option value="niebla">
-                                Niebla suave
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                    ${crearControlRango(
-                        capa.id,
-                        "velocidad",
-                        "Duración de animación",
-                        2,
-                        30,
-                        " s"
-                    )}
-
-                    ${crearControlRango(
-                        capa.id,
-                        "intensidad",
-                        "Intensidad de movimiento",
-                        0,
-                        20,
-                        ""
-                    )}
-
-                `;
-
-                panelCapas.appendChild(seccion);
+                contenedor.appendChild(movimiento);
+                escenario.appendChild(contenedor);
 
             });
 
+
+            actualizarTodaLaEscena();
+
         }
 
 
+        /* =========================================
+           ACTUALIZAR UNA CAPA
+        ========================================= */
+
+        function actualizarCapaVisual(capa) {
+
+            const contenedor =
+                document.getElementById(
+                    "capa-" + capa.id
+                );
+
+            const movimiento =
+                document.getElementById(
+                    "movimiento-" + capa.id
+                );
+
+            const visual =
+                document.getElementById(
+                    "visual-" + capa.id
+                );
+
+
+            if (!contenedor || !movimiento) {
+                return;
+            }
+
+
+            contenedor.style.display =
+                capa.visible
+                    ? "block"
+                    : "none";
+
+
+            if (capa.tipo !== "fondo") {
+
+                contenedor.style.width =
+                    capa.tamano + "%";
+
+                contenedor.style.left =
+                    capa.x + "%";
+
+                contenedor.style.top =
+                    capa.y + "%";
+
+                contenedor.style.setProperty(
+                    "--rotacion",
+                    capa.rotacion + "deg"
+                );
+
+            }
+
+
+            movimiento.className =
+                "movimiento animacion-" +
+                capa.animacion;
+
+
+            movimiento.style.setProperty(
+                "--duracion",
+                capa.velocidad + "s"
+            );
+
+            movimiento.style.setProperty(
+                "--movimiento-px",
+                capa.intensidad + "px"
+            );
+
+            movimiento.style.setProperty(
+                "--escala-intensidad",
+                capa.intensidad / 100
+            );
+
+            movimiento.style.setProperty(
+                "--opacidad-intensidad",
+                Math.min(
+                    capa.intensidad / 100,
+                    0.35
+                )
+            );
+
+            movimiento.style.setProperty(
+                "--rotacion-intensidad",
+                Math.max(
+                    capa.intensidad / 3,
+                    1
+                )
+                +
+                "deg"
+            );
+
+            movimiento.style.setProperty(
+                "--curva",
+                curvaSegunPlasticidad(
+                    capa.plasticidad
+                )
+            );
+
+
+            if (visual) {
+
+                visual.style.opacity =
+                    capa.opacidad / 100;
+
+                visual.style.filter =
+                    "brightness("
+                    +
+                    capa.brillo
+                    +
+                    "%) "
+                    +
+                    "contrast("
+                    +
+                    capa.contraste
+                    +
+                    "%) "
+                    +
+                    "saturate("
+                    +
+                    capa.saturacion
+                    +
+                    "%)";
+
+            }
+
+        }
+
+
+        function actualizarTodaLaEscena() {
+
+            capas.forEach(
+                actualizarCapaVisual
+            );
+
+            guardarProyecto();
+
+        }
+
+
+        /* =========================================
+           PANEL DE CAPAS
+        ========================================= */
+
         function crearControlRango(
-            id,
+            capa,
             propiedad,
-            texto,
+            nombre,
             minimo,
             maximo,
             unidad
@@ -926,31 +1355,33 @@
 
                 <div class="control">
 
-                    <label for="${id}-${propiedad}">
+                    <label for="${capa.id}-${propiedad}">
 
-                        ${texto}
+                        ${nombre}
 
                         <span
-                            id="${id}-${propiedad}-valor"
+                            id="${capa.id}-${propiedad}-valor"
                             class="valor"
                         >
+                            ${capa[propiedad]}${unidad}
                         </span>
 
                     </label>
 
                     <input
+                        id="${capa.id}-${propiedad}"
+                        data-id="${capa.id}"
+                        data-propiedad="${propiedad}"
+                        data-reprocesar="${
+                            propiedad === "umbral"
+                            ||
+                            propiedad === "suavidad"
+                        }"
                         type="range"
-                        id="${id}-${propiedad}"
                         min="${minimo}"
                         max="${maximo}"
+                        value="${capa[propiedad]}"
                     >
-
-                    <span
-                        id="${id}-${propiedad}-unidad"
-                        hidden
-                    >
-                        ${unidad}
-                    </span>
 
                 </div>
 
@@ -959,282 +1390,727 @@
         }
 
 
-        /* ========================================
-           COLOCAR VALORES EN LOS CONTROLES
-        ======================================== */
+        function crearPanel() {
 
-        function cargarControles() {
-
-            capas.forEach(function (capa) {
-
-                document.getElementById(
-                    capa.id + "-visible"
-                ).checked = capa.visible;
+            panelCapas.innerHTML = "";
 
 
-                const propiedades = [
-                    "tamano",
-                    "x",
-                    "y",
-                    "rotacion",
-                    "opacidad",
-                    "brillo",
-                    "contraste",
-                    "saturacion",
-                    "velocidad",
-                    "intensidad"
-                ];
+            capas
+                .slice()
+                .reverse()
+                .forEach(function (capa) {
 
-
-                propiedades.forEach(function (propiedad) {
-
-                    const control =
-                        document.getElementById(
-                            capa.id + "-" + propiedad
+                    const indiceReal =
+                        capas.findIndex(
+                            item =>
+                                item.id === capa.id
                         );
 
-                    if (control) {
-                        control.value =
-                            capa[propiedad];
-                    }
+
+                    const seccion =
+                        document.createElement("section");
+
+                    seccion.className =
+                        "capa-panel";
+
+                    seccion.innerHTML = `
+
+                        <div class="titulo-capa">
+
+                            <h2>${capa.nombre}</h2>
+
+                            <div class="orden">
+
+                                <button
+                                    class="boton-mini subir"
+                                    data-id="${capa.id}"
+                                    type="button"
+                                    title="Mover hacia delante"
+                                >
+                                    ▲
+                                </button>
+
+                                <button
+                                    class="boton-mini bajar"
+                                    data-id="${capa.id}"
+                                    type="button"
+                                    title="Mover hacia atrás"
+                                >
+                                    ▼
+                                </button>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="interruptor">
+
+                            <input
+                                id="${capa.id}-visible"
+                                data-id="${capa.id}"
+                                data-propiedad="visible"
+                                type="checkbox"
+                                ${
+                                    capa.visible
+                                        ? "checked"
+                                        : ""
+                                }
+                            >
+
+                            <label for="${capa.id}-visible">
+                                Mostrar capa
+                            </label>
+
+                        </div>
+
+
+                        ${
+                            capa.tipo !== "fondo"
+                                ? crearControlRango(
+                                    capa,
+                                    "tamano",
+                                    "Tamaño",
+                                    10,
+                                    180,
+                                    "%"
+                                )
+                                : ""
+                        }
+
+                        ${
+                            capa.tipo !== "fondo"
+                                ? crearControlRango(
+                                    capa,
+                                    "x",
+                                    "Posición horizontal",
+                                    -20,
+                                    120,
+                                    "%"
+                                )
+                                : ""
+                        }
+
+                        ${
+                            capa.tipo !== "fondo"
+                                ? crearControlRango(
+                                    capa,
+                                    "y",
+                                    "Posición vertical",
+                                    -20,
+                                    120,
+                                    "%"
+                                )
+                                : ""
+                        }
+
+                        ${
+                            capa.tipo !== "fondo"
+                                ? crearControlRango(
+                                    capa,
+                                    "rotacion",
+                                    "Rotación",
+                                    -45,
+                                    45,
+                                    "°"
+                                )
+                                : ""
+                        }
+
+
+                        ${crearControlRango(
+                            capa,
+                            "opacidad",
+                            "Opacidad",
+                            0,
+                            100,
+                            "%"
+                        )}
+
+                        ${crearControlRango(
+                            capa,
+                            "brillo",
+                            "Brillo",
+                            20,
+                            200,
+                            "%"
+                        )}
+
+                        ${crearControlRango(
+                            capa,
+                            "contraste",
+                            "Contraste",
+                            20,
+                            200,
+                            "%"
+                        )}
+
+                        ${crearControlRango(
+                            capa,
+                            "saturacion",
+                            "Intensidad del color",
+                            0,
+                            220,
+                            "%"
+                        )}
+
+
+                        <div class="interruptor">
+
+                            <input
+                                id="${capa.id}-limpiarNegro"
+                                data-id="${capa.id}"
+                                data-propiedad="limpiarNegro"
+                                data-reprocesar="true"
+                                type="checkbox"
+                                ${
+                                    capa.limpiarNegro
+                                        ? "checked"
+                                        : ""
+                                }
+                            >
+
+                            <label for="${capa.id}-limpiarNegro">
+                                Eliminar fondo negro
+                            </label>
+
+                        </div>
+
+
+                        ${crearControlRango(
+                            capa,
+                            "umbral",
+                            "Cantidad de negro a eliminar",
+                            0,
+                            100,
+                            ""
+                        )}
+
+                        ${crearControlRango(
+                            capa,
+                            "suavidad",
+                            "Suavidad de los bordes",
+                            1,
+                            120,
+                            ""
+                        )}
+
+
+                        <div class="control">
+
+                            <label for="${capa.id}-animacion">
+                                Animación
+                            </label>
+
+                            <select
+                                id="${capa.id}-animacion"
+                                data-id="${capa.id}"
+                                data-propiedad="animacion"
+                            >
+
+                                <option value="ninguna">
+                                    Sin animación
+                                </option>
+
+                                <option value="respirar">
+                                    Respirar suavemente
+                                </option>
+
+                                <option value="pulso">
+                                    Pulso de luz
+                                </option>
+
+                                <option value="flotar">
+                                    Flotar verticalmente
+                                </option>
+
+                                <option value="niebla">
+                                    Desplazamiento de niebla
+                                </option>
+
+                                <option value="agua">
+                                    Movimiento de agua
+                                </option>
+
+                                <option value="caer">
+                                    Caída de flores u hojas
+                                </option>
+
+                                <option value="balanceo">
+                                    Balanceo delicado
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        ${crearControlRango(
+                            capa,
+                            "velocidad",
+                            "Duración",
+                            2,
+                            40,
+                            " s"
+                        )}
+
+                        ${crearControlRango(
+                            capa,
+                            "intensidad",
+                            "Intensidad",
+                            0,
+                            40,
+                            ""
+                        )}
+
+                        ${crearControlRango(
+                            capa,
+                            "plasticidad",
+                            "Suavidad o plasticidad",
+                            0,
+                            100,
+                            "%"
+                        )}
+
+
+                        ${
+                            capa.tipo !== "fondo"
+                                ? `
+                                    <button
+                                        class="boton eliminar"
+                                        data-id="${capa.id}"
+                                        type="button"
+                                    >
+                                        🗑️ Eliminar capa
+                                    </button>
+                                `
+                                : ""
+                        }
+
+                    `;
+
+
+                    panelCapas.appendChild(
+                        seccion
+                    );
+
+
+                    const selectorAnimacion =
+                        seccion.querySelector(
+                            "#" +
+                            capa.id +
+                            "-animacion"
+                        );
+
+                    selectorAnimacion.value =
+                        capa.animacion;
 
                 });
-
-
-                document.getElementById(
-                    capa.id + "-animacion"
-                ).value = capa.animacion;
-
-            });
 
         }
 
 
-        /* ========================================
-           LEER CONTROLES
-        ======================================== */
+        /* =========================================
+           REPROCESAR IMAGEN
+        ========================================= */
 
-        function leerControles() {
+        function reprocesarCapa(capa) {
 
-            capas.forEach(function (capa) {
+            const movimiento =
+                document.getElementById(
+                    "movimiento-" + capa.id
+                );
 
-                capa.visible =
-                    document.getElementById(
-                        capa.id + "-visible"
-                    ).checked;
-
-
-                const propiedades = [
-                    "tamano",
-                    "x",
-                    "y",
-                    "rotacion",
-                    "opacidad",
-                    "brillo",
-                    "contraste",
-                    "saturacion",
-                    "velocidad",
-                    "intensidad"
-                ];
+            if (!movimiento) {
+                return;
+            }
 
 
-                propiedades.forEach(function (propiedad) {
+            const imagen =
+                new Image();
 
-                    const control =
-                        document.getElementById(
-                            capa.id + "-" + propiedad
+
+            imagen.addEventListener(
+                "load",
+                function () {
+
+                    const canvas =
+                        crearCanvasProcesado(
+                            capa,
+                            imagen
                         );
 
-                    if (control) {
+                    canvas.id =
+                        "visual-" + capa.id;
 
-                        capa[propiedad] =
-                            Number(control.value);
+                    movimiento.innerHTML = "";
+                    movimiento.appendChild(canvas);
 
-                    }
+                    actualizarCapaVisual(capa);
 
-                });
+                }
+            );
 
 
-                capa.animacion =
-                    document.getElementById(
-                        capa.id + "-animacion"
-                    ).value;
-
-            });
+            imagen.src =
+                capa.archivo;
 
         }
 
 
-        /* ========================================
-           ACTUALIZAR ESCENA
-        ======================================== */
+        /* =========================================
+           EVENTOS DEL PANEL
+        ========================================= */
 
-        function actualizarEscena() {
+        panelCapas.addEventListener(
+            "input",
+            function (evento) {
 
-            leerControles();
+                const objetivo =
+                    evento.target;
+
+                const id =
+                    objetivo.dataset.id;
+
+                const propiedad =
+                    objetivo.dataset.propiedad;
 
 
-            capas.forEach(function (capa) {
+                if (!id || !propiedad) {
+                    return;
+                }
 
-                const contenedor =
-                    document.getElementById(
-                        "contenedor-" + capa.id
+
+                const capa =
+                    capas.find(
+                        item =>
+                            item.id === id
                     );
 
-                const imagen =
-                    document.getElementById(
-                        "imagen-" + capa.id
-                    );
+
+                if (!capa) {
+                    return;
+                }
 
 
-                contenedor.style.display =
-                    capa.visible
-                        ? "block"
-                        : "none";
+                if (objetivo.type === "checkbox") {
 
+                    capa[propiedad] =
+                        objetivo.checked;
 
-                if (capa.tipo !== "fondo") {
+                } else if (
+                    objetivo.type === "range"
+                ) {
 
-                    contenedor.style.width =
-                        capa.tamano + "%";
+                    capa[propiedad] =
+                        Number(objetivo.value);
 
-                    contenedor.style.left =
-                        capa.x + "%";
+                    const valor =
+                        document.getElementById(
+                            id
+                            +
+                            "-"
+                            +
+                            propiedad
+                            +
+                            "-valor"
+                        );
 
-                    contenedor.style.top =
-                        capa.y + "%";
+                    if (valor) {
 
-                    contenedor.style.setProperty(
-                        "--rotacion",
-                        capa.rotacion + "deg"
-                    );
+                        const unidades = {
+
+                            tamano: "%",
+                            x: "%",
+                            y: "%",
+                            rotacion: "°",
+                            opacidad: "%",
+                            brillo: "%",
+                            contraste: "%",
+                            saturacion: "%",
+                            velocidad: " s",
+                            intensidad: "",
+                            plasticidad: "%",
+                            umbral: "",
+                            suavidad: ""
+
+                        };
+
+                        valor.textContent =
+                            capa[propiedad]
+                            +
+                            (
+                                unidades[propiedad]
+                                ??
+                                ""
+                            );
+
+                    }
+
+                } else {
+
+                    capa[propiedad] =
+                        objetivo.value;
 
                 }
 
 
-                imagen.style.opacity =
-                    capa.opacidad / 100;
+                if (
+                    objetivo.dataset.reprocesar
+                    ===
+                    "true"
+                ) {
+
+                    reprocesarCapa(capa);
+
+                } else {
+
+                    actualizarCapaVisual(capa);
+                    guardarProyecto();
+
+                }
+
+            }
+        );
 
 
-                imagen.style.filter =
-                    "brightness(" +
-                    capa.brillo +
-                    "%) " +
+        panelCapas.addEventListener(
+            "change",
+            function (evento) {
 
-                    "contrast(" +
-                    capa.contraste +
-                    "%) " +
+                const objetivo =
+                    evento.target;
 
-                    "saturate(" +
-                    capa.saturacion +
-                    "%)";
+                if (
+                    objetivo.dataset.reprocesar
+                    ===
+                    "true"
+                ) {
 
+                    const capa =
+                        capas.find(
+                            item =>
+                                item.id
+                                ===
+                                objetivo.dataset.id
+                        );
 
-                imagen.style.mixBlendMode =
-                    capa.mezcla;
+                    if (capa) {
+                        reprocesarCapa(capa);
+                        guardarProyecto();
+                    }
 
+                }
 
-                imagen.className =
-                    "capa-imagen animacion-" +
-                    capa.animacion;
-
-
-                imagen.style.setProperty(
-                    "--velocidad",
-                    capa.velocidad + "s"
-                );
-
-
-                imagen.style.setProperty(
-                    "--intensidad-px",
-                    capa.intensidad + "px"
-                );
+            }
+        );
 
 
-                imagen.style.setProperty(
-                    "--intensidad-escala",
-                    capa.intensidad / 100
-                );
+        panelCapas.addEventListener(
+            "click",
+            function (evento) {
 
-            });
+                const boton =
+                    evento.target.closest("button");
 
-
-            actualizarNumeros();
-            guardarConfiguracion();
-
-        }
+                if (!boton) {
+                    return;
+                }
 
 
-        /* ========================================
-           MOSTRAR NÚMEROS
-        ======================================== */
+                const id =
+                    boton.dataset.id;
 
-        function actualizarNumeros() {
-
-            capas.forEach(function (capa) {
-
-                const unidades = {
-
-                    tamano: "%",
-                    x: "%",
-                    y: "%",
-                    rotacion: "°",
-                    opacidad: "%",
-                    brillo: "%",
-                    contraste: "%",
-                    saturacion: "%",
-                    velocidad: " s",
-                    intensidad: ""
-
-                };
+                const indice =
+                    capas.findIndex(
+                        item =>
+                            item.id === id
+                    );
 
 
-                Object.keys(unidades)
-                    .forEach(function (propiedad) {
-
-                        const valor =
-                            document.getElementById(
-                                capa.id +
-                                "-" +
-                                propiedad +
-                                "-valor"
-                            );
-
-                        if (valor) {
-
-                            valor.textContent =
-                                capa[propiedad] +
-                                unidades[propiedad];
-
-                        }
-
-                    });
-
-            });
-
-        }
+                if (indice === -1) {
+                    return;
+                }
 
 
-        /* ========================================
+                if (
+                    boton.classList.contains("subir")
+                    &&
+                    indice < capas.length - 1
+                ) {
+
+                    const temporal =
+                        capas[indice];
+
+                    capas[indice] =
+                        capas[indice + 1];
+
+                    capas[indice + 1] =
+                        temporal;
+
+                }
+
+
+                if (
+                    boton.classList.contains("bajar")
+                    &&
+                    indice > 0
+                ) {
+
+                    const temporal =
+                        capas[indice];
+
+                    capas[indice] =
+                        capas[indice - 1];
+
+                    capas[indice - 1] =
+                        temporal;
+
+                }
+
+
+                if (
+                    boton.classList.contains("eliminar")
+                ) {
+
+                    const confirmar =
+                        window.confirm(
+                            "¿Quieres eliminar esta capa del editor?"
+                        );
+
+                    if (!confirmar) {
+                        return;
+                    }
+
+                    capas.splice(indice, 1);
+
+                }
+
+
+                guardarProyecto();
+                crearEscena();
+                crearPanel();
+
+            }
+        );
+
+
+        /* =========================================
+           AGREGAR NUEVAS CAPAS
+        ========================================= */
+
+        document.getElementById(
+            "agregarCapa"
+        ).addEventListener(
+            "click",
+            function () {
+
+                const nombre =
+                    document
+                        .getElementById("nuevoNombre")
+                        .value
+                        .trim();
+
+                const archivo =
+                    document
+                        .getElementById("nuevoArchivo")
+                        .value
+                        .trim();
+
+                const tipo =
+                    document
+                        .getElementById("nuevoTipo")
+                        .value;
+
+
+                if (!nombre || !archivo) {
+
+                    avisoAgregar.textContent =
+                        "Escribe el nombre y el archivo exacto.";
+
+                    return;
+                }
+
+
+                capas.push({
+
+                    id: crearId(nombre),
+                    nombre: nombre,
+                    archivo: archivo,
+
+                    tipo: tipo,
+                    visible: true,
+
+                    tamano:
+                        tipo === "fondo"
+                            ? 100
+                            : 80,
+
+                    x: 50,
+                    y: 50,
+                    rotacion: 0,
+
+                    opacidad: 100,
+                    brillo: 100,
+                    contraste: 100,
+                    saturacion: 100,
+
+                    limpiarNegro:
+                        tipo !== "fondo",
+
+                    umbral: 8,
+                    suavidad: 35,
+
+                    animacion: "ninguna",
+                    velocidad: 12,
+                    intensidad: 4,
+                    plasticidad: 80
+
+                });
+
+
+                document.getElementById(
+                    "nuevoNombre"
+                ).value = "";
+
+                document.getElementById(
+                    "nuevoArchivo"
+                ).value = "";
+
+
+                avisoAgregar.textContent =
+                    "Capa añadida. Si no aparece, revisa el nombre exacto del archivo.";
+
+
+                guardarProyecto();
+                crearEscena();
+                crearPanel();
+
+            }
+        );
+
+
+        /* =========================================
            GUARDAR Y CARGAR
-        ======================================== */
+        ========================================= */
 
-        function guardarConfiguracion() {
+        function guardarProyecto() {
 
             localStorage.setItem(
-                "mkUniverseCapasV2",
+                "mkUniverseStudioV4",
                 JSON.stringify(capas)
             );
 
         }
 
 
-        function cargarConfiguracion() {
+        function cargarProyecto() {
 
             const guardado =
                 localStorage.getItem(
-                    "mkUniverseCapasV2"
+                    "mkUniverseStudioV4"
                 );
+
 
             if (!guardado) {
                 return;
@@ -1243,33 +2119,17 @@
 
             try {
 
-                const valores =
+                const datos =
                     JSON.parse(guardado);
 
-
-                valores.forEach(function (guardada) {
-
-                    const capa =
-                        capas.find(function (item) {
-                            return item.id === guardada.id;
-                        });
-
-
-                    if (capa) {
-
-                        Object.assign(
-                            capa,
-                            guardada
-                        );
-
-                    }
-
-                });
+                if (Array.isArray(datos)) {
+                    capas = datos;
+                }
 
             } catch (error) {
 
                 console.error(
-                    "No se pudo cargar la configuración.",
+                    "No se pudo cargar el proyecto.",
                     error
                 );
 
@@ -1278,19 +2138,32 @@
         }
 
 
-        /* ========================================
-           EVENTOS
-        ======================================== */
+        /* =========================================
+           BOTONES GENERALES
+        ========================================= */
 
-        panelCapas.addEventListener(
-            "input",
-            actualizarEscena
-        );
+        document.getElementById(
+            "pausar"
+        ).addEventListener(
+            "click",
+            function (evento) {
+
+                animacionesPausadas =
+                    !animacionesPausadas;
 
 
-        panelCapas.addEventListener(
-            "change",
-            actualizarEscena
+                document.body.classList.toggle(
+                    "animaciones-pausadas",
+                    animacionesPausadas
+                );
+
+
+                evento.currentTarget.textContent =
+                    animacionesPausadas
+                        ? "▶️ Reanudar animaciones"
+                        : "⏸️ Pausar animaciones";
+
+            }
         );
 
 
@@ -1322,29 +2195,6 @@
         );
 
 
-        botonPausar.addEventListener(
-            "click",
-            function () {
-
-                animacionesPausadas =
-                    !animacionesPausadas;
-
-
-                document.body.classList.toggle(
-                    "animaciones-pausadas",
-                    animacionesPausadas
-                );
-
-
-                botonPausar.textContent =
-                    animacionesPausadas
-                        ? "▶️ Reanudar animaciones"
-                        : "⏸️ Pausar animaciones";
-
-            }
-        );
-
-
         document.getElementById(
             "restablecer"
         ).addEventListener(
@@ -1353,33 +2203,43 @@
 
                 const confirmar =
                     window.confirm(
-                        "¿Quieres eliminar los ajustes guardados y volver a los valores iniciales?"
+                        "¿Quieres borrar los ajustes guardados y volver a las tres capas iniciales?"
                     );
 
 
-                if (confirmar) {
-
-                    localStorage.removeItem(
-                        "mkUniverseCapasV2"
-                    );
-
-                    location.reload();
-
+                if (!confirmar) {
+                    return;
                 }
+
+
+                localStorage.removeItem(
+                    "mkUniverseStudioV4"
+                );
+
+
+                capas =
+                    JSON.parse(
+                        JSON.stringify(
+                            capasIniciales
+                        )
+                    );
+
+
+                crearEscena();
+                crearPanel();
+                guardarProyecto();
 
             }
         );
 
 
-        /* ========================================
+        /* =========================================
            INICIAR
-        ======================================== */
+        ========================================= */
 
-        cargarConfiguracion();
-        crearCapas();
+        cargarProyecto();
+        crearEscena();
         crearPanel();
-        cargarControles();
-        actualizarEscena();
 
     </script>
 

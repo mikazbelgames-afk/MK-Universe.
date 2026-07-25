@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MK Universe 2.1 — Motor de Overlays</title>
+  <title>MK Universe 2.2 — Espejos y reflejos</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -143,7 +143,9 @@
         translate(-50%, -50%)
         translate(var(--x-px, 0px), var(--y-px, 0px))
         rotate(var(--rotation, 0deg))
-        scale(var(--scale, 1));
+        skewX(var(--skew-x, 0deg))
+        skewY(var(--skew-y, 0deg))
+        scale(var(--scale-x, 1), var(--scale-y, 1));
       transform-origin: center;
       pointer-events: none;
       user-select: none;
@@ -159,7 +161,9 @@
       transform:
         translate(var(--x-px, 0px), var(--y-px, 0px))
         rotate(var(--rotation, 0deg))
-        scale(var(--scale, 1));
+        skewX(var(--skew-x, 0deg))
+        skewY(var(--skew-y, 0deg))
+        scale(var(--scale-x, 1), var(--scale-y, 1));
       transform-origin: center;
     }
 
@@ -381,7 +385,7 @@
 
     .tabs {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 7px;
       margin-bottom: 14px;
     }
@@ -393,6 +397,33 @@
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
+
+
+
+    .reflection-note {
+      padding: 10px 11px;
+      border-radius: 10px;
+      background: rgba(255, 155, 207, .08);
+      border: 1px solid rgba(255, 155, 207, .18);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    .reflection-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 7px;
+      margin-left: 6px;
+      border-radius: 999px;
+      background: rgba(120, 190, 255, .13);
+      border: 1px solid rgba(150, 205, 255, .22);
+      color: #d9efff;
+      font-size: 10px;
+      vertical-align: middle;
+    }
 
     .hidden { display: none !important; }
 
@@ -598,8 +629,8 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 2.1</h1>
-    <p class="subtitle">Overlays vivos: neón, brillo metálico, plantas, agua y luciérnagas.</p>
+    <h1>🌸 MK Universe 2.2</h1>
+    <p class="subtitle">Overlays vivos: capas, espejo, reflejos de agua, neón y animación.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
@@ -640,6 +671,7 @@
     <div class="tabs">
       <button class="btn tab active" data-tab="transform" type="button">Transformar</button>
       <button class="btn tab" data-tab="appearance" type="button">Apariencia</button>
+      <button class="btn tab" data-tab="reflection" type="button">Reflejo</button>
       <button class="btn tab" data-tab="animation" type="button">Animación</button>
     </div>
 
@@ -681,6 +713,45 @@
           <label for="propRotation">Rotación <span id="propRotationValue" class="value"></span></label>
           <input id="propRotation" type="range" min="-180" max="180" step="1" />
         </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:12px">🔄 Espejo y deformación</h3>
+
+          <div class="control">
+            <label for="propScaleX">Escala horizontal <span id="propScaleXValue" class="value"></span></label>
+            <input id="propScaleX" type="range" min="5" max="300" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propScaleY">Escala vertical <span id="propScaleYValue" class="value"></span></label>
+            <input id="propScaleY" type="range" min="5" max="300" step="1" />
+          </div>
+
+          <div class="check-row">
+            <input id="propFlipX" type="checkbox" />
+            <label for="propFlipX">Espejo horizontal</label>
+          </div>
+
+          <div class="check-row">
+            <input id="propFlipY" type="checkbox" />
+            <label for="propFlipY">Espejo vertical</label>
+          </div>
+
+          <div class="control">
+            <label for="propSkewX">Inclinación horizontal <span id="propSkewXValue" class="value"></span></label>
+            <input id="propSkewX" type="range" min="-60" max="60" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propSkewY">Inclinación vertical <span id="propSkewYValue" class="value"></span></label>
+            <input id="propSkewY" type="range" min="-60" max="60" step="1" />
+          </div>
+
+          <button id="createReflectionBtn" class="btn btn-primary" type="button" style="width:100%">
+            🌊 Duplicar como reflejo de agua
+          </button>
+        </div>
+
 
         <div class="check-row">
           <input id="propVisible" type="checkbox" />
@@ -786,6 +857,77 @@
         </div>
       </section>
 
+
+
+      <section class="tab-panel" data-panel="reflection">
+        <div class="reflection-note">
+          Selecciona una imagen y usa <strong>Duplicar como reflejo</strong>. Se creará una copia invertida sin alterar la original. Los JSON antiguos siguen siendo compatibles.
+        </div>
+
+        <div class="check-row">
+          <input id="propReflectionEnabled" type="checkbox" />
+          <label for="propReflectionEnabled">Activar distorsión de agua en esta capa</label>
+        </div>
+
+        <div class="check-row">
+          <input id="propReflectionLinked" type="checkbox" />
+          <label for="propReflectionLinked">Vincular con la capa original</label>
+        </div>
+
+        <div class="control">
+          <label for="propReflectionPreset">Preset</label>
+          <select id="propReflectionPreset">
+            <option value="custom">Personalizado</option>
+            <option value="calm">Lago tranquilo</option>
+            <option value="mkLake">Lago mágico MK</option>
+            <option value="astral">Reflejo astral</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="propReflectionGap">Separación del original <span id="propReflectionGapValue" class="value"></span></label>
+          <input id="propReflectionGap" type="range" min="-800" max="1200" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propWaveAmount">Intensidad de onda <span id="propWaveAmountValue" class="value"></span></label>
+          <input id="propWaveAmount" type="range" min="0" max="40" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propWaveSize">Tamaño de onda <span id="propWaveSizeValue" class="value"></span></label>
+          <input id="propWaveSize" type="range" min="8" max="120" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propWaveSpeed">Duración de onda <span id="propWaveSpeedValue" class="value"></span></label>
+          <input id="propWaveSpeed" type="range" min="2" max="30" step="0.5" />
+        </div>
+
+        <div class="control">
+          <label for="propReflectionBlur">Desenfoque <span id="propReflectionBlurValue" class="value"></span></label>
+          <input id="propReflectionBlur" type="range" min="0" max="10" step="0.1" />
+        </div>
+
+        <div class="control">
+          <label for="propReflectionFade">Desvanecimiento <span id="propReflectionFadeValue" class="value"></span></label>
+          <input id="propReflectionFade" type="range" min="0" max="100" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propPinkGlow">Brillo rosa MK <span id="propPinkGlowValue" class="value"></span></label>
+          <input id="propPinkGlow" type="range" min="0" max="100" step="1" />
+        </div>
+
+        <button id="breakReflectionLinkBtn" class="btn" type="button" style="width:100%;margin-bottom:8px">
+          🔓 Romper vínculo
+        </button>
+
+        <button id="createReflectionBtn2" class="btn btn-primary" type="button" style="width:100%">
+          🌊 Crear reflejo de la capa seleccionada
+        </button>
+      </section>
+
       <section class="tab-panel" data-panel="animation">
         <div class="control">
           <label for="propAnimation">Tipo</label>
@@ -832,7 +974,7 @@
     const STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 1,
+      version: 2.2,
       selectedId: null,
       layers: []
     };
@@ -858,6 +1000,12 @@
       x: document.getElementById("propX"),
       y: document.getElementById("propY"),
       scale: document.getElementById("propScale"),
+      scaleX: document.getElementById("propScaleX"),
+      scaleY: document.getElementById("propScaleY"),
+      flipX: document.getElementById("propFlipX"),
+      flipY: document.getElementById("propFlipY"),
+      skewX: document.getElementById("propSkewX"),
+      skewY: document.getElementById("propSkewY"),
       rotation: document.getElementById("propRotation"),
       visible: document.getElementById("propVisible"),
       background: document.getElementById("propBackground"),
@@ -880,7 +1028,17 @@
       edgeThickness: document.getElementById("propEdgeThickness"),
       emission: document.getElementById("propEmission"),
       metalShine: document.getElementById("propMetalShine"),
-      shineSpeed: document.getElementById("propShineSpeed")
+      shineSpeed: document.getElementById("propShineSpeed"),
+      reflectionEnabled: document.getElementById("propReflectionEnabled"),
+      reflectionLinked: document.getElementById("propReflectionLinked"),
+      reflectionPreset: document.getElementById("propReflectionPreset"),
+      reflectionGap: document.getElementById("propReflectionGap"),
+      waveAmount: document.getElementById("propWaveAmount"),
+      waveSize: document.getElementById("propWaveSize"),
+      waveSpeed: document.getElementById("propWaveSpeed"),
+      reflectionBlur: document.getElementById("propReflectionBlur"),
+      reflectionFade: document.getElementById("propReflectionFade"),
+      pinkGlow: document.getElementById("propPinkGlow")
     };
 
     function newId(prefix = "layer") {
@@ -898,6 +1056,12 @@
         x: 0,
         y: 0,
         scale: 100,
+        scaleX: 100,
+        scaleY: 100,
+        flipX: false,
+        flipY: false,
+        skewX: 0,
+        skewY: 0,
         rotation: 0,
         opacity: 100,
         brightness: 100,
@@ -919,7 +1083,40 @@
         emission: 0,
         metalShine: false,
         shineSpeed: 6,
-        ...overrides
+        reflection: {
+          enabled: false,
+          sourceLayerId: null,
+          linked: false,
+          preset: "custom",
+          offsetX: 0,
+          offsetY: 280,
+          scaleRatio: 1,
+          rotationOffset: 0,
+          waveAmount: 5,
+          waveSize: 28,
+          waveSpeed: 10,
+          blur: 1.2,
+          fade: 72,
+          pinkGlow: 18
+        },
+        ...overrides,
+        reflection: {
+          enabled: false,
+          sourceLayerId: null,
+          linked: false,
+          preset: "custom",
+          offsetX: 0,
+          offsetY: 280,
+          scaleRatio: 1,
+          rotationOffset: 0,
+          waveAmount: 5,
+          waveSize: 28,
+          waveSpeed: 10,
+          blur: 1.2,
+          fade: 72,
+          pinkGlow: 18,
+          ...(overrides.reflection || {})
+        }
       };
     }
 
@@ -959,6 +1156,7 @@
     }
 
     function renderStage() {
+      syncLinkedReflections();
       stage.innerHTML = "";
 
       project.layers.forEach((layer, index) => {
@@ -966,12 +1164,21 @@
         container.className = `layer${layer.background ? " background" : ""}`;
         container.dataset.id = layer.id;
         container.style.zIndex = index;
-        container.style.display = layer.visible ? "block" : "none";
+        const linkedSource = layer.reflection?.linked
+          ? project.layers.find(item => item.id === layer.reflection.sourceLayerId)
+          : null;
+        container.style.display = layer.visible && (!linkedSource || linkedSource.visible) ? "block" : "none";
         container.style.width = layer.background ? "100%" : "100%";
         container.style.setProperty("--x-px", `${layer.x}px`);
         container.style.setProperty("--y-px", `${layer.y}px`);
-        container.style.setProperty("--scale", layer.scale / 100);
+        const globalScale = Number(layer.scale || 100) / 100;
+        const axisScaleX = Number(layer.scaleX ?? 100) / 100;
+        const axisScaleY = Number(layer.scaleY ?? 100) / 100;
+        container.style.setProperty("--scale-x", globalScale * axisScaleX * (layer.flipX ? -1 : 1));
+        container.style.setProperty("--scale-y", globalScale * axisScaleY * (layer.flipY ? -1 : 1));
         container.style.setProperty("--rotation", `${layer.rotation}deg`);
+        container.style.setProperty("--skew-x", `${layer.skewX || 0}deg`);
+        container.style.setProperty("--skew-y", `${layer.skewY || 0}deg`);
         container.style.mixBlendMode = layer.blend;
 
         const motion = document.createElement("div");
@@ -997,7 +1204,10 @@
       const img = new Image();
       img.alt = layer.name;
       img.onload = () => {
-        const visual = processImage(layer, img);
+        const processed = processImage(layer, img);
+        const visual = layer.reflection?.enabled
+          ? createWaterReflectionCanvas(layer, processed)
+          : processed;
         styleVisual(layer, visual);
         motion.replaceChildren(visual);
         addMetalShine(layer, motion);
@@ -1059,6 +1269,17 @@
         `contrast(${layer.contrast}%)`,
         `saturate(${layer.saturation + (layer.emission || 0) * .25}%)`
       ];
+
+      if (layer.reflection?.enabled) {
+        const reflectionBlur = Math.max(0, Number(layer.reflection.blur || 0));
+        const pinkGlow = Math.max(0, Number(layer.reflection.pinkGlow || 0));
+        if (reflectionBlur > 0) filters.push(`blur(${reflectionBlur}px)`);
+        if (pinkGlow > 0) {
+          const alpha = Math.min(.7, pinkGlow / 145);
+          const blur = Math.max(2, pinkGlow * .18);
+          filters.push(`drop-shadow(0 0 ${blur}px rgba(255, 105, 205, ${alpha}))`);
+        }
+      }
 
       if (layer.glowEnabled) {
         const intensity = Math.max(0, Number(layer.glowIntensity || 0)) / 100;
@@ -1201,7 +1422,7 @@
 
         card.innerHTML = `
           <div class="layer-title">
-            <span class="layer-name" title="${escapeHtml(layer.name)}">${escapeHtml(layer.name)}</span>
+            <span class="layer-name" title="${escapeHtml(layer.name)}">${escapeHtml(layer.name)}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}</span>
             <div class="row">
               <button class="btn btn-mini move-up" type="button" title="Adelante">▲</button>
               <button class="btn btn-mini move-down" type="button" title="Atrás">▼</button>
@@ -1291,6 +1512,12 @@
       controls.x.value = layer.x;
       controls.y.value = layer.y;
       controls.scale.value = layer.scale;
+      controls.scaleX.value = layer.scaleX ?? 100;
+      controls.scaleY.value = layer.scaleY ?? 100;
+      controls.flipX.checked = Boolean(layer.flipX);
+      controls.flipY.checked = Boolean(layer.flipY);
+      controls.skewX.value = layer.skewX ?? 0;
+      controls.skewY.value = layer.skewY ?? 0;
       controls.rotation.value = layer.rotation;
       controls.visible.checked = layer.visible;
       controls.background.checked = layer.background;
@@ -1314,6 +1541,16 @@
       controls.emission.value = layer.emission ?? 0;
       controls.metalShine.checked = Boolean(layer.metalShine);
       controls.shineSpeed.value = layer.shineSpeed ?? 6;
+      controls.reflectionEnabled.checked = Boolean(layer.reflection?.enabled);
+      controls.reflectionLinked.checked = Boolean(layer.reflection?.linked);
+      controls.reflectionPreset.value = layer.reflection?.preset || "custom";
+      controls.reflectionGap.value = layer.reflection?.offsetY ?? 280;
+      controls.waveAmount.value = layer.reflection?.waveAmount ?? 5;
+      controls.waveSize.value = layer.reflection?.waveSize ?? 28;
+      controls.waveSpeed.value = layer.reflection?.waveSpeed ?? 10;
+      controls.reflectionBlur.value = layer.reflection?.blur ?? 1.2;
+      controls.reflectionFade.value = layer.reflection?.fade ?? 72;
+      controls.pinkGlow.value = layer.reflection?.pinkGlow ?? 18;
 
       updateValueLabels(layer);
     }
@@ -1323,6 +1560,10 @@
         propXValue: `${layer.x}px`,
         propYValue: `${layer.y}px`,
         propScaleValue: `${layer.scale}%`,
+        propScaleXValue: `${layer.scaleX ?? 100}%`,
+        propScaleYValue: `${layer.scaleY ?? 100}%`,
+        propSkewXValue: `${layer.skewX ?? 0}°`,
+        propSkewYValue: `${layer.skewY ?? 0}°`,
         propRotationValue: `${layer.rotation}°`,
         propOpacityValue: `${layer.opacity}%`,
         propBrightnessValue: `${layer.brightness}%`,
@@ -1337,7 +1578,14 @@
         propGlowBlurValue: `${layer.glowBlur ?? 22}px`,
         propEdgeThicknessValue: `${layer.edgeThickness ?? 2}px`,
         propEmissionValue: `${layer.emission ?? 0}%`,
-        propShineSpeedValue: `${layer.shineSpeed ?? 6}s`
+        propShineSpeedValue: `${layer.shineSpeed ?? 6}s`,
+        propReflectionGapValue: `${layer.reflection?.offsetY ?? 280}px`,
+        propWaveAmountValue: `${layer.reflection?.waveAmount ?? 5}px`,
+        propWaveSizeValue: `${layer.reflection?.waveSize ?? 28}px`,
+        propWaveSpeedValue: `${layer.reflection?.waveSpeed ?? 10}s`,
+        propReflectionBlurValue: `${layer.reflection?.blur ?? 1.2}px`,
+        propReflectionFadeValue: `${layer.reflection?.fade ?? 72}%`,
+        propPinkGlowValue: `${layer.reflection?.pinkGlow ?? 18}%`
       };
 
       Object.entries(values).forEach(([id, text]) => {
@@ -1368,6 +1616,12 @@
         x: "x",
         y: "y",
         scale: "scale",
+        scaleX: "scaleX",
+        scaleY: "scaleY",
+        flipX: "flipX",
+        flipY: "flipY",
+        skewX: "skewX",
+        skewY: "skewY",
         rotation: "rotation",
         visible: "visible",
         background: "background",
@@ -1390,7 +1644,17 @@
         edgeThickness: "edgeThickness",
         emission: "emission",
         metalShine: "metalShine",
-        shineSpeed: "shineSpeed"
+        shineSpeed: "shineSpeed",
+        reflectionEnabled: "reflection.enabled",
+        reflectionLinked: "reflection.linked",
+        reflectionPreset: "reflection.preset",
+        reflectionGap: "reflection.offsetY",
+        waveAmount: "reflection.waveAmount",
+        waveSize: "reflection.waveSize",
+        waveSpeed: "reflection.waveSpeed",
+        reflectionBlur: "reflection.blur",
+        reflectionFade: "reflection.fade",
+        pinkGlow: "reflection.pinkGlow"
       };
 
       Object.entries(controls).forEach(([key, control]) => {
@@ -1399,14 +1663,23 @@
           if (!layer) return;
 
           const prop = map[key];
-          if (control.type === "checkbox") {
-            layer[prop] = control.checked;
-          } else if (control.type === "range") {
-            layer[prop] = Number(control.value);
+          const value = control.type === "checkbox"
+            ? control.checked
+            : control.type === "range"
+              ? Number(control.value)
+              : control.value;
+
+          if (prop.startsWith("reflection.")) {
+            const reflectionProp = prop.split(".")[1];
+            layer.reflection[reflectionProp] = value;
+            if (reflectionProp === "preset" && value !== "custom") {
+              applyReflectionPreset(layer, value);
+            }
           } else {
-            layer[prop] = control.value;
+            layer[prop] = value;
           }
 
+          updateReflectionLinkOffsets(layer, prop);
           renderStage();
           renderLayersList();
           renderInspector();
@@ -1424,6 +1697,8 @@
 
       layer.x = Math.max(-1000, Math.min(1000, Number(layer.x || 0) + dx));
       layer.y = Math.max(-1800, Math.min(1800, Number(layer.y || 0) + dy));
+      updateReflectionLinkOffsets(layer, "x");
+      updateReflectionLinkOffsets(layer, "y");
       renderStage();
       renderInspector();
       saveProject(message);
@@ -1467,6 +1742,8 @@
       layer.y = Math.round(stageDrag.layerY + event.clientY - stageDrag.startY);
       layer.x = Math.max(-1000, Math.min(1000, layer.x));
       layer.y = Math.max(-1800, Math.min(1800, layer.y));
+      updateReflectionLinkOffsets(layer, "x");
+      updateReflectionLinkOffsets(layer, "y");
 
       renderStage();
       controls.x.value = layer.x;
@@ -1477,6 +1754,229 @@
 
     stage.addEventListener("pointerup", finishStageDrag);
     stage.addEventListener("pointercancel", finishStageDrag);
+
+
+
+    const REFLECTION_PRESETS = {
+      calm: {
+        scaleY: 78,
+        opacity: 58,
+        brightness: 92,
+        saturation: 92,
+        waveAmount: 3,
+        waveSize: 40,
+        waveSpeed: 16,
+        blur: .6,
+        fade: 68,
+        pinkGlow: 6
+      },
+      mkLake: {
+        scaleY: 70,
+        opacity: 52,
+        brightness: 96,
+        saturation: 118,
+        waveAmount: 6,
+        waveSize: 28,
+        waveSpeed: 11,
+        blur: 1.2,
+        fade: 75,
+        pinkGlow: 24
+      },
+      astral: {
+        scaleY: 62,
+        opacity: 46,
+        brightness: 104,
+        saturation: 138,
+        waveAmount: 10,
+        waveSize: 20,
+        waveSpeed: 7,
+        blur: 2.2,
+        fade: 84,
+        pinkGlow: 48
+      }
+    };
+
+    function applyReflectionPreset(layer, presetName) {
+      const preset = REFLECTION_PRESETS[presetName];
+      if (!preset) return;
+      layer.scaleY = preset.scaleY;
+      layer.opacity = preset.opacity;
+      layer.brightness = preset.brightness;
+      layer.saturation = preset.saturation;
+      Object.assign(layer.reflection, {
+        preset: presetName,
+        waveAmount: preset.waveAmount,
+        waveSize: preset.waveSize,
+        waveSpeed: preset.waveSpeed,
+        blur: preset.blur,
+        fade: preset.fade,
+        pinkGlow: preset.pinkGlow
+      });
+    }
+
+    function createReflectionFromSelected() {
+      const source = selectedLayer();
+      if (!source) {
+        projectStatus.textContent = "Selecciona primero una imagen.";
+        return;
+      }
+      if (source.kind !== "image" || !source.src) {
+        projectStatus.textContent = "El reflejo automático funciona con capas de imagen.";
+        return;
+      }
+      if (source.reflection?.enabled) {
+        projectStatus.textContent = "Selecciona la capa original, no otro reflejo.";
+        return;
+      }
+
+      const sourceIndex = project.layers.findIndex(item => item.id === source.id);
+      const copy = defaultLayer(structuredClone(source));
+      copy.id = newId("reflection");
+      copy.name = `${source.name} — reflejo`;
+      copy.background = false;
+      copy.flipY = !Boolean(source.flipY);
+      copy.flipX = Boolean(source.flipX);
+      copy.scale = source.scale;
+      copy.scaleX = source.scaleX ?? 100;
+      copy.scaleY = 70;
+      copy.x = source.x;
+      copy.y = Number(source.y || 0) + 280;
+      copy.rotation = source.rotation;
+      copy.animation = "none";
+      copy.metalShine = false;
+      copy.glowEnabled = false;
+      copy.reflection = {
+        enabled: true,
+        sourceLayerId: source.id,
+        linked: true,
+        preset: "mkLake",
+        offsetX: 0,
+        offsetY: 280,
+        scaleRatio: 1,
+        rotationOffset: 0,
+        waveAmount: 6,
+        waveSize: 28,
+        waveSpeed: 11,
+        blur: 1.2,
+        fade: 75,
+        pinkGlow: 24
+      };
+      applyReflectionPreset(copy, "mkLake");
+
+      project.layers.splice(Math.max(0, sourceIndex), 0, copy);
+      project.selectedId = copy.id;
+      renderAll();
+      projectStatus.textContent = "Reflejo creado. Puedes moverlo y deformarlo.";
+    }
+
+    function syncLinkedReflections() {
+      project.layers.forEach(layer => {
+        if (!layer.reflection?.enabled || !layer.reflection.linked) return;
+        const source = project.layers.find(item => item.id === layer.reflection.sourceLayerId);
+        if (!source) {
+          layer.reflection.linked = false;
+          return;
+        }
+        layer.x = Number(source.x || 0) + Number(layer.reflection.offsetX || 0);
+        layer.y = Number(source.y || 0) + Number(layer.reflection.offsetY || 0);
+        layer.scale = Number(source.scale || 100) * Number(layer.reflection.scaleRatio || 1);
+        layer.rotation = Number(source.rotation || 0) + Number(layer.reflection.rotationOffset || 0);
+      });
+    }
+
+    function updateReflectionLinkOffsets(layer, changedProp) {
+      if (!layer.reflection?.enabled || !layer.reflection.linked) return;
+      const source = project.layers.find(item => item.id === layer.reflection.sourceLayerId);
+      if (!source) return;
+
+      if (changedProp === "x" || changedProp === "reflection.offsetX") {
+        layer.reflection.offsetX = Number(layer.x || 0) - Number(source.x || 0);
+      }
+      if (changedProp === "y") {
+        layer.reflection.offsetY = Number(layer.y || 0) - Number(source.y || 0);
+      }
+      if (changedProp === "reflection.offsetY") {
+        layer.y = Number(source.y || 0) + Number(layer.reflection.offsetY || 0);
+      }
+      if (changedProp === "scale") {
+        const sourceScale = Math.max(.01, Number(source.scale || 100));
+        layer.reflection.scaleRatio = Number(layer.scale || 100) / sourceScale;
+      }
+      if (changedProp === "rotation") {
+        layer.reflection.rotationOffset = Number(layer.rotation || 0) - Number(source.rotation || 0);
+      }
+    }
+
+    function createWaterReflectionCanvas(layer, sourceElement) {
+      const sourceWidth = sourceElement.naturalWidth || sourceElement.width || 1080;
+      const sourceHeight = sourceElement.naturalHeight || sourceElement.height || 1080;
+      const maxDimension = 950;
+      const ratio = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      const width = Math.max(2, Math.round(sourceWidth * ratio));
+      const height = Math.max(2, Math.round(sourceHeight * ratio));
+
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = width;
+      sourceCanvas.height = height;
+      const sourceCtx = sourceCanvas.getContext("2d");
+      sourceCtx.drawImage(sourceElement, 0, 0, width, height);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
+      const ctx = canvas.getContext("2d");
+
+      let lastDraw = 0;
+      let hasConnected = false;
+
+      function drawFrame(time) {
+        if (hasConnected && !canvas.isConnected) return;
+        hasConnected = hasConnected || canvas.isConnected;
+
+        if (time - lastDraw >= 40 && !document.body.classList.contains("paused")) {
+          lastDraw = time;
+          ctx.clearRect(0, 0, width, height);
+
+          const amplitude = Math.max(0, Number(layer.reflection?.waveAmount || 0));
+          const wavelength = Math.max(8, Number(layer.reflection?.waveSize || 28));
+          const duration = Math.max(2, Number(layer.reflection?.waveSpeed || 10));
+          const phase = (time / 1000) * ((Math.PI * 2) / duration);
+          const strip = 4;
+
+          for (let y = 0; y < height; y += strip) {
+            const stripHeight = Math.min(strip, height - y);
+            const depth = .35 + .65 * (1 - y / Math.max(1, height));
+            const shift = Math.sin(y / wavelength + phase) * amplitude * depth;
+            ctx.drawImage(
+              sourceCanvas,
+              0, y, width, stripHeight,
+              shift, y, width, stripHeight
+            );
+          }
+
+          const fade = Math.max(0, Math.min(100, Number(layer.reflection?.fade ?? 72))) / 100;
+          if (fade > 0) {
+            ctx.save();
+            ctx.globalCompositeOperation = "destination-in";
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, "rgba(0,0,0,0)");
+            gradient.addColorStop(Math.max(.03, Math.min(.97, fade)), "rgba(0,0,0,1)");
+            gradient.addColorStop(1, "rgba(0,0,0,1)");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore();
+          }
+        }
+
+        requestAnimationFrame(drawFrame);
+      }
+
+      requestAnimationFrame(drawFrame);
+      return canvas;
+    }
+
 
     function addImageFile(file) {
       if (!file) return;
@@ -1577,7 +2077,15 @@
         try {
           const parsed = JSON.parse(reader.result);
           if (!Array.isArray(parsed.layers)) throw new Error("Formato inválido");
-          project = parsed;
+          project = {
+            ...structuredClone(defaultProject),
+            ...parsed,
+            version: 2.2,
+            layers: parsed.layers.map(layer => defaultLayer(layer))
+          };
+          if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
+            project.selectedId = null;
+          }
           renderAll();
           projectStatus.textContent = "Proyecto importado.";
         } catch {
@@ -1635,6 +2143,18 @@
     document.getElementById("deleteSelectedBtn").addEventListener("click", () => {
       const layer = selectedLayer();
       if (layer) deleteLayer(layer.id);
+    });
+
+
+
+    document.getElementById("createReflectionBtn").addEventListener("click", createReflectionFromSelected);
+    document.getElementById("createReflectionBtn2").addEventListener("click", createReflectionFromSelected);
+    document.getElementById("breakReflectionLinkBtn").addEventListener("click", () => {
+      const layer = selectedLayer();
+      if (!layer?.reflection?.enabled) return;
+      layer.reflection.linked = false;
+      renderAll();
+      projectStatus.textContent = "Vínculo del reflejo eliminado.";
     });
 
     document.querySelectorAll(".tab").forEach(button => {

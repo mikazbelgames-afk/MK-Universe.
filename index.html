@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MK Universe 2.3 — Movimiento y pétalos</title>
+  <title>🌸 MK Universe 2.5 — Aura respirante de color libre</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -459,6 +459,67 @@
       display: block;
     }
 
+
+
+    /* MK 2.5 — Aura respirante independiente y de color libre */
+    .visual-stack {
+      position: relative;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      isolation: isolate;
+    }
+
+    .visual-stack > img,
+    .visual-stack > canvas {
+      position: relative;
+      z-index: 2;
+    }
+
+    .aura-layer {
+      position: absolute;
+      z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      will-change: opacity, transform, filter;
+      animation: auraBreath var(--aura-speed, 4s) ease-in-out infinite;
+    }
+
+    .aura-layer.silhouette {
+      inset: 0;
+      background: var(--aura-color, #ff8fd1);
+      filter: blur(var(--aura-blur, 24px));
+      transform-origin: center;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+    }
+
+    .aura-layer.focus {
+      left: var(--aura-focus-x, 50%);
+      top: var(--aura-focus-y, 50%);
+      width: var(--aura-focus-size, 36%);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      filter: blur(var(--aura-blur, 24px));
+      transform-origin: center;
+    }
+
+    @keyframes auraBreath {
+      0%, 100% {
+        opacity: var(--aura-min-opacity, .18);
+        scale: 1;
+      }
+      50% {
+        opacity: var(--aura-max-opacity, .65);
+        scale: var(--aura-scale, 1.035);
+      }
+    }
+
     /* Animaciones base */
     .anim-none { animation: none; }
 
@@ -721,8 +782,8 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 2.3</h1>
-    <p class="subtitle">Overlays vivos: reflejos, movimiento multidireccional, nubes, niebla y pétalos.</p>
+    <h1>🌸 MK Universe 2.5 🌸</h1>
+    <p class="subtitle">Overlays vivos: reflejos, pétalos, movimiento orgánico y aura respirante de cualquier color.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
@@ -922,6 +983,71 @@
           </div>
         </div>
 
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:12px">💡 Aura respirante de color libre</h3>
+          <div class="reflection-note">
+            Elige cualquier color para cada capa. La respiración funciona aparte de las demás animaciones, así una lámpara puede balancearse y brillar al mismo tiempo.
+          </div>
+
+          <div class="check-row">
+            <input id="propAuraEnabled" type="checkbox" />
+            <label for="propAuraEnabled">Activar aura respirante</label>
+          </div>
+
+          <div class="control">
+            <label for="propAuraMode">Forma del aura</label>
+            <select id="propAuraMode">
+              <option value="silhouette">Seguir la silueta del objeto</option>
+              <option value="focus">Foco circular localizado</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propAuraColor">Color libre del aura</label>
+            <input id="propAuraColor" type="color" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraIntensity">Intensidad máxima <span id="propAuraIntensityValue" class="value"></span></label>
+            <input id="propAuraIntensity" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraPulse">Profundidad de respiración <span id="propAuraPulseValue" class="value"></span></label>
+            <input id="propAuraPulse" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraBlur">Difuminado del aura <span id="propAuraBlurValue" class="value"></span></label>
+            <input id="propAuraBlur" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraSpeed">Duración de la respiración <span id="propAuraSpeedValue" class="value"></span></label>
+            <input id="propAuraSpeed" type="range" min="1" max="20" step="0.25" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraScale">Expansión del pulso <span id="propAuraScaleValue" class="value"></span></label>
+            <input id="propAuraScale" type="range" min="0" max="15" step="0.25" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraFocusX">Posición focal X <span id="propAuraFocusXValue" class="value"></span></label>
+            <input id="propAuraFocusX" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraFocusY">Posición focal Y <span id="propAuraFocusYValue" class="value"></span></label>
+            <input id="propAuraFocusY" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraFocusSize">Tamaño del foco <span id="propAuraFocusSizeValue" class="value"></span></label>
+            <input id="propAuraFocusSize" type="range" min="5" max="160" step="1" />
+          </div>
+        </div>
+
         <div class="control">
           <label for="propBlend">Modo de mezcla</label>
           <select id="propBlend">
@@ -1040,7 +1166,8 @@
             <option value="fall">Caída simple</option>
             <option value="water">Agua</option>
             <option value="twinkle">Destello</option>
-            <option value="plant">Hojas / planta con viento</option>
+            <option value="plant">Hojas / planta con viento (simple)</option>
+            <option value="organic">🌿 Movimiento orgánico deformable</option>
             <option value="ripple">Agua con olitas</option>
           </select>
         </div>
@@ -1097,6 +1224,79 @@
           <label for="propMotionRandomStart">Inicio aleatorio para evitar sincronización</label>
         </div>
 
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:10px">🌿 Movimiento orgánico directo</h3>
+          <div class="reflection-note">
+            Deforma suavemente el PNG completo: la base puede permanecer fija mientras la parte superior se mueve como pasto, flores, ramas o arbustos. No necesitas separar cada hoja.
+          </div>
+
+          <div class="control">
+            <label for="propOrganicPreset">Preset</label>
+            <select id="propOrganicPreset">
+              <option value="custom">Personalizado</option>
+              <option value="grassSoft">Pasto suave</option>
+              <option value="grassWind">Pasto con viento</option>
+              <option value="flowerSwing">Flor balanceándose</option>
+              <option value="branchLight">Rama ligera</option>
+              <option value="bushMagic">Arbusto mágico</option>
+              <option value="waterPlant">Planta acuática</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propOrganicAnchor">Punto fijo / anclaje</label>
+            <select id="propOrganicAnchor">
+              <option value="bottom">Abajo — raíces o base</option>
+              <option value="top">Arriba</option>
+              <option value="left">Izquierda — rama lateral</option>
+              <option value="right">Derecha — rama lateral</option>
+              <option value="center">Centro</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propOrganicDirection">Tendencia del viento</label>
+            <select id="propOrganicDirection">
+              <option value="balanced">Balanceado ↔</option>
+              <option value="left">Más hacia la izquierda</option>
+              <option value="right">Más hacia la derecha</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propOrganicStrength">Fuerza del viento <span id="propOrganicStrengthValue" class="value"></span></label>
+            <input id="propOrganicStrength" type="range" min="0" max="80" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicBend">Curvatura <span id="propOrganicBendValue" class="value"></span></label>
+            <input id="propOrganicBend" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicWave">Ondulación interna <span id="propOrganicWaveValue" class="value"></span></label>
+            <input id="propOrganicWave" type="range" min="0" max="12" step="0.25" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicFixedZone">Zona fija desde el anclaje <span id="propOrganicFixedZoneValue" class="value"></span></label>
+            <input id="propOrganicFixedZone" type="range" min="0" max="70" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicQuality">Calidad / suavidad</label>
+            <select id="propOrganicQuality">
+              <option value="performance">Rendimiento</option>
+              <option value="balanced">Equilibrado</option>
+              <option value="smooth">Muy suave</option>
+            </select>
+          </div>
+
+          <button id="organicPresetApplyBtn" class="btn btn-primary" type="button" style="width:100%">
+            🌿 Aplicar movimiento orgánico
+          </button>
+        </div>
+
         <div class="row-wrap" style="margin-top:14px">
           <button id="petalsPresetBtn" class="btn btn-primary" type="button">🌸 Pétalos</button>
           <button id="cloudsPresetBtn" class="btn" type="button">☁️ Nubes</button>
@@ -1116,7 +1316,7 @@
     const STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 2.3,
+      version: 2.5,
       selectedId: null,
       layers: []
     };
@@ -1176,6 +1376,17 @@
       emission: document.getElementById("propEmission"),
       metalShine: document.getElementById("propMetalShine"),
       shineSpeed: document.getElementById("propShineSpeed"),
+      auraEnabled: document.getElementById("propAuraEnabled"),
+      auraMode: document.getElementById("propAuraMode"),
+      auraColor: document.getElementById("propAuraColor"),
+      auraIntensity: document.getElementById("propAuraIntensity"),
+      auraPulse: document.getElementById("propAuraPulse"),
+      auraBlur: document.getElementById("propAuraBlur"),
+      auraSpeed: document.getElementById("propAuraSpeed"),
+      auraScale: document.getElementById("propAuraScale"),
+      auraFocusX: document.getElementById("propAuraFocusX"),
+      auraFocusY: document.getElementById("propAuraFocusY"),
+      auraFocusSize: document.getElementById("propAuraFocusSize"),
       reflectionEnabled: document.getElementById("propReflectionEnabled"),
       reflectionLinked: document.getElementById("propReflectionLinked"),
       reflectionPreset: document.getElementById("propReflectionPreset"),
@@ -1185,7 +1396,15 @@
       waveSpeed: document.getElementById("propWaveSpeed"),
       reflectionBlur: document.getElementById("propReflectionBlur"),
       reflectionFade: document.getElementById("propReflectionFade"),
-      pinkGlow: document.getElementById("propPinkGlow")
+      pinkGlow: document.getElementById("propPinkGlow"),
+      organicPreset: document.getElementById("propOrganicPreset"),
+      organicAnchor: document.getElementById("propOrganicAnchor"),
+      organicDirection: document.getElementById("propOrganicDirection"),
+      organicStrength: document.getElementById("propOrganicStrength"),
+      organicBend: document.getElementById("propOrganicBend"),
+      organicWave: document.getElementById("propOrganicWave"),
+      organicFixedZone: document.getElementById("propOrganicFixedZone"),
+      organicQuality: document.getElementById("propOrganicQuality")
     };
 
     function newId(prefix = "layer") {
@@ -1235,6 +1454,29 @@
         emission: 0,
         metalShine: false,
         shineSpeed: 6,
+        aura: {
+          enabled: false,
+          mode: "silhouette",
+          color: "#ff8fd1",
+          intensity: 55,
+          pulse: 45,
+          blur: 28,
+          speed: 4.2,
+          scale: 3,
+          focusX: 50,
+          focusY: 50,
+          focusSize: 36
+        },
+        organic: {
+          preset: "custom",
+          anchor: "bottom",
+          direction: "balanced",
+          strength: 10,
+          bend: 45,
+          wave: 2.5,
+          fixedZone: 18,
+          quality: "balanced"
+        },
         reflection: {
           enabled: false,
           sourceLayerId: null,
@@ -1252,6 +1494,31 @@
           pinkGlow: 18
         },
         ...overrides,
+        aura: {
+          enabled: false,
+          mode: "silhouette",
+          color: "#ff8fd1",
+          intensity: 55,
+          pulse: 45,
+          blur: 28,
+          speed: 4.2,
+          scale: 3,
+          focusX: 50,
+          focusY: 50,
+          focusSize: 36,
+          ...(overrides.aura || {})
+        },
+        organic: {
+          preset: "custom",
+          anchor: "bottom",
+          direction: "balanced",
+          strength: 10,
+          bend: 45,
+          wave: 2.5,
+          fixedZone: 18,
+          quality: "balanced",
+          ...(overrides.organic || {})
+        },
         reflection: {
           enabled: false,
           sourceLayerId: null,
@@ -1389,6 +1656,50 @@
       }
     };
 
+    const ORGANIC_PRESETS = {
+      grassSoft: { duration: 5.6, intensity: 8, anchor: "bottom", direction: "balanced", strength: 7, bend: 48, wave: 3.2, fixedZone: 20, quality: "balanced" },
+      grassWind: { duration: 3.9, intensity: 12, anchor: "bottom", direction: "right", strength: 15, bend: 62, wave: 4.2, fixedZone: 12, quality: "smooth" },
+      flowerSwing: { duration: 4.8, intensity: 7, anchor: "bottom", direction: "balanced", strength: 9, bend: 58, wave: 1.8, fixedZone: 28, quality: "smooth" },
+      branchLight: { duration: 6.2, intensity: 5, anchor: "left", direction: "balanced", strength: 7, bend: 42, wave: 2.2, fixedZone: 24, quality: "smooth" },
+      bushMagic: { duration: 6.8, intensity: 6, anchor: "bottom", direction: "balanced", strength: 8, bend: 52, wave: 3.5, fixedZone: 30, quality: "balanced" },
+      waterPlant: { duration: 7.4, intensity: 10, anchor: "bottom", direction: "left", strength: 12, bend: 74, wave: 5.4, fixedZone: 18, quality: "smooth" }
+    };
+
+    function applyOrganicPreset(name) {
+      const layer = selectedLayer();
+      if (!layer) {
+        projectStatus.textContent = "Selecciona primero una capa de imagen.";
+        return;
+      }
+      if (layer.kind !== "image") {
+        projectStatus.textContent = "El movimiento orgánico se aplica a imágenes PNG/JPG/WebP.";
+        return;
+      }
+
+      const presetName = name && name !== "custom" ? name : (layer.organic?.preset || "grassSoft");
+      const preset = ORGANIC_PRESETS[presetName];
+      layer.animation = "organic";
+      layer.organic = {
+        ...(layer.organic || {}),
+        preset: preset ? presetName : "custom",
+        ...(preset ? {
+          anchor: preset.anchor,
+          direction: preset.direction,
+          strength: preset.strength,
+          bend: preset.bend,
+          wave: preset.wave,
+          fixedZone: preset.fixedZone,
+          quality: preset.quality
+        } : {})
+      };
+      if (preset) {
+        layer.duration = preset.duration;
+        layer.intensity = preset.intensity;
+      }
+      renderAll();
+      projectStatus.textContent = "Movimiento orgánico aplicado. La zona del anclaje permanece más firme.";
+    }
+
     function applyMotionPreset(name) {
       const layer = selectedLayer();
       const preset = MOTION_PRESETS[name];
@@ -1442,7 +1753,8 @@
 
         const motion = document.createElement("div");
         const individualPetals = layer.kind === "particles" && layer.particleType === "petals";
-        motion.className = `motion anim-${individualPetals ? "none" : layer.animation}`;
+        const directOrganic = layer.kind === "image" && layer.animation === "organic";
+        motion.className = `motion anim-${individualPetals || directOrganic ? "none" : layer.animation}`;
         motion.style.setProperty("--duration", `${layer.duration}s`);
         motion.style.setProperty("--intensity", `${layer.intensity}px`);
         motion.style.setProperty("--intensity-scale", layer.intensity / 100);
@@ -1466,12 +1778,20 @@
       img.alt = layer.name;
       img.onload = () => {
         const processed = processImage(layer, img);
-        const visual = layer.reflection?.enabled
+        const reflected = layer.reflection?.enabled
           ? createWaterReflectionCanvas(layer, processed)
           : processed;
+        const visual = layer.animation === "organic" && !layer.reflection?.enabled
+          ? createOrganicMotionCanvas(layer, reflected)
+          : reflected;
         styleVisual(layer, visual);
-        motion.replaceChildren(visual);
-        addMetalShine(layer, motion);
+        const stack = document.createElement("div");
+        stack.className = "visual-stack";
+        const aura = createAuraLayer(layer);
+        if (aura) stack.appendChild(aura);
+        stack.appendChild(visual);
+        motion.replaceChildren(stack);
+        addMetalShine(layer, stack);
       };
       img.onerror = () => {
         const msg = document.createElement("div");
@@ -1507,6 +1827,96 @@
       }
 
       ctx.putImageData(imageData, 0, 0);
+      return canvas;
+    }
+
+    function createOrganicMotionCanvas(layer, sourceElement) {
+      const sourceWidth = sourceElement.naturalWidth || sourceElement.width || 1080;
+      const sourceHeight = sourceElement.naturalHeight || sourceElement.height || 1080;
+      const maxDimension = 1100;
+      const ratio = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      const width = Math.max(2, Math.round(sourceWidth * ratio));
+      const height = Math.max(2, Math.round(sourceHeight * ratio));
+
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = width;
+      sourceCanvas.height = height;
+      const sourceCtx = sourceCanvas.getContext("2d");
+      sourceCtx.drawImage(sourceElement, 0, 0, width, height);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
+
+      const ctx = canvas.getContext("2d");
+      let lastDraw = 0;
+      let hasConnected = false;
+      const stablePhase = stableLayerRandom(layer.id) * Math.PI * 2;
+
+      function organicWeight(position, length, anchor, fixedZone, bend) {
+        const t = Math.max(0, Math.min(1, position / Math.max(1, length)));
+        let distance;
+        if (anchor === "bottom" || anchor === "right") distance = 1 - t;
+        else if (anchor === "top" || anchor === "left") distance = t;
+        else distance = Math.abs(t - .5) * 2;
+        const fixed = Math.max(0, Math.min(.7, fixedZone / 100));
+        const free = Math.max(0, (distance - fixed) / Math.max(.001, 1 - fixed));
+        const exponent = .7 + Math.max(0, bend) / 45;
+        return Math.pow(free, exponent);
+      }
+
+      function drawFrame(time) {
+        if (hasConnected && !canvas.isConnected) return;
+        hasConnected = hasConnected || canvas.isConnected;
+
+        const organic = layer.organic || {};
+        const quality = organic.quality || "balanced";
+        const frameInterval = quality === "smooth" ? 28 : quality === "performance" ? 55 : 38;
+
+        if (time - lastDraw >= frameInterval && !document.body.classList.contains("paused")) {
+          lastDraw = time;
+          ctx.clearRect(0, 0, width, height);
+
+          const duration = Math.max(.8, Number(layer.duration || 5.5));
+          const phase = (time / 1000) * (Math.PI * 2 / duration) + stablePhase;
+          const strength = Math.max(0, Number(organic.strength ?? 10));
+          const bend = Math.max(0, Number(organic.bend ?? 45));
+          const wave = Math.max(0, Number(organic.wave ?? 2.5));
+          const fixedZone = Math.max(0, Number(organic.fixedZone ?? 18));
+          const anchor = organic.anchor || "bottom";
+          const directionBias = organic.direction === "left" ? -0.34 : organic.direction === "right" ? 0.34 : 0;
+          const strip = quality === "smooth" ? 2 : quality === "performance" ? 6 : 4;
+
+          if (anchor === "left" || anchor === "right") {
+            for (let x = 0; x < width; x += strip) {
+              const stripWidth = Math.min(strip + 1, width - x);
+              const weight = organicWeight(x, width, anchor, fixedZone, bend);
+              const localPhase = phase + (x / Math.max(1, width)) * wave * Math.PI * 2;
+              const primary = (Math.sin(phase) + directionBias) * strength * weight;
+              const detail = Math.sin(localPhase * 1.13 + Math.sin(phase * .7)) * strength * .24 * weight;
+              const verticalShift = primary + detail;
+              const horizontalBreath = Math.sin(localPhase * .55) * strength * .06 * weight;
+              ctx.drawImage(sourceCanvas, x, 0, stripWidth, height, x + horizontalBreath, verticalShift, stripWidth + .8, height);
+            }
+          } else {
+            for (let y = 0; y < height; y += strip) {
+              const stripHeight = Math.min(strip + 1, height - y);
+              const weight = organicWeight(y, height, anchor, fixedZone, bend);
+              const localPhase = phase + (y / Math.max(1, height)) * wave * Math.PI * 2;
+              const primary = (Math.sin(phase) + directionBias) * strength * weight;
+              const detail = Math.sin(localPhase * 1.09 + Math.sin(phase * .72)) * strength * .24 * weight;
+              const horizontalShift = primary + detail;
+              const verticalBreath = Math.cos(localPhase * .63) * strength * .035 * weight;
+              ctx.drawImage(sourceCanvas, 0, y, width, stripHeight, horizontalShift, y + verticalBreath, width, stripHeight + .8);
+            }
+          }
+        }
+        requestAnimationFrame(drawFrame);
+      }
+
+      requestAnimationFrame(drawFrame);
       return canvas;
     }
 
@@ -1563,6 +1973,44 @@
       }
 
       element.style.filter = filters.join(" ");
+    }
+
+    function createAuraLayer(layer) {
+      const auraConfig = layer.aura || {};
+      if (!auraConfig.enabled || layer.kind !== "image" || !layer.src) return null;
+
+      const aura = document.createElement("div");
+      const mode = auraConfig.mode === "focus" ? "focus" : "silhouette";
+      aura.className = `aura-layer ${mode}`;
+
+      const intensity = Math.max(0, Math.min(100, Number(auraConfig.intensity ?? 55))) / 100;
+      const pulse = Math.max(0, Math.min(100, Number(auraConfig.pulse ?? 45))) / 100;
+      const minOpacity = Math.max(0.01, intensity * (1 - pulse * .82));
+      const maxOpacity = Math.max(minOpacity, Math.min(1, intensity));
+      const blur = Math.max(0, Number(auraConfig.blur ?? 28));
+      const speed = Math.max(.5, Number(auraConfig.speed ?? 4.2));
+      const scale = 1 + Math.max(0, Number(auraConfig.scale ?? 3)) / 100;
+      const color = auraConfig.color || "#ff8fd1";
+
+      aura.style.setProperty("--aura-color", color);
+      aura.style.setProperty("--aura-min-opacity", minOpacity);
+      aura.style.setProperty("--aura-max-opacity", maxOpacity);
+      aura.style.setProperty("--aura-blur", `${blur}px`);
+      aura.style.setProperty("--aura-speed", `${speed}s`);
+      aura.style.setProperty("--aura-scale", scale);
+      aura.style.setProperty("--aura-focus-x", `${Math.max(0, Math.min(100, Number(auraConfig.focusX ?? 50)))}%`);
+      aura.style.setProperty("--aura-focus-y", `${Math.max(0, Math.min(100, Number(auraConfig.focusY ?? 50)))}%`);
+      aura.style.setProperty("--aura-focus-size", `${Math.max(5, Math.min(160, Number(auraConfig.focusSize ?? 36)))}%`);
+
+      if (mode === "silhouette") {
+        const maskUrl = `url("${layer.src}")`;
+        aura.style.webkitMaskImage = maskUrl;
+        aura.style.maskImage = maskUrl;
+      } else {
+        aura.style.background = `radial-gradient(circle, ${hexToRgba(color, .96)} 0%, ${hexToRgba(color, .62)} 28%, ${hexToRgba(color, .26)} 52%, transparent 76%)`;
+      }
+
+      return aura;
     }
 
     function addMetalShine(layer, motion) {
@@ -1913,6 +2361,17 @@
       controls.emission.value = layer.emission ?? 0;
       controls.metalShine.checked = Boolean(layer.metalShine);
       controls.shineSpeed.value = layer.shineSpeed ?? 6;
+      controls.auraEnabled.checked = Boolean(layer.aura?.enabled);
+      controls.auraMode.value = layer.aura?.mode || "silhouette";
+      controls.auraColor.value = layer.aura?.color || "#ff8fd1";
+      controls.auraIntensity.value = layer.aura?.intensity ?? 55;
+      controls.auraPulse.value = layer.aura?.pulse ?? 45;
+      controls.auraBlur.value = layer.aura?.blur ?? 28;
+      controls.auraSpeed.value = layer.aura?.speed ?? 4.2;
+      controls.auraScale.value = layer.aura?.scale ?? 3;
+      controls.auraFocusX.value = layer.aura?.focusX ?? 50;
+      controls.auraFocusY.value = layer.aura?.focusY ?? 50;
+      controls.auraFocusSize.value = layer.aura?.focusSize ?? 36;
       controls.reflectionEnabled.checked = Boolean(layer.reflection?.enabled);
       controls.reflectionLinked.checked = Boolean(layer.reflection?.linked);
       controls.reflectionPreset.value = layer.reflection?.preset || "custom";
@@ -1923,6 +2382,14 @@
       controls.reflectionBlur.value = layer.reflection?.blur ?? 1.2;
       controls.reflectionFade.value = layer.reflection?.fade ?? 72;
       controls.pinkGlow.value = layer.reflection?.pinkGlow ?? 18;
+      controls.organicPreset.value = layer.organic?.preset || "custom";
+      controls.organicAnchor.value = layer.organic?.anchor || "bottom";
+      controls.organicDirection.value = layer.organic?.direction || "balanced";
+      controls.organicStrength.value = layer.organic?.strength ?? 10;
+      controls.organicBend.value = layer.organic?.bend ?? 45;
+      controls.organicWave.value = layer.organic?.wave ?? 2.5;
+      controls.organicFixedZone.value = layer.organic?.fixedZone ?? 18;
+      controls.organicQuality.value = layer.organic?.quality || "balanced";
 
       updateValueLabels(layer);
     }
@@ -1953,13 +2420,25 @@
         propEdgeThicknessValue: `${layer.edgeThickness ?? 2}px`,
         propEmissionValue: `${layer.emission ?? 0}%`,
         propShineSpeedValue: `${layer.shineSpeed ?? 6}s`,
+        propAuraIntensityValue: `${layer.aura?.intensity ?? 55}%`,
+        propAuraPulseValue: `${layer.aura?.pulse ?? 45}%`,
+        propAuraBlurValue: `${layer.aura?.blur ?? 28}px`,
+        propAuraSpeedValue: `${layer.aura?.speed ?? 4.2}s`,
+        propAuraScaleValue: `${layer.aura?.scale ?? 3}%`,
+        propAuraFocusXValue: `${layer.aura?.focusX ?? 50}%`,
+        propAuraFocusYValue: `${layer.aura?.focusY ?? 50}%`,
+        propAuraFocusSizeValue: `${layer.aura?.focusSize ?? 36}%`,
         propReflectionGapValue: `${layer.reflection?.offsetY ?? 280}px`,
         propWaveAmountValue: `${layer.reflection?.waveAmount ?? 5}px`,
         propWaveSizeValue: `${layer.reflection?.waveSize ?? 28}px`,
         propWaveSpeedValue: `${layer.reflection?.waveSpeed ?? 10}s`,
         propReflectionBlurValue: `${layer.reflection?.blur ?? 1.2}px`,
         propReflectionFadeValue: `${layer.reflection?.fade ?? 72}%`,
-        propPinkGlowValue: `${layer.reflection?.pinkGlow ?? 18}%`
+        propPinkGlowValue: `${layer.reflection?.pinkGlow ?? 18}%`,
+        propOrganicStrengthValue: `${layer.organic?.strength ?? 10}px`,
+        propOrganicBendValue: `${layer.organic?.bend ?? 45}%`,
+        propOrganicWaveValue: `${layer.organic?.wave ?? 2.5}`,
+        propOrganicFixedZoneValue: `${layer.organic?.fixedZone ?? 18}%`
       };
 
       Object.entries(values).forEach(([id, text]) => {
@@ -2024,6 +2503,17 @@
         emission: "emission",
         metalShine: "metalShine",
         shineSpeed: "shineSpeed",
+        auraEnabled: "aura.enabled",
+        auraMode: "aura.mode",
+        auraColor: "aura.color",
+        auraIntensity: "aura.intensity",
+        auraPulse: "aura.pulse",
+        auraBlur: "aura.blur",
+        auraSpeed: "aura.speed",
+        auraScale: "aura.scale",
+        auraFocusX: "aura.focusX",
+        auraFocusY: "aura.focusY",
+        auraFocusSize: "aura.focusSize",
         reflectionEnabled: "reflection.enabled",
         reflectionLinked: "reflection.linked",
         reflectionPreset: "reflection.preset",
@@ -2033,7 +2523,15 @@
         waveSpeed: "reflection.waveSpeed",
         reflectionBlur: "reflection.blur",
         reflectionFade: "reflection.fade",
-        pinkGlow: "reflection.pinkGlow"
+        pinkGlow: "reflection.pinkGlow",
+        organicPreset: "organic.preset",
+        organicAnchor: "organic.anchor",
+        organicDirection: "organic.direction",
+        organicStrength: "organic.strength",
+        organicBend: "organic.bend",
+        organicWave: "organic.wave",
+        organicFixedZone: "organic.fixedZone",
+        organicQuality: "organic.quality"
       };
 
       Object.entries(controls).forEach(([key, control]) => {
@@ -2048,11 +2546,34 @@
               ? Number(control.value)
               : control.value;
 
-          if (prop.startsWith("reflection.")) {
+          if (prop.startsWith("aura.")) {
+            const auraProp = prop.split(".")[1];
+            layer.aura[auraProp] = value;
+          } else if (prop.startsWith("reflection.")) {
             const reflectionProp = prop.split(".")[1];
             layer.reflection[reflectionProp] = value;
             if (reflectionProp === "preset" && value !== "custom") {
               applyReflectionPreset(layer, value);
+            }
+          } else if (prop.startsWith("organic.")) {
+            const organicProp = prop.split(".")[1];
+            layer.organic[organicProp] = value;
+            if (organicProp === "preset" && value !== "custom") {
+              const preset = ORGANIC_PRESETS[value];
+              if (preset) {
+                layer.animation = "organic";
+                layer.duration = preset.duration;
+                layer.intensity = preset.intensity;
+                Object.assign(layer.organic, {
+                  anchor: preset.anchor,
+                  direction: preset.direction,
+                  strength: preset.strength,
+                  bend: preset.bend,
+                  wave: preset.wave,
+                  fixedZone: preset.fixedZone,
+                  quality: preset.quality
+                });
+              }
             }
           } else {
             layer[prop] = value;
@@ -2491,7 +3012,7 @@
           project = {
             ...structuredClone(defaultProject),
             ...parsed,
-            version: 2.3,
+            version: 2.5,
             layers: parsed.layers.map(layer => defaultLayer(layer))
           };
           if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
@@ -2564,6 +3085,10 @@
     document.getElementById("petalsPresetBtn").addEventListener("click", () => applyMotionPreset("petals"));
     document.getElementById("cloudsPresetBtn").addEventListener("click", () => applyMotionPreset("clouds"));
     document.getElementById("fogPresetBtn").addEventListener("click", () => applyMotionPreset("fog"));
+    document.getElementById("organicPresetApplyBtn").addEventListener("click", () => {
+      const layer = selectedLayer();
+      applyOrganicPreset(layer?.organic?.preset || "grassSoft");
+    });
     document.getElementById("breakReflectionLinkBtn").addEventListener("click", () => {
       const layer = selectedLayer();
       if (!layer?.reflection?.enabled) return;

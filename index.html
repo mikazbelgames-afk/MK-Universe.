@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MK Universe 2.2 — Espejos y reflejos</title>
+  <title>MK Universe 2.3 — Movimiento y pétalos</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -504,6 +504,37 @@
       animation: ripple var(--duration, 6s) var(--easing, ease-in-out) infinite;
     }
 
+
+    /* Movimiento multidireccional MK 2.3 */
+    .anim-travel,
+    .anim-petals {
+      animation-name: directionalLoop;
+      animation-duration: var(--duration, 18s);
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      animation-delay: var(--motion-delay, 0s);
+    }
+
+    .anim-petals {
+      animation-name: directionalPetals;
+      animation-timing-function: var(--easing, ease-in-out);
+    }
+
+    .motion-pingpong.anim-travel,
+    .motion-pingpong.anim-petals {
+      animation-name: directionalPingPong;
+      animation-direction: alternate;
+      animation-timing-function: var(--easing, ease-in-out);
+    }
+
+    .petal-field {
+      display: block;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      user-select: none;
+    }
+
     @keyframes float {
       from { transform: translateY(calc(var(--intensity, 8px) * -1)); }
       to { transform: translateY(var(--intensity, 8px)); }
@@ -557,6 +588,67 @@
       25% { transform: translateX(0) skewX(.25deg) scaleY(calc(1 + var(--intensity-scale, .015))); }
       50% { transform: translateX(calc(var(--intensity, 8px) * .45)) skewX(-.15deg) scaleY(.996); }
       75% { transform: translateX(0) skewX(.3deg) scaleY(calc(1 + var(--intensity-scale, .01))); }
+    }
+
+
+    @keyframes directionalLoop {
+      0% {
+        transform: translate3d(var(--motion-start-x, 0px), var(--motion-start-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 0deg) * -1));
+        opacity: 0;
+      }
+      8% { opacity: 1; }
+      50% {
+        transform: translate3d(var(--motion-mid-x, 0px), var(--motion-mid-y, 0px), 0)
+          rotate(0deg);
+        opacity: 1;
+      }
+      92% { opacity: 1; }
+      100% {
+        transform: translate3d(var(--motion-end-x, 0px), var(--motion-end-y, 0px), 0)
+          rotate(var(--motion-rotation, 0deg));
+        opacity: 0;
+      }
+    }
+
+    @keyframes directionalPetals {
+      0% {
+        transform: translate3d(var(--motion-start-x, 0px), var(--motion-start-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * -1));
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      27% {
+        transform: translate3d(var(--motion-quarter-x, 0px), var(--motion-quarter-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * .35))
+          skewX(2deg);
+      }
+      55% {
+        transform: translate3d(var(--motion-mid-x, 0px), var(--motion-mid-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * -.45))
+          skewX(-2deg);
+        opacity: 1;
+      }
+      82% {
+        transform: translate3d(var(--motion-three-quarter-x, 0px), var(--motion-three-quarter-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * .65));
+      }
+      100% {
+        transform: translate3d(var(--motion-end-x, 0px), var(--motion-end-y, 0px), 0)
+          rotate(var(--motion-rotation, 25deg));
+        opacity: 0;
+      }
+    }
+
+    @keyframes directionalPingPong {
+      from {
+        transform: translate3d(var(--motion-start-x, 0px), var(--motion-start-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 0deg) * -1));
+      }
+      to {
+        transform: translate3d(var(--motion-end-x, 0px), var(--motion-end-y, 0px), 0)
+          rotate(var(--motion-rotation, 0deg));
+      }
     }
 
     @keyframes metalSweep {
@@ -629,13 +721,14 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 2.2</h1>
-    <p class="subtitle">Overlays vivos: capas, espejo, reflejos de agua, neón y animación.</p>
+    <h1>🌸 MK Universe 2.3</h1>
+    <p class="subtitle">Overlays vivos: reflejos, movimiento multidireccional, nubes, niebla y pétalos.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
       <button id="addParticleBtn" class="btn" type="button">✨ Partículas</button>
       <button id="addFirefliesBtn" class="btn" type="button">🪲 Luciérnagas</button>
+      <button id="addPetalsBtn" class="btn" type="button">🌸 Pétalos</button>
       <button id="pauseBtn" class="btn" type="button">⏸️ Pausar</button>
       <button id="previewBtn" class="btn" type="button">👁️ Vista limpia</button>
     </div>
@@ -929,16 +1022,22 @@
       </section>
 
       <section class="tab-panel" data-panel="animation">
+        <div class="reflection-note">
+          Para nubes y niebla usa <strong>Desplazamiento continuo</strong>. Para pétalos usa el preset 🌸, que mueve cada pétalo de forma individual.
+        </div>
+
         <div class="control">
           <label for="propAnimation">Tipo</label>
           <select id="propAnimation">
             <option value="none">Sin animación</option>
             <option value="float">Flotar</option>
-            <option value="drift">Niebla / Deriva</option>
+            <option value="drift">Niebla / Deriva corta</option>
+            <option value="travel">Desplazamiento continuo</option>
+            <option value="petals">Pétalos al viento</option>
             <option value="pulse">Pulso de luz</option>
             <option value="breathe">Respirar</option>
             <option value="sway">Balanceo</option>
-            <option value="fall">Caída</option>
+            <option value="fall">Caída simple</option>
             <option value="water">Agua</option>
             <option value="twinkle">Destello</option>
             <option value="plant">Hojas / planta con viento</option>
@@ -947,18 +1046,61 @@
         </div>
 
         <div class="control">
+          <label for="propMotionDirection">Dirección</label>
+          <select id="propMotionDirection">
+            <option value="rightToLeft">Derecha → izquierda</option>
+            <option value="leftToRight">Izquierda → derecha</option>
+            <option value="topToBottom">Arriba → abajo</option>
+            <option value="bottomToTop">Abajo → arriba</option>
+            <option value="downLeft">Diagonal ↙</option>
+            <option value="downRight">Diagonal ↘</option>
+            <option value="upLeft">Diagonal ↖</option>
+            <option value="upRight">Diagonal ↗</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="propMotionMode">Recorrido</label>
+          <select id="propMotionMode">
+            <option value="loop">Continuo: sale y reaparece</option>
+            <option value="pingpong">Ida y vuelta</option>
+          </select>
+        </div>
+
+        <div class="control">
           <label for="propDuration">Duración <span id="propDurationValue" class="value"></span></label>
-          <input id="propDuration" type="range" min="1" max="60" step="0.5" />
+          <input id="propDuration" type="range" min="1" max="120" step="0.5" />
         </div>
 
         <div class="control">
-          <label for="propIntensity">Intensidad <span id="propIntensityValue" class="value"></span></label>
-          <input id="propIntensity" type="range" min="0" max="120" step="1" />
+          <label for="propMotionDistance">Distancia del recorrido <span id="propMotionDistanceValue" class="value"></span></label>
+          <input id="propMotionDistance" type="range" min="20" max="1800" step="5" />
         </div>
 
         <div class="control">
-          <label for="propPlasticity">Plasticidad <span id="propPlasticityValue" class="value"></span></label>
+          <label for="propIntensity">Ondulación / intensidad <span id="propIntensityValue" class="value"></span></label>
+          <input id="propIntensity" type="range" min="0" max="160" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propMotionRotation">Giro durante el viaje <span id="propMotionRotationValue" class="value"></span></label>
+          <input id="propMotionRotation" type="range" min="0" max="360" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propPlasticity">Suavidad <span id="propPlasticityValue" class="value"></span></label>
           <input id="propPlasticity" type="range" min="0" max="100" step="1" />
+        </div>
+
+        <div class="check-row">
+          <input id="propMotionRandomStart" type="checkbox" />
+          <label for="propMotionRandomStart">Inicio aleatorio para evitar sincronización</label>
+        </div>
+
+        <div class="row-wrap" style="margin-top:14px">
+          <button id="petalsPresetBtn" class="btn btn-primary" type="button">🌸 Pétalos</button>
+          <button id="cloudsPresetBtn" class="btn" type="button">☁️ Nubes</button>
+          <button id="fogPresetBtn" class="btn" type="button">🌫️ Niebla</button>
         </div>
       </section>
 
@@ -974,7 +1116,7 @@
     const STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 2.2,
+      version: 2.3,
       selectedId: null,
       layers: []
     };
@@ -1018,9 +1160,14 @@
       threshold: document.getElementById("propThreshold"),
       feather: document.getElementById("propFeather"),
       animation: document.getElementById("propAnimation"),
+      motionDirection: document.getElementById("propMotionDirection"),
+      motionMode: document.getElementById("propMotionMode"),
       duration: document.getElementById("propDuration"),
+      motionDistance: document.getElementById("propMotionDistance"),
       intensity: document.getElementById("propIntensity"),
+      motionRotation: document.getElementById("propMotionRotation"),
       plasticity: document.getElementById("propPlasticity"),
+      motionRandomStart: document.getElementById("propMotionRandomStart"),
       glowEnabled: document.getElementById("propGlowEnabled"),
       glowColor: document.getElementById("propGlowColor"),
       glowIntensity: document.getElementById("propGlowIntensity"),
@@ -1072,9 +1219,14 @@
         threshold: 12,
         feather: 40,
         animation: "none",
+        motionDirection: "rightToLeft",
+        motionMode: "loop",
         duration: 10,
+        motionDistance: 520,
         intensity: 8,
+        motionRotation: 0,
         plasticity: 80,
+        motionRandomStart: true,
         glowEnabled: false,
         glowColor: "#ff8fd1",
         glowIntensity: 35,
@@ -1148,6 +1300,113 @@
       return "linear";
     }
 
+
+    function motionVector(direction, distance) {
+      const d = Math.max(0, Number(distance || 0));
+      const diagonal = d * .72;
+      const vectors = {
+        rightToLeft: { x: -d, y: 0 },
+        leftToRight: { x: d, y: 0 },
+        topToBottom: { x: 0, y: d },
+        bottomToTop: { x: 0, y: -d },
+        downLeft: { x: -diagonal, y: diagonal },
+        downRight: { x: diagonal, y: diagonal },
+        upLeft: { x: -diagonal, y: -diagonal },
+        upRight: { x: diagonal, y: -diagonal }
+      };
+      return vectors[direction] || vectors.rightToLeft;
+    }
+
+    function stableLayerRandom(id) {
+      let hash = 2166136261;
+      for (const char of String(id || "layer")) {
+        hash ^= char.charCodeAt(0);
+        hash = Math.imul(hash, 16777619);
+      }
+      return ((hash >>> 0) % 10000) / 10000;
+    }
+
+    function setMotionVariables(layer, motion) {
+      const vector = motionVector(layer.motionDirection, layer.motionDistance);
+      const startX = -vector.x / 2;
+      const startY = -vector.y / 2;
+      const endX = vector.x / 2;
+      const endY = vector.y / 2;
+      const sway = Number(layer.intensity || 0) * .35;
+
+      motion.style.setProperty("--motion-start-x", `${startX}px`);
+      motion.style.setProperty("--motion-start-y", `${startY}px`);
+      motion.style.setProperty("--motion-quarter-x", `${startX + vector.x * .25 + sway}px`);
+      motion.style.setProperty("--motion-quarter-y", `${startY + vector.y * .25}px`);
+      motion.style.setProperty("--motion-mid-x", `${startX + vector.x * .5 - sway}px`);
+      motion.style.setProperty("--motion-mid-y", `${startY + vector.y * .5}px`);
+      motion.style.setProperty("--motion-three-quarter-x", `${startX + vector.x * .75 + sway * .6}px`);
+      motion.style.setProperty("--motion-three-quarter-y", `${startY + vector.y * .75}px`);
+      motion.style.setProperty("--motion-end-x", `${endX}px`);
+      motion.style.setProperty("--motion-end-y", `${endY}px`);
+      motion.style.setProperty("--motion-rotation", `${Number(layer.motionRotation || 0)}deg`);
+
+      if (layer.motionMode === "pingpong") motion.classList.add("motion-pingpong");
+      const delay = layer.motionRandomStart
+        ? -stableLayerRandom(layer.id) * Math.max(1, Number(layer.duration || 10))
+        : 0;
+      motion.style.setProperty("--motion-delay", `${delay}s`);
+    }
+
+    const MOTION_PRESETS = {
+      petals: {
+        animation: "petals",
+        motionDirection: "downLeft",
+        motionMode: "loop",
+        duration: 17,
+        motionDistance: 1450,
+        intensity: 58,
+        motionRotation: 230,
+        plasticity: 72,
+        motionRandomStart: true
+      },
+      clouds: {
+        animation: "travel",
+        motionDirection: "rightToLeft",
+        motionMode: "loop",
+        duration: 48,
+        motionDistance: 1200,
+        intensity: 8,
+        motionRotation: 0,
+        plasticity: 30,
+        motionRandomStart: true
+      },
+      fog: {
+        animation: "travel",
+        motionDirection: "leftToRight",
+        motionMode: "pingpong",
+        duration: 34,
+        motionDistance: 240,
+        intensity: 14,
+        motionRotation: 0,
+        plasticity: 92,
+        motionRandomStart: true
+      }
+    };
+
+    function applyMotionPreset(name) {
+      const layer = selectedLayer();
+      const preset = MOTION_PRESETS[name];
+      if (!layer || !preset) {
+        projectStatus.textContent = "Selecciona primero una capa.";
+        return;
+      }
+      Object.assign(layer, preset);
+      if (name === "petals" && layer.kind === "particles") {
+        layer.particleType = "petals";
+        layer.particleCount = Math.max(24, Number(layer.particleCount || 42));
+        layer.particleSize = Math.max(7, Number(layer.particleSize || 10));
+        layer.background = true;
+      }
+      renderAll();
+      projectStatus.textContent = `Preset ${name === "petals" ? "Pétalos" : name === "clouds" ? "Nubes" : "Niebla"} aplicado.`;
+    }
+
     function renderAll() {
       renderStage();
       renderLayersList();
@@ -1182,12 +1441,14 @@
         container.style.mixBlendMode = layer.blend;
 
         const motion = document.createElement("div");
-        motion.className = `motion anim-${layer.animation}`;
+        const individualPetals = layer.kind === "particles" && layer.particleType === "petals";
+        motion.className = `motion anim-${individualPetals ? "none" : layer.animation}`;
         motion.style.setProperty("--duration", `${layer.duration}s`);
         motion.style.setProperty("--intensity", `${layer.intensity}px`);
         motion.style.setProperty("--intensity-scale", layer.intensity / 100);
         motion.style.setProperty("--intensity-deg", `${Math.max(1, layer.intensity / 6)}deg`);
         motion.style.setProperty("--easing", easingFromPlasticity(layer.plasticity));
+        setMotionVariables(layer, motion);
 
         if (layer.kind === "particles") {
           drawParticleLayer(layer, motion);
@@ -1321,6 +1582,10 @@
         drawFireflies(layer, motion);
         return;
       }
+      if ((layer.particleType || "") === "petals") {
+        drawAnimatedPetals(layer, motion);
+        return;
+      }
 
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
@@ -1381,6 +1646,108 @@
 
       styleVisual(layer, canvas);
       motion.appendChild(canvas);
+    }
+
+
+    function drawAnimatedPetals(layer, motion) {
+      const canvas = document.createElement("canvas");
+      canvas.className = "petal-field";
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext("2d");
+
+      const count = Math.max(8, Math.min(140, Math.round(layer.particleCount || 42)));
+      const baseSize = Math.max(3, Number(layer.particleSize || 10));
+      const vector = motionVector(layer.motionDirection || "downLeft", 1);
+      const dx = vector.x;
+      const dy = vector.y;
+      const axisLength = Math.hypot(dx, dy) || 1;
+      const nx = dx / axisLength;
+      const ny = dy / axisLength;
+      const margin = 170;
+      const duration = Math.max(2, Number(layer.duration || 17));
+      const swayAmount = Math.max(0, Number(layer.intensity || 0));
+      const rotationAmount = Math.max(0, Number(layer.motionRotation || 230));
+      const randomStart = layer.motionRandomStart !== false;
+      const mode = layer.motionMode || "loop";
+      const palette = ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8"];
+
+      const petals = Array.from({ length: count }, (_, i) => {
+        let startX;
+        let startY;
+        if (Math.abs(nx) > .2) startX = nx > 0 ? -margin - Math.random() * 260 : canvas.width + margin + Math.random() * 260;
+        else startX = Math.random() * canvas.width;
+        if (Math.abs(ny) > .2) startY = ny > 0 ? -margin - Math.random() * 320 : canvas.height + margin + Math.random() * 320;
+        else startY = Math.random() * canvas.height;
+
+        const travel = Math.abs(nx) > Math.abs(ny)
+          ? canvas.width + margin * 2 + Math.random() * 300
+          : canvas.height + margin * 2 + Math.random() * 420;
+
+        return {
+          startX,
+          startY,
+          travel,
+          phase: randomStart ? Math.random() : (i / count),
+          speed: .72 + Math.random() * .65,
+          sway: (18 + Math.random() * 50) * (swayAmount / 55),
+          swaySpeed: 1.5 + Math.random() * 2.8,
+          size: baseSize * (.55 + Math.random() * 1.35),
+          rotation: Math.random() * Math.PI * 2,
+          rotationSpeed: (.4 + Math.random() * 1.5) * (rotationAmount / 180),
+          alpha: .42 + Math.random() * .55,
+          color: palette[Math.floor(Math.random() * palette.length)]
+        };
+      });
+
+      let lastDraw = 0;
+      let hasConnected = false;
+
+      function drawPetal(petal, x, y, angle, alpha) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.globalAlpha = alpha * (layer.opacity / 100);
+        ctx.shadowColor = "rgba(255, 130, 214, .45)";
+        ctx.shadowBlur = Math.max(0, petal.size * .55);
+        ctx.fillStyle = petal.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -petal.size);
+        ctx.bezierCurveTo(petal.size * .72, -petal.size * .35, petal.size * .62, petal.size * .72, 0, petal.size);
+        ctx.bezierCurveTo(-petal.size * .62, petal.size * .72, -petal.size * .72, -petal.size * .35, 0, -petal.size);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawFrame(time) {
+        if (hasConnected && !canvas.isConnected) return;
+        hasConnected = hasConnected || canvas.isConnected;
+
+        if (time - lastDraw >= 32 && !document.body.classList.contains("paused")) {
+          lastDraw = time;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const seconds = time / 1000;
+
+          petals.forEach(petal => {
+            let progress = ((seconds * petal.speed / duration) + petal.phase) % 1;
+            if (mode === "pingpong") progress = progress < .5 ? progress * 2 : (1 - progress) * 2;
+            const fade = Math.min(1, progress / .08, (1 - progress) / .10);
+            const perpendicularX = -ny;
+            const perpendicularY = nx;
+            const wave = Math.sin((progress * Math.PI * 2 * petal.swaySpeed) + petal.phase * 12) * petal.sway;
+            const x = petal.startX + nx * petal.travel * progress + perpendicularX * wave;
+            const y = petal.startY + ny * petal.travel * progress + perpendicularY * wave + Math.sin(progress * Math.PI * 4) * 8;
+            const angle = petal.rotation + seconds * petal.rotationSpeed + Math.sin(progress * Math.PI * 3) * .7;
+            drawPetal(petal, x, y, angle, petal.alpha * Math.max(0, fade));
+          });
+        }
+        requestAnimationFrame(drawFrame);
+      }
+
+      canvas.style.filter =
+        `brightness(${layer.brightness}%) contrast(${layer.contrast}%) saturate(${layer.saturation}%)`;
+      motion.appendChild(canvas);
+      requestAnimationFrame(drawFrame);
     }
 
 
@@ -1530,9 +1897,14 @@
       controls.threshold.value = layer.threshold;
       controls.feather.value = layer.feather;
       controls.animation.value = layer.animation;
+      controls.motionDirection.value = layer.motionDirection || "rightToLeft";
+      controls.motionMode.value = layer.motionMode || "loop";
       controls.duration.value = layer.duration;
+      controls.motionDistance.value = layer.motionDistance ?? 520;
       controls.intensity.value = layer.intensity;
+      controls.motionRotation.value = layer.motionRotation ?? 0;
       controls.plasticity.value = layer.plasticity;
+      controls.motionRandomStart.checked = layer.motionRandomStart !== false;
       controls.glowEnabled.checked = Boolean(layer.glowEnabled);
       controls.glowColor.value = layer.glowColor || "#ff8fd1";
       controls.glowIntensity.value = layer.glowIntensity ?? 35;
@@ -1572,7 +1944,9 @@
         propThresholdValue: `${layer.threshold}`,
         propFeatherValue: `${layer.feather}`,
         propDurationValue: `${layer.duration}s`,
+        propMotionDistanceValue: `${layer.motionDistance ?? 520}px`,
         propIntensityValue: `${layer.intensity}`,
+        propMotionRotationValue: `${layer.motionRotation ?? 0}°`,
         propPlasticityValue: `${layer.plasticity}%`,
         propGlowIntensityValue: `${layer.glowIntensity ?? 35}%`,
         propGlowBlurValue: `${layer.glowBlur ?? 22}px`,
@@ -1634,9 +2008,14 @@
         threshold: "threshold",
         feather: "feather",
         animation: "animation",
+        motionDirection: "motionDirection",
+        motionMode: "motionMode",
         duration: "duration",
+        motionDistance: "motionDistance",
         intensity: "intensity",
+        motionRotation: "motionRotation",
         plasticity: "plasticity",
+        motionRandomStart: "motionRandomStart",
         glowEnabled: "glowEnabled",
         glowColor: "glowColor",
         glowIntensity: "glowIntensity",
@@ -2017,20 +2396,52 @@
           cleanType === "stars" ? "twinkle" :
           cleanType === "lights" ? "pulse" :
           cleanType === "fireflies" ? "none" :
-          "fall",
+          "petals",
         duration:
           cleanType === "petals" ? 16 :
           cleanType === "lights" ? 8 :
           cleanType === "fireflies" ? 6 :
           5,
         intensity:
-          cleanType === "petals" ? 28 :
+          cleanType === "petals" ? 58 :
           cleanType === "lights" ? 3 :
           4,
+        motionDirection: cleanType === "petals" ? "downLeft" : "rightToLeft",
+        motionMode: "loop",
+        motionDistance: cleanType === "petals" ? 1450 : 520,
+        motionRotation: cleanType === "petals" ? 230 : 0,
+        motionRandomStart: true,
         opacity: cleanType === "lights" ? 55 : 80,
         blend: cleanType === "lights" ? "screen" : "normal"
       });
 
+      project.layers.push(layer);
+      project.selectedId = layer.id;
+      renderAll();
+    }
+
+
+    function addPetalsLayer() {
+      const layer = defaultLayer({
+        name: "Pétalos MK",
+        kind: "particles",
+        particleType: "petals",
+        particleCount: 46,
+        particleSize: 10,
+        background: true,
+        animation: "petals",
+        motionDirection: "downLeft",
+        motionMode: "loop",
+        duration: 17,
+        motionDistance: 1450,
+        intensity: 58,
+        motionRotation: 230,
+        plasticity: 72,
+        motionRandomStart: true,
+        opacity: 84,
+        saturation: 118,
+        blend: "screen"
+      });
       project.layers.push(layer);
       project.selectedId = layer.id;
       renderAll();
@@ -2080,7 +2491,7 @@
           project = {
             ...structuredClone(defaultProject),
             ...parsed,
-            version: 2.2,
+            version: 2.3,
             layers: parsed.layers.map(layer => defaultLayer(layer))
           };
           if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
@@ -2111,6 +2522,7 @@
 
     document.getElementById("addParticleBtn").addEventListener("click", addParticleLayer);
     document.getElementById("addFirefliesBtn").addEventListener("click", addFirefliesLayer);
+    document.getElementById("addPetalsBtn").addEventListener("click", addPetalsLayer);
 
     document.getElementById("pauseBtn").addEventListener("click", event => {
       document.body.classList.toggle("paused");
@@ -2149,6 +2561,9 @@
 
     document.getElementById("createReflectionBtn").addEventListener("click", createReflectionFromSelected);
     document.getElementById("createReflectionBtn2").addEventListener("click", createReflectionFromSelected);
+    document.getElementById("petalsPresetBtn").addEventListener("click", () => applyMotionPreset("petals"));
+    document.getElementById("cloudsPresetBtn").addEventListener("click", () => applyMotionPreset("clouds"));
+    document.getElementById("fogPresetBtn").addEventListener("click", () => applyMotionPreset("fog"));
     document.getElementById("breakReflectionLinkBtn").addEventListener("click", () => {
       const layer = selectedLayer();
       if (!layer?.reflection?.enabled) return;

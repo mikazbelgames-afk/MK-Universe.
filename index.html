@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MK Universe 2.0 — Motor de Overlays</title>
+  <title>MK Universe 2.1 — Motor de Overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -22,6 +22,8 @@
 
     html, body {
       margin: 0;
+      width: 100%;
+      height: 100%;
       min-height: 100%;
       background: var(--bg);
       color: var(--text);
@@ -29,9 +31,12 @@
     }
 
     body {
-      min-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 0;
       display: grid;
       grid-template-columns: minmax(320px, 420px) minmax(420px, 1fr) minmax(320px, 420px);
+      grid-template-rows: minmax(0, 1fr);
       gap: 14px;
       padding: 14px;
       overflow: hidden;
@@ -43,7 +48,13 @@
 
     .panel {
       min-height: 0;
-      overflow: auto;
+      height: 100%;
+      max-height: calc(100dvh - 28px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      -webkit-overflow-scrolling: touch;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 18px;
@@ -145,7 +156,11 @@
       top: 0;
       width: 100%;
       height: 100%;
-      transform: none;
+      transform:
+        translate(var(--x-px, 0px), var(--y-px, 0px))
+        rotate(var(--rotation, 0deg))
+        scale(var(--scale, 1));
+      transform-origin: center;
     }
 
     .layer > .motion {
@@ -230,6 +245,45 @@
       border-radius: 14px;
       padding: 14px;
       margin-bottom: 12px;
+    }
+
+    .project-card {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(36, 23, 45, .97);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+    }
+
+    .nudge-help {
+      margin: -3px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .nudge-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(2, 38px);
+      justify-content: center;
+      gap: 6px;
+      margin: 4px 0 14px;
+    }
+
+    .nudge-pad .nudge-up { grid-column: 2; grid-row: 1; }
+    .nudge-pad .nudge-left { grid-column: 1; grid-row: 2; }
+    .nudge-pad .nudge-down { grid-column: 2; grid-row: 2; }
+    .nudge-pad .nudge-right { grid-column: 3; grid-row: 2; }
+
+    #stage {
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #stage.dragging {
+      cursor: grabbing;
     }
 
     .layer-card {
@@ -518,12 +572,17 @@
     @media (max-width: 760px) {
       body {
         display: block;
+        height: auto;
+        min-height: 100dvh;
         overflow: auto;
       }
       .left-panel,
       .right-panel {
         position: static;
         width: 100%;
+        height: auto;
+        max-height: none;
+        overflow: visible;
         margin-bottom: 12px;
       }
       .scene-shell {
@@ -539,7 +598,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 2.0</h1>
+    <h1>🌸 MK Universe 2.1</h1>
     <p class="subtitle">Overlays vivos: neón, brillo metálico, plantas, agua y luciérnagas.</p>
 
     <div class="toolbar row-wrap">
@@ -552,13 +611,7 @@
 
     <input id="filePicker" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
 
-    <section class="card">
-      <h3>Capas</h3>
-      <p class="notice">Arrastra una capa para reordenarla o usa las flechas.</p>
-      <div id="layersList"></div>
-    </section>
-
-    <section class="card">
+    <section class="card project-card">
       <h3>Proyecto</h3>
       <div class="row-wrap" style="margin-top:10px">
         <button id="saveBtn" class="btn" type="button">💾 Guardar</button>
@@ -568,6 +621,12 @@
       </div>
       <input id="jsonPicker" type="file" accept=".json,application/json" class="hidden" />
       <div id="projectStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h3>Capas</h3>
+      <p class="notice">Arrastra una capa para reordenarla o usa las flechas.</p>
+      <div id="layersList"></div>
     </section>
   </aside>
 
@@ -603,6 +662,14 @@
         <div class="control">
           <label for="propY">Posición Y <span id="propYValue" class="value"></span></label>
           <input id="propY" type="range" min="-1800" max="1800" step="1" />
+        </div>
+
+        <p class="nudge-help">También puedes arrastrar la capa seleccionada directamente sobre la escena o moverla con estos botones.</p>
+        <div class="nudge-pad" aria-label="Mover capa seleccionada">
+          <button id="nudgeUpBtn" class="btn btn-mini nudge-up" type="button" title="Subir">↑</button>
+          <button id="nudgeLeftBtn" class="btn btn-mini nudge-left" type="button" title="Mover a la izquierda">←</button>
+          <button id="nudgeDownBtn" class="btn btn-mini nudge-down" type="button" title="Bajar">↓</button>
+          <button id="nudgeRightBtn" class="btn btn-mini nudge-right" type="button" title="Mover a la derecha">→</button>
         </div>
 
         <div class="control">
@@ -776,6 +843,7 @@
       project.selectedId = null;
     }
     let dragId = null;
+    let stageDrag = null;
 
     const stage = document.getElementById("stage");
     const layersList = document.getElementById("layersList");
@@ -1350,6 +1418,66 @@
       });
     }
 
+    function moveSelectedLayer(dx, dy, message = "Posición actualizada.") {
+      const layer = selectedLayer();
+      if (!layer) return;
+
+      layer.x = Math.max(-1000, Math.min(1000, Number(layer.x || 0) + dx));
+      layer.y = Math.max(-1800, Math.min(1800, Number(layer.y || 0) + dy));
+      renderStage();
+      renderInspector();
+      saveProject(message);
+    }
+
+    function finishStageDrag(event) {
+      if (!stageDrag) return;
+      if (event && stageDrag.pointerId !== event.pointerId) return;
+      try {
+        stage.releasePointerCapture?.(stageDrag.pointerId);
+      } catch {}
+      stageDrag = null;
+      stage.classList.remove("dragging");
+      renderInspector();
+      saveProject("Posición guardada.");
+    }
+
+    stage.addEventListener("pointerdown", event => {
+      const layer = selectedLayer();
+      if (!layer || (event.button !== undefined && event.button !== 0)) return;
+
+      stageDrag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        layerX: Number(layer.x || 0),
+        layerY: Number(layer.y || 0)
+      };
+
+      stage.setPointerCapture?.(event.pointerId);
+      stage.classList.add("dragging");
+      event.preventDefault();
+    });
+
+    stage.addEventListener("pointermove", event => {
+      if (!stageDrag || stageDrag.pointerId !== event.pointerId) return;
+      const layer = selectedLayer();
+      if (!layer) return;
+
+      layer.x = Math.round(stageDrag.layerX + event.clientX - stageDrag.startX);
+      layer.y = Math.round(stageDrag.layerY + event.clientY - stageDrag.startY);
+      layer.x = Math.max(-1000, Math.min(1000, layer.x));
+      layer.y = Math.max(-1800, Math.min(1800, layer.y));
+
+      renderStage();
+      controls.x.value = layer.x;
+      controls.y.value = layer.y;
+      updateValueLabels(layer);
+      event.preventDefault();
+    });
+
+    stage.addEventListener("pointerup", finishStageDrag);
+    stage.addEventListener("pointercancel", finishStageDrag);
+
     function addImageFile(file) {
       if (!file) return;
       const reader = new FileReader();
@@ -1516,6 +1644,34 @@
         button.classList.add("active");
         document.querySelector(`[data-panel="${button.dataset.tab}"]`).classList.add("active");
       });
+    });
+
+    document.getElementById("nudgeUpBtn").addEventListener("click", event => {
+      moveSelectedLayer(0, event.shiftKey ? -10 : -2);
+    });
+    document.getElementById("nudgeDownBtn").addEventListener("click", event => {
+      moveSelectedLayer(0, event.shiftKey ? 10 : 2);
+    });
+    document.getElementById("nudgeLeftBtn").addEventListener("click", event => {
+      moveSelectedLayer(event.shiftKey ? -10 : -2, 0);
+    });
+    document.getElementById("nudgeRightBtn").addEventListener("click", event => {
+      moveSelectedLayer(event.shiftKey ? 10 : 2, 0);
+    });
+
+    document.addEventListener("keydown", event => {
+      const tag = document.activeElement?.tagName;
+      if (["INPUT", "SELECT", "TEXTAREA"].includes(tag)) return;
+      const step = event.shiftKey ? 10 : 2;
+      const moves = {
+        ArrowUp: [0, -step],
+        ArrowDown: [0, step],
+        ArrowLeft: [-step, 0],
+        ArrowRight: [step, 0]
+      };
+      if (!moves[event.key]) return;
+      event.preventDefault();
+      moveSelectedLayer(...moves[event.key]);
     });
 
     bindInspector();

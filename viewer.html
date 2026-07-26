@@ -1,0 +1,3295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MK Universe — Visor del live</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #0b0710;
+      --panel: rgba(27, 19, 35, .98);
+      --panel-2: rgba(255,255,255,.05);
+      --border: rgba(255, 211, 232, .22);
+      --text: #fff7fb;
+      --muted: #c7b8c9;
+      --accent: #ff9bcf;
+      --accent-2: #ffd1e8;
+      --danger: #ff7b94;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      height: 100dvh;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(320px, 420px) minmax(420px, 1fr) minmax(320px, 420px);
+      grid-template-rows: minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
+      overflow: hidden;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .panel {
+      min-height: 0;
+      height: 100%;
+      max-height: calc(100dvh - 28px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      -webkit-overflow-scrolling: touch;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .panel h1,
+    .panel h2,
+    .panel h3 {
+      margin: 0;
+    }
+
+    .subtitle {
+      margin: 6px 0 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .toolbar,
+    .row,
+    .row-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row-wrap { flex-wrap: wrap; }
+
+    .toolbar {
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px 11px;
+      background: rgba(255,255,255,.07);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .btn:hover { background: rgba(255,255,255,.12); }
+    .btn-primary { background: rgba(255,155,207,.17); }
+    .btn-danger { color: #ffdbe4; border-color: rgba(255,123,148,.35); }
+    .btn-mini { padding: 6px 8px; min-width: 34px; }
+
+    .scene-shell {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+      padding: 10px;
+      background:
+        radial-gradient(circle at center, rgba(255,155,207,.08), transparent 55%),
+        #07050a;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .stage-wrap {
+      position: relative;
+      height: min(92vh, 960px);
+      aspect-ratio: 9 / 16;
+      max-width: 100%;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 16px 50px rgba(0,0,0,.45);
+    }
+
+    #stage {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .layer {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform:
+        translate(-50%, -50%)
+        translate(var(--x-px, 0px), var(--y-px, 0px))
+        rotate(var(--rotation, 0deg))
+        skewX(var(--skew-x, 0deg))
+        skewY(var(--skew-y, 0deg))
+        scale(var(--scale-x, 1), var(--scale-y, 1));
+      transform-origin: center;
+      pointer-events: none;
+      user-select: none;
+      will-change: transform, opacity, filter;
+    }
+
+    .layer.background {
+      inset: 0;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      transform:
+        translate(var(--x-px, 0px), var(--y-px, 0px))
+        rotate(var(--rotation, 0deg))
+        skewX(var(--skew-x, 0deg))
+        skewY(var(--skew-y, 0deg))
+        scale(var(--scale-x, 1), var(--scale-y, 1));
+      transform-origin: center;
+    }
+
+    .layer > .motion {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-origin: center;
+      will-change: transform, opacity;
+    }
+
+    .metal-shine {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: var(--shine-opacity, .72);
+      background: linear-gradient(
+        115deg,
+        transparent 15%,
+        rgba(255,255,255,0) 35%,
+        rgba(255,255,255,.95) 48%,
+        rgba(255,221,238,.85) 53%,
+        rgba(255,255,255,0) 66%,
+        transparent 85%
+      );
+      background-size: 240% 100%;
+      mix-blend-mode: screen;
+      animation: metalSweep var(--shine-speed, 5s) ease-in-out infinite;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+    }
+
+    .firefly-field {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .firefly {
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      left: var(--left);
+      top: var(--top);
+      border-radius: 999px;
+      background: radial-gradient(circle, #fffde8 0 18%, #fff3a8 28%, rgba(255,235,116,.38) 55%, transparent 74%);
+      box-shadow:
+        0 0 calc(var(--size) * .8) rgba(255,247,177,.95),
+        0 0 calc(var(--size) * 2.2) rgba(216,255,151,.72);
+      opacity: .2;
+      animation:
+        fireflyMove var(--fly-duration) ease-in-out infinite alternate,
+        fireflyBlink var(--blink-duration) ease-in-out infinite;
+      animation-delay: var(--delay);
+      will-change: transform, opacity;
+    }
+
+    .layer img,
+    .layer canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .layer.background img,
+    .layer.background canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card {
+      background: var(--panel-2);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .project-card {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(36, 23, 45, .97);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+    }
+
+    .nudge-help {
+      margin: -3px 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .nudge-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      grid-template-rows: repeat(2, 38px);
+      justify-content: center;
+      gap: 6px;
+      margin: 4px 0 14px;
+    }
+
+    .nudge-pad .nudge-up { grid-column: 2; grid-row: 1; }
+    .nudge-pad .nudge-left { grid-column: 1; grid-row: 2; }
+    .nudge-pad .nudge-down { grid-column: 2; grid-row: 2; }
+    .nudge-pad .nudge-right { grid-column: 3; grid-row: 2; }
+
+    #stage {
+      cursor: grab;
+      touch-action: none;
+    }
+
+    #stage.dragging {
+      cursor: grabbing;
+    }
+
+    .layer-card {
+      padding: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      margin-bottom: 9px;
+      background: rgba(255,255,255,.035);
+    }
+
+    .layer-card.active {
+      border-color: rgba(255,155,207,.65);
+      background: rgba(255,155,207,.08);
+    }
+
+    .layer-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .layer-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .control {
+      margin-bottom: 13px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .value {
+      color: var(--accent-2);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="color"],
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 9px 10px;
+      background: #24172d;
+      color: white;
+    }
+
+    .check-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .check-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .notice {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .status {
+      min-height: 18px;
+      margin-top: 8px;
+      color: var(--accent-2);
+      font-size: 12px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .tab.active {
+      background: rgba(255,155,207,.20);
+      border-color: rgba(255,155,207,.55);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+
+
+    .reflection-note {
+      padding: 10px 11px;
+      border-radius: 10px;
+      background: rgba(255, 155, 207, .08);
+      border: 1px solid rgba(255, 155, 207, .18);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    .reflection-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 7px;
+      margin-left: 6px;
+      border-radius: 999px;
+      background: rgba(120, 190, 255, .13);
+      border: 1px solid rgba(150, 205, 255, .22);
+      color: #d9efff;
+      font-size: 10px;
+      vertical-align: middle;
+    }
+
+    .hidden { display: none !important; }
+
+    body.preview-mode {
+      grid-template-columns: 1fr;
+    }
+
+    body.preview-mode .panel {
+      display: none;
+    }
+
+    body.preview-mode .scene-shell {
+      border: 0;
+      background: #000;
+      padding: 0;
+    }
+
+    body.preview-mode .stage-wrap {
+      height: 100vh;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .preview-exit {
+      display: none;
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 9999;
+    }
+
+    body.preview-mode .preview-exit {
+      display: block;
+    }
+
+
+
+    /* MK 2.5 — Aura respirante independiente y de color libre */
+    .visual-stack {
+      position: relative;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      isolation: isolate;
+    }
+
+    .visual-stack > img,
+    .visual-stack > canvas {
+      position: relative;
+      z-index: 2;
+    }
+
+    .aura-layer {
+      position: absolute;
+      z-index: 1;
+      pointer-events: none;
+      mix-blend-mode: screen;
+      will-change: opacity, transform, filter;
+      animation: auraBreath var(--aura-speed, 4s) ease-in-out infinite;
+    }
+
+    .aura-layer.silhouette {
+      inset: 0;
+      background: var(--aura-color, #ff8fd1);
+      filter: blur(var(--aura-blur, 24px));
+      transform-origin: center;
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+      mask-position: center;
+      -webkit-mask-size: contain;
+      mask-size: contain;
+    }
+
+    .aura-layer.focus {
+      left: var(--aura-focus-x, 50%);
+      top: var(--aura-focus-y, 50%);
+      width: var(--aura-focus-size, 36%);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      transform: translate(-50%, -50%);
+      filter: blur(var(--aura-blur, 24px));
+      transform-origin: center;
+    }
+
+    @keyframes auraBreath {
+      0%, 100% {
+        opacity: var(--aura-min-opacity, .18);
+        scale: 1;
+      }
+      50% {
+        opacity: var(--aura-max-opacity, .65);
+        scale: var(--aura-scale, 1.035);
+      }
+    }
+
+    /* Animaciones base */
+    .anim-none { animation: none; }
+
+    .anim-float {
+      animation: float var(--duration, 8s) var(--easing, ease-in-out) infinite alternate;
+    }
+
+    .anim-drift {
+      animation: drift var(--duration, 14s) var(--easing, ease-in-out) infinite alternate;
+    }
+
+    .anim-pulse {
+      animation: pulse var(--duration, 8s) var(--easing, ease-in-out) infinite;
+    }
+
+    .anim-breathe {
+      animation: breathe var(--duration, 10s) var(--easing, ease-in-out) infinite;
+    }
+
+    .anim-sway {
+      animation: sway var(--duration, 7s) var(--easing, ease-in-out) infinite alternate;
+    }
+
+    .anim-fall {
+      animation: fall var(--duration, 12s) linear infinite;
+    }
+
+    .anim-water {
+      animation: water var(--duration, 10s) var(--easing, ease-in-out) infinite;
+    }
+
+    .anim-twinkle {
+      animation: twinkle var(--duration, 4s) ease-in-out infinite;
+    }
+
+    .anim-plant {
+      transform-origin: 50% 100%;
+      animation: plantWind var(--duration, 7s) var(--easing, ease-in-out) infinite alternate;
+    }
+
+    .anim-ripple {
+      transform-origin: 50% 60%;
+      animation: ripple var(--duration, 6s) var(--easing, ease-in-out) infinite;
+    }
+
+
+    /* Movimiento multidireccional MK 2.3 */
+    .anim-travel,
+    .anim-petals {
+      animation-name: directionalLoop;
+      animation-duration: var(--duration, 18s);
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      animation-delay: var(--motion-delay, 0s);
+    }
+
+    .anim-petals {
+      animation-name: directionalPetals;
+      animation-timing-function: var(--easing, ease-in-out);
+    }
+
+    .motion-pingpong.anim-travel,
+    .motion-pingpong.anim-petals {
+      animation-name: directionalPingPong;
+      animation-direction: alternate;
+      animation-timing-function: var(--easing, ease-in-out);
+    }
+
+    .petal-palette-grid {
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .petal-color-box {
+      display:grid;
+      gap:5px;
+      padding:8px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:10px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .petal-color-box span {
+      font-size:11px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .petal-color-box input[type="color"] {
+      width:100%;
+      height:34px;
+      padding:2px;
+      cursor:pointer;
+    }
+
+    .petal-field {
+      display: block;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    @keyframes float {
+      from { transform: translateY(calc(var(--intensity, 8px) * -1)); }
+      to { transform: translateY(var(--intensity, 8px)); }
+    }
+
+    @keyframes drift {
+      from { transform: translateX(calc(var(--intensity, 12px) * -1)) scale(1.01); }
+      to { transform: translateX(var(--intensity, 12px)) scale(1.03); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: .72; }
+      50% { transform: scale(calc(1 + var(--intensity-scale, .03))); opacity: 1; }
+    }
+
+    @keyframes breathe {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(calc(1 + var(--intensity-scale, .025))); }
+    }
+
+    @keyframes sway {
+      from { transform: rotate(calc(var(--intensity-deg, 2deg) * -1)); }
+      to { transform: rotate(var(--intensity-deg, 2deg)); }
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-120%) translateX(calc(var(--intensity, 20px) * -1)) rotate(-8deg); opacity: 0; }
+      12% { opacity: 1; }
+      88% { opacity: 1; }
+      100% { transform: translateY(120%) translateX(var(--intensity, 20px)) rotate(10deg); opacity: 0; }
+    }
+
+    @keyframes water {
+      0%,100% { transform: translateX(calc(var(--intensity, 8px) * -1)) scaleY(1); }
+      50% { transform: translateX(var(--intensity, 8px)) scaleY(calc(1 + var(--intensity-scale, .02))); }
+    }
+
+    @keyframes twinkle {
+      0%,100% { opacity: .35; transform: scale(.98); }
+      50% { opacity: 1; transform: scale(calc(1 + var(--intensity-scale, .04))); }
+    }
+
+    @keyframes plantWind {
+      0% { transform: rotate(calc(var(--intensity-deg, 2deg) * -.55)) skewX(-.35deg) scaleY(1); }
+      45% { transform: rotate(calc(var(--intensity-deg, 2deg) * .25)) skewX(.25deg) scaleY(1.003); }
+      100% { transform: rotate(var(--intensity-deg, 2deg)) skewX(.55deg) scaleY(.998); }
+    }
+
+    @keyframes ripple {
+      0%,100% { transform: translateX(calc(var(--intensity, 8px) * -.45)) skewX(-.3deg) scaleY(1); }
+      25% { transform: translateX(0) skewX(.25deg) scaleY(calc(1 + var(--intensity-scale, .015))); }
+      50% { transform: translateX(calc(var(--intensity, 8px) * .45)) skewX(-.15deg) scaleY(.996); }
+      75% { transform: translateX(0) skewX(.3deg) scaleY(calc(1 + var(--intensity-scale, .01))); }
+    }
+
+
+    @keyframes directionalLoop {
+      0% {
+        transform: translate3d(var(--motion-start-x, 0px), var(--motion-start-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 0deg) * -1));
+        opacity: 0;
+      }
+      8% { opacity: 1; }
+      50% {
+        transform: translate3d(var(--motion-mid-x, 0px), var(--motion-mid-y, 0px), 0)
+          rotate(0deg);
+        opacity: 1;
+      }
+      92% { opacity: 1; }
+      100% {
+        transform: translate3d(var(--motion-end-x, 0px), var(--motion-end-y, 0px), 0)
+          rotate(var(--motion-rotation, 0deg));
+        opacity: 0;
+      }
+    }
+
+    @keyframes directionalPetals {
+      0% {
+        transform: translate3d(var(--motion-start-x, 0px), var(--motion-start-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * -1));
+        opacity: 0;
+      }
+      10% { opacity: 1; }
+      27% {
+        transform: translate3d(var(--motion-quarter-x, 0px), var(--motion-quarter-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * .35))
+          skewX(2deg);
+      }
+      55% {
+        transform: translate3d(var(--motion-mid-x, 0px), var(--motion-mid-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * -.45))
+          skewX(-2deg);
+        opacity: 1;
+      }
+      82% {
+        transform: translate3d(var(--motion-three-quarter-x, 0px), var(--motion-three-quarter-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 25deg) * .65));
+      }
+      100% {
+        transform: translate3d(var(--motion-end-x, 0px), var(--motion-end-y, 0px), 0)
+          rotate(var(--motion-rotation, 25deg));
+        opacity: 0;
+      }
+    }
+
+    @keyframes directionalPingPong {
+      from {
+        transform: translate3d(var(--motion-start-x, 0px), var(--motion-start-y, 0px), 0)
+          rotate(calc(var(--motion-rotation, 0deg) * -1));
+      }
+      to {
+        transform: translate3d(var(--motion-end-x, 0px), var(--motion-end-y, 0px), 0)
+          rotate(var(--motion-rotation, 0deg));
+      }
+    }
+
+    @keyframes metalSweep {
+      0%, 18% { background-position: 160% 0; opacity: 0; }
+      34% { opacity: var(--shine-opacity, .72); }
+      58% { background-position: -80% 0; opacity: var(--shine-opacity, .72); }
+      72%, 100% { background-position: -80% 0; opacity: 0; }
+    }
+
+    @keyframes fireflyMove {
+      0% { transform: translate3d(-8px, 8px, 0) scale(.75); }
+      35% { transform: translate3d(16px, -12px, 0) scale(1); }
+      70% { transform: translate3d(-13px, -23px, 0) scale(.86); }
+      100% { transform: translate3d(24px, 10px, 0) scale(1.08); }
+    }
+
+    @keyframes fireflyBlink {
+      0%,100% { opacity: .08; }
+      38% { opacity: .92; }
+      55% { opacity: .28; }
+      75% { opacity: 1; }
+    }
+
+    body.paused .motion {
+      animation-play-state: paused !important;
+    }
+
+    @media (max-width: 1180px) {
+      body {
+        grid-template-columns: minmax(300px, 380px) minmax(400px, 1fr);
+      }
+      .right-panel {
+        position: fixed;
+        right: 14px;
+        top: 14px;
+        bottom: 14px;
+        width: min(92vw, 390px);
+        z-index: 1000;
+        box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      }
+      .right-panel.closed { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        display: block;
+        height: auto;
+        min-height: 100dvh;
+        overflow: auto;
+      }
+      .left-panel,
+      .right-panel {
+        position: static;
+        width: 100%;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        margin-bottom: 12px;
+      }
+      .scene-shell {
+        min-height: 70vh;
+      }
+      .stage-wrap {
+        width: min(94vw, 430px);
+        height: auto;
+      }
+    }
+  </style>
+
+<style>
+  html, body { margin:0 !important; width:100%; height:100%; overflow:hidden !important; background:#000 !important; }
+  body.viewer-live { display:block !important; padding:0 !important; }
+  body.viewer-live .panel, body.viewer-live .preview-exit { display:none !important; }
+  body.viewer-live .scene-shell { width:100vw !important; height:100vh !important; padding:0 !important; margin:0 !important; border:0 !important; background:#000 !important; }
+  body.viewer-live .stage-wrap { height:100vh !important; width:auto !important; max-width:none !important; aspect-ratio:9/16 !important; margin:0 auto !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:#000 !important; }
+  body.viewer-live #stage { cursor:none !important; }
+  #viewerError { position:fixed; inset:0; display:none; place-items:center; padding:30px; background:#09030f; color:#ffd8ef; font:16px/1.5 system-ui,sans-serif; text-align:center; z-index:99999; }
+</style>
+</head>
+
+<body class="viewer-live preview-mode"><div id="viewerError"></div>
+  <aside class="panel left-panel">
+    <h1>🌸 MK Universe 2.5 🌸</h1>
+    <p class="subtitle">Overlays vivos: reflejos, pétalos, movimiento orgánico y aura respirante de cualquier color.</p>
+
+    <div class="toolbar row-wrap">
+      <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
+      <button id="addParticleBtn" class="btn" type="button">✨ Partículas</button>
+      <button id="addFirefliesBtn" class="btn" type="button">🪲 Luciérnagas</button>
+      <button id="addPetalsBtn" class="btn" type="button">🌸 Pétalos</button>
+      <button id="pauseBtn" class="btn" type="button">⏸️ Pausar</button>
+      <button id="previewBtn" class="btn" type="button">👁️ Vista limpia</button>
+    </div>
+
+    <input id="filePicker" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
+
+    <section class="card project-card">
+      <h3>Proyecto</h3>
+      <div class="row-wrap" style="margin-top:10px">
+        <button id="saveBtn" class="btn" type="button">💾 Guardar</button>
+        <button id="exportBtn" class="btn" type="button">📤 Exportar JSON</button>
+        <button id="importBtn" class="btn" type="button">📥 Importar JSON</button>
+        <button id="resetBtn" class="btn btn-danger" type="button">↩️ Restablecer</button>
+      </div>
+      <input id="jsonPicker" type="file" accept=".json,application/json" class="hidden" />
+      <div id="projectStatus" class="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h3>Capas</h3>
+      <p class="notice">Arrastra una capa para reordenarla o usa las flechas.</p>
+      <div id="layersList"></div>
+    </section>
+  </aside>
+
+  <main class="scene-shell">
+    <div class="stage-wrap">
+      <div id="stage" aria-label="Escena vertical 1080 por 1920"></div>
+    </div>
+  </main>
+
+  <aside class="panel right-panel" id="rightPanel">
+    <div class="tabs">
+      <button class="btn tab active" data-tab="transform" type="button">Transformar</button>
+      <button class="btn tab" data-tab="appearance" type="button">Apariencia</button>
+      <button class="btn tab" data-tab="reflection" type="button">Reflejo</button>
+      <button class="btn tab" data-tab="animation" type="button">Animación</button>
+    </div>
+
+    <div id="emptyInspector" class="notice">
+      Selecciona una capa para editarla.
+    </div>
+
+    <div id="inspector" class="hidden">
+      <section class="tab-panel active" data-panel="transform">
+        <div class="control">
+          <label>Nombre</label>
+          <input id="propName" type="text" />
+        </div>
+
+        <div class="control">
+          <label for="propX">Posición X <span id="propXValue" class="value"></span></label>
+          <input id="propX" type="range" min="-1000" max="1000" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propY">Posición Y <span id="propYValue" class="value"></span></label>
+          <input id="propY" type="range" min="-1800" max="1800" step="1" />
+        </div>
+
+        <p class="nudge-help">También puedes arrastrar la capa seleccionada directamente sobre la escena o moverla con estos botones.</p>
+        <div class="nudge-pad" aria-label="Mover capa seleccionada">
+          <button id="nudgeUpBtn" class="btn btn-mini nudge-up" type="button" title="Subir">↑</button>
+          <button id="nudgeLeftBtn" class="btn btn-mini nudge-left" type="button" title="Mover a la izquierda">←</button>
+          <button id="nudgeDownBtn" class="btn btn-mini nudge-down" type="button" title="Bajar">↓</button>
+          <button id="nudgeRightBtn" class="btn btn-mini nudge-right" type="button" title="Mover a la derecha">→</button>
+        </div>
+
+        <div class="control">
+          <label for="propScale">Escala <span id="propScaleValue" class="value"></span></label>
+          <input id="propScale" type="range" min="5" max="300" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propRotation">Rotación <span id="propRotationValue" class="value"></span></label>
+          <input id="propRotation" type="range" min="-180" max="180" step="1" />
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:12px">🔄 Espejo y deformación</h3>
+
+          <div class="control">
+            <label for="propScaleX">Escala horizontal <span id="propScaleXValue" class="value"></span></label>
+            <input id="propScaleX" type="range" min="5" max="300" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propScaleY">Escala vertical <span id="propScaleYValue" class="value"></span></label>
+            <input id="propScaleY" type="range" min="5" max="300" step="1" />
+          </div>
+
+          <div class="check-row">
+            <input id="propFlipX" type="checkbox" />
+            <label for="propFlipX">Espejo horizontal</label>
+          </div>
+
+          <div class="check-row">
+            <input id="propFlipY" type="checkbox" />
+            <label for="propFlipY">Espejo vertical</label>
+          </div>
+
+          <div class="control">
+            <label for="propSkewX">Inclinación horizontal <span id="propSkewXValue" class="value"></span></label>
+            <input id="propSkewX" type="range" min="-60" max="60" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propSkewY">Inclinación vertical <span id="propSkewYValue" class="value"></span></label>
+            <input id="propSkewY" type="range" min="-60" max="60" step="1" />
+          </div>
+
+          <button id="createReflectionBtn" class="btn btn-primary" type="button" style="width:100%">
+            🌊 Duplicar como reflejo de agua
+          </button>
+        </div>
+
+
+        <div class="check-row">
+          <input id="propVisible" type="checkbox" />
+          <label for="propVisible">Mostrar capa</label>
+        </div>
+
+        <div class="check-row">
+          <input id="propBackground" type="checkbox" />
+          <label for="propBackground">Usar como fondo completo</label>
+        </div>
+      </section>
+
+      <section class="tab-panel" data-panel="appearance">
+        <div class="control">
+          <label for="propOpacity">Opacidad <span id="propOpacityValue" class="value"></span></label>
+          <input id="propOpacity" type="range" min="0" max="100" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propBrightness">Brillo <span id="propBrightnessValue" class="value"></span></label>
+          <input id="propBrightness" type="range" min="0" max="250" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propContrast">Contraste <span id="propContrastValue" class="value"></span></label>
+          <input id="propContrast" type="range" min="0" max="250" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propSaturation">Saturación <span id="propSaturationValue" class="value"></span></label>
+          <input id="propSaturation" type="range" min="0" max="250" step="1" />
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:12px">✨ Luz y materiales</h3>
+
+          <div class="check-row">
+            <input id="propGlowEnabled" type="checkbox" />
+            <label for="propGlowEnabled">Activar resplandor neón</label>
+          </div>
+
+          <div class="control">
+            <label for="propGlowColor">Color del resplandor</label>
+            <input id="propGlowColor" type="color" />
+          </div>
+
+          <div class="control">
+            <label for="propGlowIntensity">Intensidad <span id="propGlowIntensityValue" class="value"></span></label>
+            <input id="propGlowIntensity" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propGlowBlur">Difuminado <span id="propGlowBlurValue" class="value"></span></label>
+            <input id="propGlowBlur" type="range" min="0" max="80" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propEdgeThickness">Borde luminoso <span id="propEdgeThicknessValue" class="value"></span></label>
+            <input id="propEdgeThickness" type="range" min="0" max="20" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propEmission">Emisión / núcleo de luz <span id="propEmissionValue" class="value"></span></label>
+            <input id="propEmission" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="check-row">
+            <input id="propMetalShine" type="checkbox" />
+            <label for="propMetalShine">Brillo metálico animado</label>
+          </div>
+
+          <div class="control">
+            <label for="propShineSpeed">Velocidad del brillo <span id="propShineSpeedValue" class="value"></span></label>
+            <input id="propShineSpeed" type="range" min="1" max="20" step=".5" />
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:12px">💡 Aura respirante de color libre</h3>
+          <div class="reflection-note">
+            Elige cualquier color para cada capa. La respiración funciona aparte de las demás animaciones, así una lámpara puede balancearse y brillar al mismo tiempo.
+          </div>
+
+          <div class="check-row">
+            <input id="propAuraEnabled" type="checkbox" />
+            <label for="propAuraEnabled">Activar aura respirante</label>
+          </div>
+
+          <div class="control">
+            <label for="propAuraMode">Forma del aura</label>
+            <select id="propAuraMode">
+              <option value="silhouette">Seguir la silueta del objeto</option>
+              <option value="focus">Foco circular localizado</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propAuraColor">Color libre del aura</label>
+            <input id="propAuraColor" type="color" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraIntensity">Intensidad máxima <span id="propAuraIntensityValue" class="value"></span></label>
+            <input id="propAuraIntensity" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraPulse">Profundidad de respiración <span id="propAuraPulseValue" class="value"></span></label>
+            <input id="propAuraPulse" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraBlur">Difuminado del aura <span id="propAuraBlurValue" class="value"></span></label>
+            <input id="propAuraBlur" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraSpeed">Duración de la respiración <span id="propAuraSpeedValue" class="value"></span></label>
+            <input id="propAuraSpeed" type="range" min="1" max="20" step="0.25" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraScale">Expansión del pulso <span id="propAuraScaleValue" class="value"></span></label>
+            <input id="propAuraScale" type="range" min="0" max="15" step="0.25" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraFocusX">Posición focal X <span id="propAuraFocusXValue" class="value"></span></label>
+            <input id="propAuraFocusX" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraFocusY">Posición focal Y <span id="propAuraFocusYValue" class="value"></span></label>
+            <input id="propAuraFocusY" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propAuraFocusSize">Tamaño del foco <span id="propAuraFocusSizeValue" class="value"></span></label>
+            <input id="propAuraFocusSize" type="range" min="5" max="160" step="1" />
+          </div>
+        </div>
+
+        <div class="control">
+          <label for="propBlend">Modo de mezcla</label>
+          <select id="propBlend">
+            <option value="normal">Normal</option>
+            <option value="screen">Pantalla / Screen</option>
+            <option value="lighten">Aclarar</option>
+            <option value="multiply">Multiplicar</option>
+            <option value="overlay">Superponer</option>
+            <option value="soft-light">Luz suave</option>
+          </select>
+        </div>
+
+        <div class="check-row">
+          <input id="propRemoveBlack" type="checkbox" />
+          <label for="propRemoveBlack">Eliminar fondo negro</label>
+        </div>
+
+        <div class="control">
+          <label for="propThreshold">Umbral negro <span id="propThresholdValue" class="value"></span></label>
+          <input id="propThreshold" type="range" min="0" max="140" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propFeather">Suavidad del borde <span id="propFeatherValue" class="value"></span></label>
+          <input id="propFeather" type="range" min="1" max="160" step="1" />
+        </div>
+      </section>
+
+
+
+      <section class="tab-panel" data-panel="reflection">
+        <div class="reflection-note">
+          Selecciona una imagen y usa <strong>Duplicar como reflejo</strong>. Se creará una copia invertida sin alterar la original. Los JSON antiguos siguen siendo compatibles.
+        </div>
+
+        <div class="check-row">
+          <input id="propReflectionEnabled" type="checkbox" />
+          <label for="propReflectionEnabled">Activar distorsión de agua en esta capa</label>
+        </div>
+
+        <div class="check-row">
+          <input id="propReflectionLinked" type="checkbox" />
+          <label for="propReflectionLinked">Vincular con la capa original</label>
+        </div>
+
+        <div class="control">
+          <label for="propReflectionPreset">Preset</label>
+          <select id="propReflectionPreset">
+            <option value="custom">Personalizado</option>
+            <option value="calm">Lago tranquilo</option>
+            <option value="mkLake">Lago mágico MK</option>
+            <option value="astral">Reflejo astral</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="propReflectionGap">Separación del original <span id="propReflectionGapValue" class="value"></span></label>
+          <input id="propReflectionGap" type="range" min="-800" max="1200" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propWaveAmount">Intensidad de onda <span id="propWaveAmountValue" class="value"></span></label>
+          <input id="propWaveAmount" type="range" min="0" max="40" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propWaveSize">Tamaño de onda <span id="propWaveSizeValue" class="value"></span></label>
+          <input id="propWaveSize" type="range" min="8" max="120" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propWaveSpeed">Duración de onda <span id="propWaveSpeedValue" class="value"></span></label>
+          <input id="propWaveSpeed" type="range" min="2" max="30" step="0.5" />
+        </div>
+
+        <div class="control">
+          <label for="propReflectionBlur">Desenfoque <span id="propReflectionBlurValue" class="value"></span></label>
+          <input id="propReflectionBlur" type="range" min="0" max="10" step="0.1" />
+        </div>
+
+        <div class="control">
+          <label for="propReflectionFade">Desvanecimiento <span id="propReflectionFadeValue" class="value"></span></label>
+          <input id="propReflectionFade" type="range" min="0" max="100" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propPinkGlow">Brillo rosa MK <span id="propPinkGlowValue" class="value"></span></label>
+          <input id="propPinkGlow" type="range" min="0" max="100" step="1" />
+        </div>
+
+        <button id="breakReflectionLinkBtn" class="btn" type="button" style="width:100%;margin-bottom:8px">
+          🔓 Romper vínculo
+        </button>
+
+        <button id="createReflectionBtn2" class="btn btn-primary" type="button" style="width:100%">
+          🌊 Crear reflejo de la capa seleccionada
+        </button>
+      </section>
+
+      <section class="tab-panel" data-panel="animation">
+        <div class="reflection-note">
+          Para nubes y niebla usa <strong>Desplazamiento continuo</strong>. Para pétalos usa el preset 🌸, que mueve cada pétalo de forma individual.
+        </div>
+
+        <div class="reflection-note" style="margin-top:10px">
+          <strong>🌈 Paleta de pétalos:</strong> cada pétalo elige aleatoriamente uno de estos seis colores. Puedes combinarlos como quieras.
+        </div>
+
+        <div class="petal-palette-grid">
+          <label class="petal-color-box"><span>Color 1</span><input id="propPetalColor1" type="color" /></label>
+          <label class="petal-color-box"><span>Color 2</span><input id="propPetalColor2" type="color" /></label>
+          <label class="petal-color-box"><span>Color 3</span><input id="propPetalColor3" type="color" /></label>
+          <label class="petal-color-box"><span>Color 4</span><input id="propPetalColor4" type="color" /></label>
+          <label class="petal-color-box"><span>Color 5</span><input id="propPetalColor5" type="color" /></label>
+          <label class="petal-color-box"><span>Color 6</span><input id="propPetalColor6" type="color" /></label>
+        </div>
+
+        <div class="row-wrap" style="margin:10px 0 14px">
+          <button id="petalPaletteMkBtn" class="btn" type="button">Paleta MK</button>
+          <button id="petalPalettePastelBtn" class="btn" type="button">Pastel</button>
+          <button id="petalPaletteNeonBtn" class="btn" type="button">Neón</button>
+        </div>
+
+        <div class="control">
+          <label for="propAnimation">Tipo</label>
+          <select id="propAnimation">
+            <option value="none">Sin animación</option>
+            <option value="float">Flotar</option>
+            <option value="drift">Niebla / Deriva corta</option>
+            <option value="travel">Desplazamiento continuo</option>
+            <option value="petals">Pétalos al viento</option>
+            <option value="pulse">Pulso de luz</option>
+            <option value="breathe">Respirar</option>
+            <option value="sway">Balanceo</option>
+            <option value="fall">Caída simple</option>
+            <option value="water">Agua</option>
+            <option value="twinkle">Destello</option>
+            <option value="plant">Hojas / planta con viento (simple)</option>
+            <option value="organic">🌿 Movimiento orgánico deformable</option>
+            <option value="ripple">Agua con olitas</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="propMotionDirection">Dirección</label>
+          <select id="propMotionDirection">
+            <option value="rightToLeft">Derecha → izquierda</option>
+            <option value="leftToRight">Izquierda → derecha</option>
+            <option value="topToBottom">Arriba → abajo</option>
+            <option value="bottomToTop">Abajo → arriba</option>
+            <option value="downLeft">Diagonal ↙</option>
+            <option value="downRight">Diagonal ↘</option>
+            <option value="upLeft">Diagonal ↖</option>
+            <option value="upRight">Diagonal ↗</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="propMotionMode">Recorrido</label>
+          <select id="propMotionMode">
+            <option value="loop">Continuo: sale y reaparece</option>
+            <option value="pingpong">Ida y vuelta</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="propDuration">Duración <span id="propDurationValue" class="value"></span></label>
+          <input id="propDuration" type="range" min="1" max="120" step="0.5" />
+        </div>
+
+        <div class="control">
+          <label for="propMotionDistance">Distancia del recorrido <span id="propMotionDistanceValue" class="value"></span></label>
+          <input id="propMotionDistance" type="range" min="20" max="1800" step="5" />
+        </div>
+
+        <div class="control">
+          <label for="propIntensity">Ondulación / intensidad <span id="propIntensityValue" class="value"></span></label>
+          <input id="propIntensity" type="range" min="0" max="160" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propMotionRotation">Giro durante el viaje <span id="propMotionRotationValue" class="value"></span></label>
+          <input id="propMotionRotation" type="range" min="0" max="360" step="1" />
+        </div>
+
+        <div class="control">
+          <label for="propPlasticity">Suavidad <span id="propPlasticityValue" class="value"></span></label>
+          <input id="propPlasticity" type="range" min="0" max="100" step="1" />
+        </div>
+
+        <div class="check-row">
+          <input id="propMotionRandomStart" type="checkbox" />
+          <label for="propMotionRandomStart">Inicio aleatorio para evitar sincronización</label>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:10px">🌿 Movimiento orgánico directo</h3>
+          <div class="reflection-note">
+            Deforma suavemente el PNG completo: la base puede permanecer fija mientras la parte superior se mueve como pasto, flores, ramas o arbustos. No necesitas separar cada hoja.
+          </div>
+
+          <div class="control">
+            <label for="propOrganicPreset">Preset</label>
+            <select id="propOrganicPreset">
+              <option value="custom">Personalizado</option>
+              <option value="grassSoft">Pasto suave</option>
+              <option value="grassWind">Pasto con viento</option>
+              <option value="flowerSwing">Flor balanceándose</option>
+              <option value="branchLight">Rama ligera</option>
+              <option value="bushMagic">Arbusto mágico</option>
+              <option value="waterPlant">Planta acuática</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propOrganicAnchor">Punto fijo / anclaje</label>
+            <select id="propOrganicAnchor">
+              <option value="bottom">Abajo — raíces o base</option>
+              <option value="top">Arriba</option>
+              <option value="left">Izquierda — rama lateral</option>
+              <option value="right">Derecha — rama lateral</option>
+              <option value="center">Centro</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propOrganicDirection">Tendencia del viento</label>
+            <select id="propOrganicDirection">
+              <option value="balanced">Balanceado ↔</option>
+              <option value="left">Más hacia la izquierda</option>
+              <option value="right">Más hacia la derecha</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label for="propOrganicStrength">Fuerza del viento <span id="propOrganicStrengthValue" class="value"></span></label>
+            <input id="propOrganicStrength" type="range" min="0" max="80" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicBend">Curvatura <span id="propOrganicBendValue" class="value"></span></label>
+            <input id="propOrganicBend" type="range" min="0" max="100" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicWave">Ondulación interna <span id="propOrganicWaveValue" class="value"></span></label>
+            <input id="propOrganicWave" type="range" min="0" max="12" step="0.25" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicFixedZone">Zona fija desde el anclaje <span id="propOrganicFixedZoneValue" class="value"></span></label>
+            <input id="propOrganicFixedZone" type="range" min="0" max="70" step="1" />
+          </div>
+
+          <div class="control">
+            <label for="propOrganicQuality">Calidad / suavidad</label>
+            <select id="propOrganicQuality">
+              <option value="performance">Rendimiento</option>
+              <option value="balanced">Equilibrado</option>
+              <option value="smooth">Muy suave</option>
+            </select>
+          </div>
+
+          <button id="organicPresetApplyBtn" class="btn btn-primary" type="button" style="width:100%">
+            🌿 Aplicar movimiento orgánico
+          </button>
+        </div>
+
+        <div class="row-wrap" style="margin-top:14px">
+          <button id="petalsPresetBtn" class="btn btn-primary" type="button">🌸 Pétalos</button>
+          <button id="cloudsPresetBtn" class="btn" type="button">☁️ Nubes</button>
+          <button id="fogPresetBtn" class="btn" type="button">🌫️ Niebla</button>
+        </div>
+      </section>
+
+      <button id="deleteSelectedBtn" class="btn btn-danger" type="button" style="width:100%;margin-top:10px">
+        🗑️ Eliminar capa seleccionada
+      </button>
+    </div>
+  </aside>
+
+  <button id="exitPreviewBtn" class="btn preview-exit" type="button">🎛️ Volver al editor</button>
+
+  <script>
+    const STORAGE_KEY = "mkUniverse2DEngine_v1";
+
+    const defaultProject = {
+      version: 2.6,
+      selectedId: null,
+      layers: []
+    };
+
+    let project = loadProject() || structuredClone(defaultProject);
+    project.layers = (project.layers || []).map(layer => defaultLayer(layer));
+    if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
+      project.selectedId = null;
+    }
+    let dragId = null;
+    let stageDrag = null;
+
+    const stage = document.getElementById("stage");
+    const layersList = document.getElementById("layersList");
+    const filePicker = document.getElementById("filePicker");
+    const jsonPicker = document.getElementById("jsonPicker");
+    const inspector = document.getElementById("inspector");
+    const emptyInspector = document.getElementById("emptyInspector");
+    const projectStatus = document.getElementById("projectStatus");
+
+    const controls = {
+      name: document.getElementById("propName"),
+      x: document.getElementById("propX"),
+      y: document.getElementById("propY"),
+      scale: document.getElementById("propScale"),
+      scaleX: document.getElementById("propScaleX"),
+      scaleY: document.getElementById("propScaleY"),
+      flipX: document.getElementById("propFlipX"),
+      flipY: document.getElementById("propFlipY"),
+      skewX: document.getElementById("propSkewX"),
+      skewY: document.getElementById("propSkewY"),
+      rotation: document.getElementById("propRotation"),
+      visible: document.getElementById("propVisible"),
+      background: document.getElementById("propBackground"),
+      opacity: document.getElementById("propOpacity"),
+      brightness: document.getElementById("propBrightness"),
+      contrast: document.getElementById("propContrast"),
+      saturation: document.getElementById("propSaturation"),
+      blend: document.getElementById("propBlend"),
+      removeBlack: document.getElementById("propRemoveBlack"),
+      threshold: document.getElementById("propThreshold"),
+      feather: document.getElementById("propFeather"),
+      animation: document.getElementById("propAnimation"),
+      motionDirection: document.getElementById("propMotionDirection"),
+      motionMode: document.getElementById("propMotionMode"),
+      duration: document.getElementById("propDuration"),
+      motionDistance: document.getElementById("propMotionDistance"),
+      intensity: document.getElementById("propIntensity"),
+      motionRotation: document.getElementById("propMotionRotation"),
+      plasticity: document.getElementById("propPlasticity"),
+      motionRandomStart: document.getElementById("propMotionRandomStart"),
+      glowEnabled: document.getElementById("propGlowEnabled"),
+      glowColor: document.getElementById("propGlowColor"),
+      glowIntensity: document.getElementById("propGlowIntensity"),
+      glowBlur: document.getElementById("propGlowBlur"),
+      edgeThickness: document.getElementById("propEdgeThickness"),
+      emission: document.getElementById("propEmission"),
+      metalShine: document.getElementById("propMetalShine"),
+      shineSpeed: document.getElementById("propShineSpeed"),
+      auraEnabled: document.getElementById("propAuraEnabled"),
+      auraMode: document.getElementById("propAuraMode"),
+      auraColor: document.getElementById("propAuraColor"),
+      auraIntensity: document.getElementById("propAuraIntensity"),
+      auraPulse: document.getElementById("propAuraPulse"),
+      auraBlur: document.getElementById("propAuraBlur"),
+      auraSpeed: document.getElementById("propAuraSpeed"),
+      auraScale: document.getElementById("propAuraScale"),
+      auraFocusX: document.getElementById("propAuraFocusX"),
+      auraFocusY: document.getElementById("propAuraFocusY"),
+      auraFocusSize: document.getElementById("propAuraFocusSize"),
+      reflectionEnabled: document.getElementById("propReflectionEnabled"),
+      reflectionLinked: document.getElementById("propReflectionLinked"),
+      reflectionPreset: document.getElementById("propReflectionPreset"),
+      reflectionGap: document.getElementById("propReflectionGap"),
+      waveAmount: document.getElementById("propWaveAmount"),
+      waveSize: document.getElementById("propWaveSize"),
+      waveSpeed: document.getElementById("propWaveSpeed"),
+      reflectionBlur: document.getElementById("propReflectionBlur"),
+      reflectionFade: document.getElementById("propReflectionFade"),
+      pinkGlow: document.getElementById("propPinkGlow"),
+      organicPreset: document.getElementById("propOrganicPreset"),
+      organicAnchor: document.getElementById("propOrganicAnchor"),
+      organicDirection: document.getElementById("propOrganicDirection"),
+      organicStrength: document.getElementById("propOrganicStrength"),
+      organicBend: document.getElementById("propOrganicBend"),
+      organicWave: document.getElementById("propOrganicWave"),
+      organicFixedZone: document.getElementById("propOrganicFixedZone"),
+      organicQuality: document.getElementById("propOrganicQuality"),
+      petalColor1: document.getElementById("propPetalColor1"),
+      petalColor2: document.getElementById("propPetalColor2"),
+      petalColor3: document.getElementById("propPetalColor3"),
+      petalColor4: document.getElementById("propPetalColor4"),
+      petalColor5: document.getElementById("propPetalColor5"),
+      petalColor6: document.getElementById("propPetalColor6")
+    };
+
+    function newId(prefix = "layer") {
+      return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function defaultLayer(overrides = {}) {
+      return {
+        id: newId(),
+        name: "Nueva capa",
+        kind: "image",
+        src: "",
+        visible: true,
+        background: false,
+        x: 0,
+        y: 0,
+        scale: 100,
+        scaleX: 100,
+        scaleY: 100,
+        flipX: false,
+        flipY: false,
+        skewX: 0,
+        skewY: 0,
+        rotation: 0,
+        opacity: 100,
+        brightness: 100,
+        contrast: 100,
+        saturation: 100,
+        blend: "normal",
+        removeBlack: false,
+        threshold: 12,
+        feather: 40,
+        animation: "none",
+        motionDirection: "rightToLeft",
+        motionMode: "loop",
+        duration: 10,
+        motionDistance: 520,
+        intensity: 8,
+        motionRotation: 0,
+        plasticity: 80,
+        motionRandomStart: true,
+        petalPalette: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
+        glowEnabled: false,
+        glowColor: "#ff8fd1",
+        glowIntensity: 35,
+        glowBlur: 22,
+        edgeThickness: 2,
+        emission: 0,
+        metalShine: false,
+        shineSpeed: 6,
+        aura: {
+          enabled: false,
+          mode: "silhouette",
+          color: "#ff8fd1",
+          intensity: 55,
+          pulse: 45,
+          blur: 28,
+          speed: 4.2,
+          scale: 3,
+          focusX: 50,
+          focusY: 50,
+          focusSize: 36
+        },
+        organic: {
+          preset: "custom",
+          anchor: "bottom",
+          direction: "balanced",
+          strength: 10,
+          bend: 45,
+          wave: 2.5,
+          fixedZone: 18,
+          quality: "balanced"
+        },
+        reflection: {
+          enabled: false,
+          sourceLayerId: null,
+          linked: false,
+          preset: "custom",
+          offsetX: 0,
+          offsetY: 280,
+          scaleRatio: 1,
+          rotationOffset: 0,
+          waveAmount: 5,
+          waveSize: 28,
+          waveSpeed: 10,
+          blur: 1.2,
+          fade: 72,
+          pinkGlow: 18
+        },
+        ...overrides,
+        aura: {
+          enabled: false,
+          mode: "silhouette",
+          color: "#ff8fd1",
+          intensity: 55,
+          pulse: 45,
+          blur: 28,
+          speed: 4.2,
+          scale: 3,
+          focusX: 50,
+          focusY: 50,
+          focusSize: 36,
+          ...(overrides.aura || {})
+        },
+        organic: {
+          preset: "custom",
+          anchor: "bottom",
+          direction: "balanced",
+          strength: 10,
+          bend: 45,
+          wave: 2.5,
+          fixedZone: 18,
+          quality: "balanced",
+          ...(overrides.organic || {})
+        },
+        reflection: {
+          enabled: false,
+          sourceLayerId: null,
+          linked: false,
+          preset: "custom",
+          offsetX: 0,
+          offsetY: 280,
+          scaleRatio: 1,
+          rotationOffset: 0,
+          waveAmount: 5,
+          waveSize: 28,
+          waveSpeed: 10,
+          blur: 1.2,
+          fade: 72,
+          pinkGlow: 18,
+          ...(overrides.reflection || {})
+        }
+      };
+    }
+
+    function loadProject() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveProject(message = "Proyecto guardado.") {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+      projectStatus.textContent = message;
+      setTimeout(() => {
+        if (projectStatus.textContent === message) projectStatus.textContent = "";
+      }, 1800);
+    }
+
+    function selectedLayer() {
+      return project.layers.find(layer => layer.id === project.selectedId) || null;
+    }
+
+    function easingFromPlasticity(value) {
+      if (value >= 85) return "cubic-bezier(.45,0,.55,1)";
+      if (value >= 60) return "ease-in-out";
+      if (value >= 35) return "ease";
+      return "linear";
+    }
+
+
+    function motionVector(direction, distance) {
+      const d = Math.max(0, Number(distance || 0));
+      const diagonal = d * .72;
+      const vectors = {
+        rightToLeft: { x: -d, y: 0 },
+        leftToRight: { x: d, y: 0 },
+        topToBottom: { x: 0, y: d },
+        bottomToTop: { x: 0, y: -d },
+        downLeft: { x: -diagonal, y: diagonal },
+        downRight: { x: diagonal, y: diagonal },
+        upLeft: { x: -diagonal, y: -diagonal },
+        upRight: { x: diagonal, y: -diagonal }
+      };
+      return vectors[direction] || vectors.rightToLeft;
+    }
+
+    function stableLayerRandom(id) {
+      let hash = 2166136261;
+      for (const char of String(id || "layer")) {
+        hash ^= char.charCodeAt(0);
+        hash = Math.imul(hash, 16777619);
+      }
+      return ((hash >>> 0) % 10000) / 10000;
+    }
+
+    function setMotionVariables(layer, motion) {
+      const vector = motionVector(layer.motionDirection, layer.motionDistance);
+      const startX = -vector.x / 2;
+      const startY = -vector.y / 2;
+      const endX = vector.x / 2;
+      const endY = vector.y / 2;
+      const sway = Number(layer.intensity || 0) * .35;
+
+      motion.style.setProperty("--motion-start-x", `${startX}px`);
+      motion.style.setProperty("--motion-start-y", `${startY}px`);
+      motion.style.setProperty("--motion-quarter-x", `${startX + vector.x * .25 + sway}px`);
+      motion.style.setProperty("--motion-quarter-y", `${startY + vector.y * .25}px`);
+      motion.style.setProperty("--motion-mid-x", `${startX + vector.x * .5 - sway}px`);
+      motion.style.setProperty("--motion-mid-y", `${startY + vector.y * .5}px`);
+      motion.style.setProperty("--motion-three-quarter-x", `${startX + vector.x * .75 + sway * .6}px`);
+      motion.style.setProperty("--motion-three-quarter-y", `${startY + vector.y * .75}px`);
+      motion.style.setProperty("--motion-end-x", `${endX}px`);
+      motion.style.setProperty("--motion-end-y", `${endY}px`);
+      motion.style.setProperty("--motion-rotation", `${Number(layer.motionRotation || 0)}deg`);
+
+      if (layer.motionMode === "pingpong") motion.classList.add("motion-pingpong");
+      const delay = layer.motionRandomStart
+        ? -stableLayerRandom(layer.id) * Math.max(1, Number(layer.duration || 10))
+        : 0;
+      motion.style.setProperty("--motion-delay", `${delay}s`);
+    }
+
+    const MOTION_PRESETS = {
+      petals: {
+        animation: "petals",
+        motionDirection: "downLeft",
+        motionMode: "loop",
+        duration: 17,
+        motionDistance: 1450,
+        intensity: 58,
+        motionRotation: 230,
+        plasticity: 72,
+        motionRandomStart: true
+      },
+      clouds: {
+        animation: "travel",
+        motionDirection: "rightToLeft",
+        motionMode: "loop",
+        duration: 48,
+        motionDistance: 1200,
+        intensity: 8,
+        motionRotation: 0,
+        plasticity: 30,
+        motionRandomStart: true
+      },
+      fog: {
+        animation: "travel",
+        motionDirection: "leftToRight",
+        motionMode: "pingpong",
+        duration: 34,
+        motionDistance: 240,
+        intensity: 14,
+        motionRotation: 0,
+        plasticity: 92,
+        motionRandomStart: true
+      }
+    };
+
+    const ORGANIC_PRESETS = {
+      grassSoft: { duration: 5.6, intensity: 8, anchor: "bottom", direction: "balanced", strength: 7, bend: 48, wave: 3.2, fixedZone: 20, quality: "balanced" },
+      grassWind: { duration: 3.9, intensity: 12, anchor: "bottom", direction: "right", strength: 15, bend: 62, wave: 4.2, fixedZone: 12, quality: "smooth" },
+      flowerSwing: { duration: 4.8, intensity: 7, anchor: "bottom", direction: "balanced", strength: 9, bend: 58, wave: 1.8, fixedZone: 28, quality: "smooth" },
+      branchLight: { duration: 6.2, intensity: 5, anchor: "left", direction: "balanced", strength: 7, bend: 42, wave: 2.2, fixedZone: 24, quality: "smooth" },
+      bushMagic: { duration: 6.8, intensity: 6, anchor: "bottom", direction: "balanced", strength: 8, bend: 52, wave: 3.5, fixedZone: 30, quality: "balanced" },
+      waterPlant: { duration: 7.4, intensity: 10, anchor: "bottom", direction: "left", strength: 12, bend: 74, wave: 5.4, fixedZone: 18, quality: "smooth" }
+    };
+
+    function applyOrganicPreset(name) {
+      const layer = selectedLayer();
+      if (!layer) {
+        projectStatus.textContent = "Selecciona primero una capa de imagen.";
+        return;
+      }
+      if (layer.kind !== "image") {
+        projectStatus.textContent = "El movimiento orgánico se aplica a imágenes PNG/JPG/WebP.";
+        return;
+      }
+
+      const presetName = name && name !== "custom" ? name : (layer.organic?.preset || "grassSoft");
+      const preset = ORGANIC_PRESETS[presetName];
+      layer.animation = "organic";
+      layer.organic = {
+        ...(layer.organic || {}),
+        preset: preset ? presetName : "custom",
+        ...(preset ? {
+          anchor: preset.anchor,
+          direction: preset.direction,
+          strength: preset.strength,
+          bend: preset.bend,
+          wave: preset.wave,
+          fixedZone: preset.fixedZone,
+          quality: preset.quality
+        } : {})
+      };
+      if (preset) {
+        layer.duration = preset.duration;
+        layer.intensity = preset.intensity;
+      }
+      renderAll();
+      projectStatus.textContent = "Movimiento orgánico aplicado. La zona del anclaje permanece más firme.";
+    }
+
+    function applyMotionPreset(name) {
+      const layer = selectedLayer();
+      const preset = MOTION_PRESETS[name];
+      if (!layer || !preset) {
+        projectStatus.textContent = "Selecciona primero una capa.";
+        return;
+      }
+      Object.assign(layer, preset);
+      if (name === "petals" && layer.kind === "particles") {
+        layer.particleType = "petals";
+        layer.particleCount = Math.max(24, Number(layer.particleCount || 42));
+        layer.particleSize = Math.max(7, Number(layer.particleSize || 10));
+        layer.background = true;
+      }
+      renderAll();
+      projectStatus.textContent = `Preset ${name === "petals" ? "Pétalos" : name === "clouds" ? "Nubes" : "Niebla"} aplicado.`;
+    }
+
+    function renderAll() {
+      renderStage();
+      renderLayersList();
+      renderInspector();
+      saveProject("Cambios guardados automáticamente.");
+    }
+
+    function renderStage() {
+      syncLinkedReflections();
+      stage.innerHTML = "";
+
+      project.layers.forEach((layer, index) => {
+        const container = document.createElement("div");
+        container.className = `layer${layer.background ? " background" : ""}`;
+        container.dataset.id = layer.id;
+        container.style.zIndex = index;
+        const linkedSource = layer.reflection?.linked
+          ? project.layers.find(item => item.id === layer.reflection.sourceLayerId)
+          : null;
+        container.style.display = layer.visible && (!linkedSource || linkedSource.visible) ? "block" : "none";
+        container.style.width = layer.background ? "100%" : "100%";
+        container.style.setProperty("--x-px", `${layer.x}px`);
+        container.style.setProperty("--y-px", `${layer.y}px`);
+        const globalScale = Number(layer.scale || 100) / 100;
+        const axisScaleX = Number(layer.scaleX ?? 100) / 100;
+        const axisScaleY = Number(layer.scaleY ?? 100) / 100;
+        container.style.setProperty("--scale-x", globalScale * axisScaleX * (layer.flipX ? -1 : 1));
+        container.style.setProperty("--scale-y", globalScale * axisScaleY * (layer.flipY ? -1 : 1));
+        container.style.setProperty("--rotation", `${layer.rotation}deg`);
+        container.style.setProperty("--skew-x", `${layer.skewX || 0}deg`);
+        container.style.setProperty("--skew-y", `${layer.skewY || 0}deg`);
+        container.style.mixBlendMode = layer.blend;
+
+        const motion = document.createElement("div");
+        const individualPetals = layer.kind === "particles" && layer.particleType === "petals";
+        const directOrganic = layer.kind === "image" && layer.animation === "organic";
+        motion.className = `motion anim-${individualPetals || directOrganic ? "none" : layer.animation}`;
+        motion.style.setProperty("--duration", `${layer.duration}s`);
+        motion.style.setProperty("--intensity", `${layer.intensity}px`);
+        motion.style.setProperty("--intensity-scale", layer.intensity / 100);
+        motion.style.setProperty("--intensity-deg", `${Math.max(1, layer.intensity / 6)}deg`);
+        motion.style.setProperty("--easing", easingFromPlasticity(layer.plasticity));
+        setMotionVariables(layer, motion);
+
+        if (layer.kind === "particles") {
+          drawParticleLayer(layer, motion);
+        } else {
+          loadImageLayer(layer, motion);
+        }
+
+        container.appendChild(motion);
+        stage.appendChild(container);
+      });
+    }
+
+    function loadImageLayer(layer, motion) {
+      const img = new Image();
+      img.alt = layer.name;
+      img.onload = () => {
+        const processed = processImage(layer, img);
+        const reflected = layer.reflection?.enabled
+          ? createWaterReflectionCanvas(layer, processed)
+          : processed;
+        const visual = layer.animation === "organic" && !layer.reflection?.enabled
+          ? createOrganicMotionCanvas(layer, reflected)
+          : reflected;
+        styleVisual(layer, visual);
+        const stack = document.createElement("div");
+        stack.className = "visual-stack";
+        const aura = createAuraLayer(layer);
+        if (aura) stack.appendChild(aura);
+        stack.appendChild(visual);
+        motion.replaceChildren(stack);
+        addMetalShine(layer, stack);
+      };
+      img.onerror = () => {
+        const msg = document.createElement("div");
+        msg.textContent = `No se pudo cargar: ${layer.name}`;
+        msg.style.padding = "10px";
+        msg.style.background = "rgba(150,30,70,.75)";
+        msg.style.color = "white";
+        motion.replaceChildren(msg);
+      };
+      img.src = layer.src;
+    }
+
+    function processImage(layer, img) {
+      if (!layer.removeBlack) return img;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      const threshold = Number(layer.threshold);
+      const feather = Math.max(1, Number(layer.feather));
+
+      for (let i = 0; i < data.length; i += 4) {
+        const luminance = Math.max(data[i], data[i + 1], data[i + 2]);
+        let alphaFactor = (luminance - threshold) / feather;
+        alphaFactor = Math.min(1, Math.max(0, alphaFactor));
+        alphaFactor = alphaFactor * alphaFactor * (3 - 2 * alphaFactor);
+        data[i + 3] = Math.round(data[i + 3] * alphaFactor);
+      }
+
+      ctx.putImageData(imageData, 0, 0);
+      return canvas;
+    }
+
+    function createOrganicMotionCanvas(layer, sourceElement) {
+      const sourceWidth = sourceElement.naturalWidth || sourceElement.width || 1080;
+      const sourceHeight = sourceElement.naturalHeight || sourceElement.height || 1080;
+      const maxDimension = 1100;
+      const ratio = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      const width = Math.max(2, Math.round(sourceWidth * ratio));
+      const height = Math.max(2, Math.round(sourceHeight * ratio));
+
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = width;
+      sourceCanvas.height = height;
+      const sourceCtx = sourceCanvas.getContext("2d");
+      sourceCtx.drawImage(sourceElement, 0, 0, width, height);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
+
+      const ctx = canvas.getContext("2d");
+      let lastDraw = 0;
+      let hasConnected = false;
+      const stablePhase = stableLayerRandom(layer.id) * Math.PI * 2;
+
+      function organicWeight(position, length, anchor, fixedZone, bend) {
+        const t = Math.max(0, Math.min(1, position / Math.max(1, length)));
+        let distance;
+        if (anchor === "bottom" || anchor === "right") distance = 1 - t;
+        else if (anchor === "top" || anchor === "left") distance = t;
+        else distance = Math.abs(t - .5) * 2;
+        const fixed = Math.max(0, Math.min(.7, fixedZone / 100));
+        const free = Math.max(0, (distance - fixed) / Math.max(.001, 1 - fixed));
+        const exponent = .7 + Math.max(0, bend) / 45;
+        return Math.pow(free, exponent);
+      }
+
+      function drawFrame(time) {
+        if (hasConnected && !canvas.isConnected) return;
+        hasConnected = hasConnected || canvas.isConnected;
+
+        const organic = layer.organic || {};
+        const quality = organic.quality || "balanced";
+        const frameInterval = quality === "smooth" ? 28 : quality === "performance" ? 55 : 38;
+
+        if (time - lastDraw >= frameInterval && !document.body.classList.contains("paused")) {
+          lastDraw = time;
+          ctx.clearRect(0, 0, width, height);
+
+          const duration = Math.max(.8, Number(layer.duration || 5.5));
+          const phase = (time / 1000) * (Math.PI * 2 / duration) + stablePhase;
+          const strength = Math.max(0, Number(organic.strength ?? 10));
+          const bend = Math.max(0, Number(organic.bend ?? 45));
+          const wave = Math.max(0, Number(organic.wave ?? 2.5));
+          const fixedZone = Math.max(0, Number(organic.fixedZone ?? 18));
+          const anchor = organic.anchor || "bottom";
+          const directionBias = organic.direction === "left" ? -0.34 : organic.direction === "right" ? 0.34 : 0;
+          const strip = quality === "smooth" ? 2 : quality === "performance" ? 6 : 4;
+
+          if (anchor === "left" || anchor === "right") {
+            for (let x = 0; x < width; x += strip) {
+              const stripWidth = Math.min(strip + 1, width - x);
+              const weight = organicWeight(x, width, anchor, fixedZone, bend);
+              const localPhase = phase + (x / Math.max(1, width)) * wave * Math.PI * 2;
+              const primary = (Math.sin(phase) + directionBias) * strength * weight;
+              const detail = Math.sin(localPhase * 1.13 + Math.sin(phase * .7)) * strength * .24 * weight;
+              const verticalShift = primary + detail;
+              const horizontalBreath = Math.sin(localPhase * .55) * strength * .06 * weight;
+              ctx.drawImage(sourceCanvas, x, 0, stripWidth, height, x + horizontalBreath, verticalShift, stripWidth + .8, height);
+            }
+          } else {
+            for (let y = 0; y < height; y += strip) {
+              const stripHeight = Math.min(strip + 1, height - y);
+              const weight = organicWeight(y, height, anchor, fixedZone, bend);
+              const localPhase = phase + (y / Math.max(1, height)) * wave * Math.PI * 2;
+              const primary = (Math.sin(phase) + directionBias) * strength * weight;
+              const detail = Math.sin(localPhase * 1.09 + Math.sin(phase * .72)) * strength * .24 * weight;
+              const horizontalShift = primary + detail;
+              const verticalBreath = Math.cos(localPhase * .63) * strength * .035 * weight;
+              ctx.drawImage(sourceCanvas, 0, y, width, stripHeight, horizontalShift, y + verticalBreath, width, stripHeight + .8);
+            }
+          }
+        }
+        requestAnimationFrame(drawFrame);
+      }
+
+      requestAnimationFrame(drawFrame);
+      return canvas;
+    }
+
+    function hexToRgba(hex, alpha = 1) {
+      const clean = String(hex || "#ffffff").replace("#", "");
+      const full = clean.length === 3
+        ? clean.split("").map(char => char + char).join("")
+        : clean.padEnd(6, "f").slice(0, 6);
+      const value = Number.parseInt(full, 16);
+      const r = (value >> 16) & 255;
+      const g = (value >> 8) & 255;
+      const b = value & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function styleVisual(layer, element) {
+      element.style.opacity = layer.opacity / 100;
+
+      const filters = [
+        `brightness(${layer.brightness + (layer.emission || 0) * .45}%)`,
+        `contrast(${layer.contrast}%)`,
+        `saturate(${layer.saturation + (layer.emission || 0) * .25}%)`
+      ];
+
+      if (layer.reflection?.enabled) {
+        const reflectionBlur = Math.max(0, Number(layer.reflection.blur || 0));
+        const pinkGlow = Math.max(0, Number(layer.reflection.pinkGlow || 0));
+        if (reflectionBlur > 0) filters.push(`blur(${reflectionBlur}px)`);
+        if (pinkGlow > 0) {
+          const alpha = Math.min(.7, pinkGlow / 145);
+          const blur = Math.max(2, pinkGlow * .18);
+          filters.push(`drop-shadow(0 0 ${blur}px rgba(255, 105, 205, ${alpha}))`);
+        }
+      }
+
+      if (layer.glowEnabled) {
+        const intensity = Math.max(0, Number(layer.glowIntensity || 0)) / 100;
+        const blur = Math.max(0, Number(layer.glowBlur || 0));
+        const edge = Math.max(0, Number(layer.edgeThickness || 0));
+        const colorStrong = hexToRgba(layer.glowColor, Math.min(.98, .35 + intensity * .65));
+        const colorSoft = hexToRgba(layer.glowColor, Math.min(.8, .12 + intensity * .58));
+
+        if (edge > 0) {
+          filters.push(`drop-shadow(${edge}px 0 0 ${colorStrong})`);
+          filters.push(`drop-shadow(${-edge}px 0 0 ${colorStrong})`);
+          filters.push(`drop-shadow(0 ${edge}px 0 ${colorStrong})`);
+          filters.push(`drop-shadow(0 ${-edge}px 0 ${colorStrong})`);
+        }
+
+        if (blur > 0) {
+          filters.push(`drop-shadow(0 0 ${Math.max(1, blur * .35)}px ${colorStrong})`);
+          filters.push(`drop-shadow(0 0 ${Math.max(2, blur)}px ${colorSoft})`);
+        }
+      }
+
+      element.style.filter = filters.join(" ");
+    }
+
+    function createAuraLayer(layer) {
+      const auraConfig = layer.aura || {};
+      if (!auraConfig.enabled || layer.kind !== "image" || !layer.src) return null;
+
+      const aura = document.createElement("div");
+      const mode = auraConfig.mode === "focus" ? "focus" : "silhouette";
+      aura.className = `aura-layer ${mode}`;
+
+      const intensity = Math.max(0, Math.min(100, Number(auraConfig.intensity ?? 55))) / 100;
+      const pulse = Math.max(0, Math.min(100, Number(auraConfig.pulse ?? 45))) / 100;
+      const minOpacity = Math.max(0.01, intensity * (1 - pulse * .82));
+      const maxOpacity = Math.max(minOpacity, Math.min(1, intensity));
+      const blur = Math.max(0, Number(auraConfig.blur ?? 28));
+      const speed = Math.max(.5, Number(auraConfig.speed ?? 4.2));
+      const scale = 1 + Math.max(0, Number(auraConfig.scale ?? 3)) / 100;
+      const color = auraConfig.color || "#ff8fd1";
+
+      aura.style.setProperty("--aura-color", color);
+      aura.style.setProperty("--aura-min-opacity", minOpacity);
+      aura.style.setProperty("--aura-max-opacity", maxOpacity);
+      aura.style.setProperty("--aura-blur", `${blur}px`);
+      aura.style.setProperty("--aura-speed", `${speed}s`);
+      aura.style.setProperty("--aura-scale", scale);
+      aura.style.setProperty("--aura-focus-x", `${Math.max(0, Math.min(100, Number(auraConfig.focusX ?? 50)))}%`);
+      aura.style.setProperty("--aura-focus-y", `${Math.max(0, Math.min(100, Number(auraConfig.focusY ?? 50)))}%`);
+      aura.style.setProperty("--aura-focus-size", `${Math.max(5, Math.min(160, Number(auraConfig.focusSize ?? 36)))}%`);
+
+      if (mode === "silhouette") {
+        const maskUrl = `url("${layer.src}")`;
+        aura.style.webkitMaskImage = maskUrl;
+        aura.style.maskImage = maskUrl;
+      } else {
+        aura.style.background = `radial-gradient(circle, ${hexToRgba(color, .96)} 0%, ${hexToRgba(color, .62)} 28%, ${hexToRgba(color, .26)} 52%, transparent 76%)`;
+      }
+
+      return aura;
+    }
+
+    function addMetalShine(layer, motion) {
+      if (!layer.metalShine || layer.kind !== "image" || !layer.src) return;
+
+      const shine = document.createElement("div");
+      shine.className = "metal-shine";
+      shine.style.setProperty("--shine-speed", `${Math.max(1, layer.shineSpeed || 6)}s`);
+      shine.style.setProperty("--shine-opacity", Math.min(.95, .35 + (layer.emission || 0) / 150));
+      shine.style.webkitMaskImage = `url("${layer.src}")`;
+      shine.style.maskImage = `url("${layer.src}")`;
+      motion.appendChild(shine);
+    }
+
+    function drawParticleLayer(layer, motion) {
+      if ((layer.particleType || "") === "fireflies") {
+        drawFireflies(layer, motion);
+        return;
+      }
+      if ((layer.particleType || "") === "petals") {
+        drawAnimatedPetals(layer, motion);
+        return;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 1080;
+      canvas.height = 1920;
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      const ctx = canvas.getContext("2d");
+
+      const count = Math.max(8, Math.min(220, Math.round(layer.particleCount || 60)));
+      const type = layer.particleType || "stars";
+      const size = layer.particleSize || 9;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        const s = size * (0.45 + Math.random() * 1.2);
+        const a = 0.25 + Math.random() * 0.75;
+
+        ctx.save();
+        ctx.globalAlpha = a;
+
+        if (type === "stars") {
+          ctx.fillStyle = "white";
+          ctx.beginPath();
+          ctx.arc(x, y, s * 0.28, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = "rgba(255,255,255,.8)";
+          ctx.lineWidth = Math.max(1, s * 0.08);
+          ctx.beginPath();
+          ctx.moveTo(x - s, y);
+          ctx.lineTo(x + s, y);
+          ctx.moveTo(x, y - s);
+          ctx.lineTo(x, y + s);
+          ctx.stroke();
+        } else if (type === "lights") {
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, s * 2.2);
+          gradient.addColorStop(0, "rgba(255,245,220,.95)");
+          gradient.addColorStop(.35, "rgba(255,195,225,.55)");
+          gradient.addColorStop(1, "rgba(255,155,207,0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(x, y, s * 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.translate(x, y);
+          ctx.rotate(Math.random() * Math.PI);
+          ctx.fillStyle = "rgba(255,210,230,.92)";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, s * .55, s, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      styleVisual(layer, canvas);
+      motion.appendChild(canvas);
+    }
+
+
+    function drawAnimatedPetals(layer, motion) {
+      const canvas = document.createElement("canvas");
+      canvas.className = "petal-field";
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext("2d");
+
+      const count = Math.max(8, Math.min(140, Math.round(layer.particleCount || 42)));
+      const baseSize = Math.max(3, Number(layer.particleSize || 10));
+      const vector = motionVector(layer.motionDirection || "downLeft", 1);
+      const dx = vector.x;
+      const dy = vector.y;
+      const axisLength = Math.hypot(dx, dy) || 1;
+      const nx = dx / axisLength;
+      const ny = dy / axisLength;
+      const margin = 170;
+      const duration = Math.max(2, Number(layer.duration || 17));
+      const swayAmount = Math.max(0, Number(layer.intensity || 0));
+      const rotationAmount = Math.max(0, Number(layer.motionRotation || 230));
+      const randomStart = layer.motionRandomStart !== false;
+      const mode = layer.motionMode || "loop";
+      const defaultPetalPalette = ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"];
+      const palette = Array.isArray(layer.petalPalette)
+        ? layer.petalPalette.filter(color => /^#[0-9a-f]{6}$/i.test(String(color))).slice(0, 6)
+        : defaultPetalPalette;
+      if (!palette.length) palette.push(...defaultPetalPalette);
+
+      const petals = Array.from({ length: count }, (_, i) => {
+        let startX;
+        let startY;
+        if (Math.abs(nx) > .2) startX = nx > 0 ? -margin - Math.random() * 260 : canvas.width + margin + Math.random() * 260;
+        else startX = Math.random() * canvas.width;
+        if (Math.abs(ny) > .2) startY = ny > 0 ? -margin - Math.random() * 320 : canvas.height + margin + Math.random() * 320;
+        else startY = Math.random() * canvas.height;
+
+        const travel = Math.abs(nx) > Math.abs(ny)
+          ? canvas.width + margin * 2 + Math.random() * 300
+          : canvas.height + margin * 2 + Math.random() * 420;
+
+        return {
+          startX,
+          startY,
+          travel,
+          phase: randomStart ? Math.random() : (i / count),
+          speed: .72 + Math.random() * .65,
+          sway: (18 + Math.random() * 50) * (swayAmount / 55),
+          swaySpeed: 1.5 + Math.random() * 2.8,
+          size: baseSize * (.55 + Math.random() * 1.35),
+          rotation: Math.random() * Math.PI * 2,
+          rotationSpeed: (.4 + Math.random() * 1.5) * (rotationAmount / 180),
+          alpha: .42 + Math.random() * .55,
+          color: palette[Math.floor(Math.random() * palette.length)]
+        };
+      });
+
+      let lastDraw = 0;
+      let hasConnected = false;
+
+      function drawPetal(petal, x, y, angle, alpha) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.globalAlpha = alpha * (layer.opacity / 100);
+        ctx.shadowColor = "rgba(255, 130, 214, .45)";
+        ctx.shadowBlur = Math.max(0, petal.size * .55);
+        ctx.fillStyle = petal.color;
+        ctx.beginPath();
+        ctx.moveTo(0, -petal.size);
+        ctx.bezierCurveTo(petal.size * .72, -petal.size * .35, petal.size * .62, petal.size * .72, 0, petal.size);
+        ctx.bezierCurveTo(-petal.size * .62, petal.size * .72, -petal.size * .72, -petal.size * .35, 0, -petal.size);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawFrame(time) {
+        if (hasConnected && !canvas.isConnected) return;
+        hasConnected = hasConnected || canvas.isConnected;
+
+        if (time - lastDraw >= 32 && !document.body.classList.contains("paused")) {
+          lastDraw = time;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          const seconds = time / 1000;
+
+          petals.forEach(petal => {
+            let progress = ((seconds * petal.speed / duration) + petal.phase) % 1;
+            if (mode === "pingpong") progress = progress < .5 ? progress * 2 : (1 - progress) * 2;
+            const fade = Math.min(1, progress / .08, (1 - progress) / .10);
+            const perpendicularX = -ny;
+            const perpendicularY = nx;
+            const wave = Math.sin((progress * Math.PI * 2 * petal.swaySpeed) + petal.phase * 12) * petal.sway;
+            const x = petal.startX + nx * petal.travel * progress + perpendicularX * wave;
+            const y = petal.startY + ny * petal.travel * progress + perpendicularY * wave + Math.sin(progress * Math.PI * 4) * 8;
+            const angle = petal.rotation + seconds * petal.rotationSpeed + Math.sin(progress * Math.PI * 3) * .7;
+            drawPetal(petal, x, y, angle, petal.alpha * Math.max(0, fade));
+          });
+        }
+        requestAnimationFrame(drawFrame);
+      }
+
+      canvas.style.filter =
+        `brightness(${layer.brightness}%) contrast(${layer.contrast}%) saturate(${layer.saturation}%)`;
+      motion.appendChild(canvas);
+      requestAnimationFrame(drawFrame);
+    }
+
+
+    function drawFireflies(layer, motion) {
+      const field = document.createElement("div");
+      field.className = "firefly-field";
+
+      const count = Math.max(4, Math.min(90, Number(layer.particleCount || 24)));
+      const baseSize = Math.max(3, Number(layer.particleSize || 10));
+
+      for (let i = 0; i < count; i++) {
+        const dot = document.createElement("span");
+        dot.className = "firefly";
+        const size = baseSize * (.45 + Math.random() * 1.15);
+        dot.style.setProperty("--size", `${size}px`);
+        dot.style.setProperty("--left", `${4 + Math.random() * 92}%`);
+        dot.style.setProperty("--top", `${8 + Math.random() * 84}%`);
+        dot.style.setProperty("--fly-duration", `${4 + Math.random() * 7}s`);
+        dot.style.setProperty("--blink-duration", `${1.6 + Math.random() * 3.6}s`);
+        dot.style.setProperty("--delay", `${-Math.random() * 8}s`);
+        field.appendChild(dot);
+      }
+
+      field.style.opacity = layer.opacity / 100;
+      field.style.filter =
+        `brightness(${layer.brightness}%) contrast(${layer.contrast}%) saturate(${layer.saturation}%)`;
+      motion.appendChild(field);
+    }
+
+    function renderLayersList() {
+      layersList.innerHTML = "";
+
+      [...project.layers].reverse().forEach(layer => {
+        const realIndex = project.layers.findIndex(item => item.id === layer.id);
+        const card = document.createElement("div");
+        card.className = `layer-card${project.selectedId === layer.id ? " active" : ""}`;
+        card.draggable = true;
+        card.dataset.id = layer.id;
+
+        card.innerHTML = `
+          <div class="layer-title">
+            <span class="layer-name" title="${escapeHtml(layer.name)}">${escapeHtml(layer.name)}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}</span>
+            <div class="row">
+              <button class="btn btn-mini move-up" type="button" title="Adelante">▲</button>
+              <button class="btn btn-mini move-down" type="button" title="Atrás">▼</button>
+            </div>
+          </div>
+          <div class="row-wrap">
+            <button class="btn btn-mini toggle-visible" type="button">${layer.visible ? "👁️" : "🚫"}</button>
+            <button class="btn btn-mini duplicate" type="button">⧉</button>
+            <button class="btn btn-mini btn-danger delete" type="button">🗑️</button>
+          </div>
+        `;
+
+        card.querySelector(".layer-name").addEventListener("click", () => selectLayer(layer.id));
+        card.addEventListener("click", event => {
+          if (!event.target.closest("button")) selectLayer(layer.id);
+        });
+
+        card.querySelector(".move-up").addEventListener("click", () => {
+          if (realIndex < project.layers.length - 1) {
+            [project.layers[realIndex], project.layers[realIndex + 1]] =
+              [project.layers[realIndex + 1], project.layers[realIndex]];
+            renderAll();
+          }
+        });
+
+        card.querySelector(".move-down").addEventListener("click", () => {
+          if (realIndex > 0) {
+            [project.layers[realIndex], project.layers[realIndex - 1]] =
+              [project.layers[realIndex - 1], project.layers[realIndex]];
+            renderAll();
+          }
+        });
+
+        card.querySelector(".toggle-visible").addEventListener("click", () => {
+          layer.visible = !layer.visible;
+          renderAll();
+        });
+
+        card.querySelector(".duplicate").addEventListener("click", () => {
+          const copy = structuredClone(layer);
+          copy.id = newId();
+          copy.name = `${layer.name} copia`;
+          project.layers.splice(realIndex + 1, 0, copy);
+          project.selectedId = copy.id;
+          renderAll();
+        });
+
+        card.querySelector(".delete").addEventListener("click", () => deleteLayer(layer.id));
+
+        card.addEventListener("dragstart", () => {
+          dragId = layer.id;
+        });
+
+        card.addEventListener("dragover", event => {
+          event.preventDefault();
+        });
+
+        card.addEventListener("drop", event => {
+          event.preventDefault();
+          if (!dragId || dragId === layer.id) return;
+
+          const from = project.layers.findIndex(item => item.id === dragId);
+          const to = project.layers.findIndex(item => item.id === layer.id);
+          const [moved] = project.layers.splice(from, 1);
+          project.layers.splice(to, 0, moved);
+          dragId = null;
+          renderAll();
+        });
+
+        layersList.appendChild(card);
+      });
+    }
+
+    function renderInspector() {
+      const layer = selectedLayer();
+
+      if (!layer) {
+        inspector.classList.add("hidden");
+        emptyInspector.classList.remove("hidden");
+        return;
+      }
+
+      inspector.classList.remove("hidden");
+      emptyInspector.classList.add("hidden");
+
+      controls.name.value = layer.name;
+      controls.x.value = layer.x;
+      controls.y.value = layer.y;
+      controls.scale.value = layer.scale;
+      controls.scaleX.value = layer.scaleX ?? 100;
+      controls.scaleY.value = layer.scaleY ?? 100;
+      controls.flipX.checked = Boolean(layer.flipX);
+      controls.flipY.checked = Boolean(layer.flipY);
+      controls.skewX.value = layer.skewX ?? 0;
+      controls.skewY.value = layer.skewY ?? 0;
+      controls.rotation.value = layer.rotation;
+      controls.visible.checked = layer.visible;
+      controls.background.checked = layer.background;
+      controls.opacity.value = layer.opacity;
+      controls.brightness.value = layer.brightness;
+      controls.contrast.value = layer.contrast;
+      controls.saturation.value = layer.saturation;
+      controls.blend.value = layer.blend;
+      controls.removeBlack.checked = layer.removeBlack;
+      controls.threshold.value = layer.threshold;
+      controls.feather.value = layer.feather;
+      controls.animation.value = layer.animation;
+      controls.motionDirection.value = layer.motionDirection || "rightToLeft";
+      controls.motionMode.value = layer.motionMode || "loop";
+      controls.duration.value = layer.duration;
+      controls.motionDistance.value = layer.motionDistance ?? 520;
+      controls.intensity.value = layer.intensity;
+      controls.motionRotation.value = layer.motionRotation ?? 0;
+      controls.plasticity.value = layer.plasticity;
+      controls.motionRandomStart.checked = layer.motionRandomStart !== false;
+      controls.glowEnabled.checked = Boolean(layer.glowEnabled);
+      controls.glowColor.value = layer.glowColor || "#ff8fd1";
+      controls.glowIntensity.value = layer.glowIntensity ?? 35;
+      controls.glowBlur.value = layer.glowBlur ?? 22;
+      controls.edgeThickness.value = layer.edgeThickness ?? 2;
+      controls.emission.value = layer.emission ?? 0;
+      controls.metalShine.checked = Boolean(layer.metalShine);
+      controls.shineSpeed.value = layer.shineSpeed ?? 6;
+      controls.auraEnabled.checked = Boolean(layer.aura?.enabled);
+      controls.auraMode.value = layer.aura?.mode || "silhouette";
+      controls.auraColor.value = layer.aura?.color || "#ff8fd1";
+      controls.auraIntensity.value = layer.aura?.intensity ?? 55;
+      controls.auraPulse.value = layer.aura?.pulse ?? 45;
+      controls.auraBlur.value = layer.aura?.blur ?? 28;
+      controls.auraSpeed.value = layer.aura?.speed ?? 4.2;
+      controls.auraScale.value = layer.aura?.scale ?? 3;
+      controls.auraFocusX.value = layer.aura?.focusX ?? 50;
+      controls.auraFocusY.value = layer.aura?.focusY ?? 50;
+      controls.auraFocusSize.value = layer.aura?.focusSize ?? 36;
+      controls.reflectionEnabled.checked = Boolean(layer.reflection?.enabled);
+      controls.reflectionLinked.checked = Boolean(layer.reflection?.linked);
+      controls.reflectionPreset.value = layer.reflection?.preset || "custom";
+      controls.reflectionGap.value = layer.reflection?.offsetY ?? 280;
+      controls.waveAmount.value = layer.reflection?.waveAmount ?? 5;
+      controls.waveSize.value = layer.reflection?.waveSize ?? 28;
+      controls.waveSpeed.value = layer.reflection?.waveSpeed ?? 10;
+      controls.reflectionBlur.value = layer.reflection?.blur ?? 1.2;
+      controls.reflectionFade.value = layer.reflection?.fade ?? 72;
+      controls.pinkGlow.value = layer.reflection?.pinkGlow ?? 18;
+      controls.organicPreset.value = layer.organic?.preset || "custom";
+      controls.organicAnchor.value = layer.organic?.anchor || "bottom";
+      controls.organicDirection.value = layer.organic?.direction || "balanced";
+      controls.organicStrength.value = layer.organic?.strength ?? 10;
+      controls.organicBend.value = layer.organic?.bend ?? 45;
+      controls.organicWave.value = layer.organic?.wave ?? 2.5;
+      controls.organicFixedZone.value = layer.organic?.fixedZone ?? 18;
+      controls.organicQuality.value = layer.organic?.quality || "balanced";
+      const petalPalette = Array.isArray(layer.petalPalette) && layer.petalPalette.length
+        ? layer.petalPalette
+        : ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"];
+      controls.petalColor1.value = petalPalette[0] || "#ffd8ec";
+      controls.petalColor2.value = petalPalette[1] || "#ff9fd5";
+      controls.petalColor3.value = petalPalette[2] || "#efb4ff";
+      controls.petalColor4.value = petalPalette[3] || "#d8c4ff";
+      controls.petalColor5.value = petalPalette[4] || "#ff7fc8";
+      controls.petalColor6.value = petalPalette[5] || "#f7ecff";
+
+      updateValueLabels(layer);
+    }
+
+    function updateValueLabels(layer) {
+      const values = {
+        propXValue: `${layer.x}px`,
+        propYValue: `${layer.y}px`,
+        propScaleValue: `${layer.scale}%`,
+        propScaleXValue: `${layer.scaleX ?? 100}%`,
+        propScaleYValue: `${layer.scaleY ?? 100}%`,
+        propSkewXValue: `${layer.skewX ?? 0}°`,
+        propSkewYValue: `${layer.skewY ?? 0}°`,
+        propRotationValue: `${layer.rotation}°`,
+        propOpacityValue: `${layer.opacity}%`,
+        propBrightnessValue: `${layer.brightness}%`,
+        propContrastValue: `${layer.contrast}%`,
+        propSaturationValue: `${layer.saturation}%`,
+        propThresholdValue: `${layer.threshold}`,
+        propFeatherValue: `${layer.feather}`,
+        propDurationValue: `${layer.duration}s`,
+        propMotionDistanceValue: `${layer.motionDistance ?? 520}px`,
+        propIntensityValue: `${layer.intensity}`,
+        propMotionRotationValue: `${layer.motionRotation ?? 0}°`,
+        propPlasticityValue: `${layer.plasticity}%`,
+        propGlowIntensityValue: `${layer.glowIntensity ?? 35}%`,
+        propGlowBlurValue: `${layer.glowBlur ?? 22}px`,
+        propEdgeThicknessValue: `${layer.edgeThickness ?? 2}px`,
+        propEmissionValue: `${layer.emission ?? 0}%`,
+        propShineSpeedValue: `${layer.shineSpeed ?? 6}s`,
+        propAuraIntensityValue: `${layer.aura?.intensity ?? 55}%`,
+        propAuraPulseValue: `${layer.aura?.pulse ?? 45}%`,
+        propAuraBlurValue: `${layer.aura?.blur ?? 28}px`,
+        propAuraSpeedValue: `${layer.aura?.speed ?? 4.2}s`,
+        propAuraScaleValue: `${layer.aura?.scale ?? 3}%`,
+        propAuraFocusXValue: `${layer.aura?.focusX ?? 50}%`,
+        propAuraFocusYValue: `${layer.aura?.focusY ?? 50}%`,
+        propAuraFocusSizeValue: `${layer.aura?.focusSize ?? 36}%`,
+        propReflectionGapValue: `${layer.reflection?.offsetY ?? 280}px`,
+        propWaveAmountValue: `${layer.reflection?.waveAmount ?? 5}px`,
+        propWaveSizeValue: `${layer.reflection?.waveSize ?? 28}px`,
+        propWaveSpeedValue: `${layer.reflection?.waveSpeed ?? 10}s`,
+        propReflectionBlurValue: `${layer.reflection?.blur ?? 1.2}px`,
+        propReflectionFadeValue: `${layer.reflection?.fade ?? 72}%`,
+        propPinkGlowValue: `${layer.reflection?.pinkGlow ?? 18}%`,
+        propOrganicStrengthValue: `${layer.organic?.strength ?? 10}px`,
+        propOrganicBendValue: `${layer.organic?.bend ?? 45}%`,
+        propOrganicWaveValue: `${layer.organic?.wave ?? 2.5}`,
+        propOrganicFixedZoneValue: `${layer.organic?.fixedZone ?? 18}%`
+      };
+
+      Object.entries(values).forEach(([id, text]) => {
+        document.getElementById(id).textContent = text;
+      });
+    }
+
+    function selectLayer(id) {
+      project.selectedId = id;
+      renderLayersList();
+      renderInspector();
+      saveProject("Capa seleccionada.");
+    }
+
+    function deleteLayer(id) {
+      const layer = project.layers.find(item => item.id === id);
+      if (!layer) return;
+      if (!confirm(`¿Eliminar la capa "${layer.name}"?`)) return;
+
+      project.layers = project.layers.filter(item => item.id !== id);
+      if (project.selectedId === id) project.selectedId = null;
+      renderAll();
+    }
+
+    function bindInspector() {
+      const map = {
+        name: "name",
+        x: "x",
+        y: "y",
+        scale: "scale",
+        scaleX: "scaleX",
+        scaleY: "scaleY",
+        flipX: "flipX",
+        flipY: "flipY",
+        skewX: "skewX",
+        skewY: "skewY",
+        rotation: "rotation",
+        visible: "visible",
+        background: "background",
+        opacity: "opacity",
+        brightness: "brightness",
+        contrast: "contrast",
+        saturation: "saturation",
+        blend: "blend",
+        removeBlack: "removeBlack",
+        threshold: "threshold",
+        feather: "feather",
+        animation: "animation",
+        motionDirection: "motionDirection",
+        motionMode: "motionMode",
+        duration: "duration",
+        motionDistance: "motionDistance",
+        intensity: "intensity",
+        motionRotation: "motionRotation",
+        plasticity: "plasticity",
+        motionRandomStart: "motionRandomStart",
+        glowEnabled: "glowEnabled",
+        glowColor: "glowColor",
+        glowIntensity: "glowIntensity",
+        glowBlur: "glowBlur",
+        edgeThickness: "edgeThickness",
+        emission: "emission",
+        metalShine: "metalShine",
+        shineSpeed: "shineSpeed",
+        auraEnabled: "aura.enabled",
+        auraMode: "aura.mode",
+        auraColor: "aura.color",
+        auraIntensity: "aura.intensity",
+        auraPulse: "aura.pulse",
+        auraBlur: "aura.blur",
+        auraSpeed: "aura.speed",
+        auraScale: "aura.scale",
+        auraFocusX: "aura.focusX",
+        auraFocusY: "aura.focusY",
+        auraFocusSize: "aura.focusSize",
+        reflectionEnabled: "reflection.enabled",
+        reflectionLinked: "reflection.linked",
+        reflectionPreset: "reflection.preset",
+        reflectionGap: "reflection.offsetY",
+        waveAmount: "reflection.waveAmount",
+        waveSize: "reflection.waveSize",
+        waveSpeed: "reflection.waveSpeed",
+        reflectionBlur: "reflection.blur",
+        reflectionFade: "reflection.fade",
+        pinkGlow: "reflection.pinkGlow",
+        organicPreset: "organic.preset",
+        organicAnchor: "organic.anchor",
+        organicDirection: "organic.direction",
+        organicStrength: "organic.strength",
+        organicBend: "organic.bend",
+        organicWave: "organic.wave",
+        organicFixedZone: "organic.fixedZone",
+        organicQuality: "organic.quality"
+      };
+
+      Object.entries(controls).forEach(([key, control]) => {
+        if (key.startsWith("petalColor")) return;
+        const handler = () => {
+          const layer = selectedLayer();
+          if (!layer) return;
+
+          const prop = map[key];
+          const value = control.type === "checkbox"
+            ? control.checked
+            : control.type === "range"
+              ? Number(control.value)
+              : control.value;
+
+          if (prop.startsWith("aura.")) {
+            const auraProp = prop.split(".")[1];
+            layer.aura[auraProp] = value;
+          } else if (prop.startsWith("reflection.")) {
+            const reflectionProp = prop.split(".")[1];
+            layer.reflection[reflectionProp] = value;
+            if (reflectionProp === "preset" && value !== "custom") {
+              applyReflectionPreset(layer, value);
+            }
+          } else if (prop.startsWith("organic.")) {
+            const organicProp = prop.split(".")[1];
+            layer.organic[organicProp] = value;
+            if (organicProp === "preset" && value !== "custom") {
+              const preset = ORGANIC_PRESETS[value];
+              if (preset) {
+                layer.animation = "organic";
+                layer.duration = preset.duration;
+                layer.intensity = preset.intensity;
+                Object.assign(layer.organic, {
+                  anchor: preset.anchor,
+                  direction: preset.direction,
+                  strength: preset.strength,
+                  bend: preset.bend,
+                  wave: preset.wave,
+                  fixedZone: preset.fixedZone,
+                  quality: preset.quality
+                });
+              }
+            }
+          } else {
+            layer[prop] = value;
+          }
+
+          updateReflectionLinkOffsets(layer, prop);
+          renderStage();
+          renderLayersList();
+          renderInspector();
+          saveProject();
+        };
+
+        control.addEventListener(control.type === "text" ? "change" : "input", handler);
+        control.addEventListener("change", handler);
+      });
+    }
+
+    const PETAL_PALETTES = {
+      mk: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
+      pastel: ["#ffe8f4", "#ffc7e6", "#e9d5ff", "#d8dcff", "#fff0fa", "#f4c9ff"],
+      neon: ["#ff3fbf", "#ff75dc", "#d85cff", "#a972ff", "#ff9fe8", "#f5d8ff"]
+    };
+
+    function setPetalPalette(colors, message = "Paleta de pétalos actualizada.") {
+      const layer = selectedLayer();
+      if (!layer) {
+        projectStatus.textContent = "Selecciona primero una capa de pétalos.";
+        return;
+      }
+      layer.petalPalette = colors.slice(0, 6);
+      if (layer.kind === "particles") {
+        layer.particleType = "petals";
+        layer.animation = "petals";
+      }
+      renderStage();
+      renderInspector();
+      saveProject(message);
+    }
+
+    function updatePetalColor(index, value) {
+      const layer = selectedLayer();
+      if (!layer) return;
+      const palette = Array.isArray(layer.petalPalette)
+        ? [...layer.petalPalette]
+        : [...PETAL_PALETTES.mk];
+      while (palette.length < 6) palette.push(PETAL_PALETTES.mk[palette.length]);
+      palette[index] = value;
+      layer.petalPalette = palette;
+      renderStage();
+      saveProject("Color de pétalo actualizado.");
+    }
+
+    function moveSelectedLayer(dx, dy, message = "Posición actualizada.") {
+      const layer = selectedLayer();
+      if (!layer) return;
+
+      layer.x = Math.max(-1000, Math.min(1000, Number(layer.x || 0) + dx));
+      layer.y = Math.max(-1800, Math.min(1800, Number(layer.y || 0) + dy));
+      updateReflectionLinkOffsets(layer, "x");
+      updateReflectionLinkOffsets(layer, "y");
+      renderStage();
+      renderInspector();
+      saveProject(message);
+    }
+
+    function finishStageDrag(event) {
+      if (!stageDrag) return;
+      if (event && stageDrag.pointerId !== event.pointerId) return;
+      try {
+        stage.releasePointerCapture?.(stageDrag.pointerId);
+      } catch {}
+      stageDrag = null;
+      stage.classList.remove("dragging");
+      renderInspector();
+      saveProject("Posición guardada.");
+    }
+
+    stage.addEventListener("pointerdown", event => {
+      const layer = selectedLayer();
+      if (!layer || (event.button !== undefined && event.button !== 0)) return;
+
+      stageDrag = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        layerX: Number(layer.x || 0),
+        layerY: Number(layer.y || 0)
+      };
+
+      stage.setPointerCapture?.(event.pointerId);
+      stage.classList.add("dragging");
+      event.preventDefault();
+    });
+
+    stage.addEventListener("pointermove", event => {
+      if (!stageDrag || stageDrag.pointerId !== event.pointerId) return;
+      const layer = selectedLayer();
+      if (!layer) return;
+
+      layer.x = Math.round(stageDrag.layerX + event.clientX - stageDrag.startX);
+      layer.y = Math.round(stageDrag.layerY + event.clientY - stageDrag.startY);
+      layer.x = Math.max(-1000, Math.min(1000, layer.x));
+      layer.y = Math.max(-1800, Math.min(1800, layer.y));
+      updateReflectionLinkOffsets(layer, "x");
+      updateReflectionLinkOffsets(layer, "y");
+
+      renderStage();
+      controls.x.value = layer.x;
+      controls.y.value = layer.y;
+      updateValueLabels(layer);
+      event.preventDefault();
+    });
+
+    stage.addEventListener("pointerup", finishStageDrag);
+    stage.addEventListener("pointercancel", finishStageDrag);
+
+
+
+    const REFLECTION_PRESETS = {
+      calm: {
+        scaleY: 78,
+        opacity: 58,
+        brightness: 92,
+        saturation: 92,
+        waveAmount: 3,
+        waveSize: 40,
+        waveSpeed: 16,
+        blur: .6,
+        fade: 68,
+        pinkGlow: 6
+      },
+      mkLake: {
+        scaleY: 70,
+        opacity: 52,
+        brightness: 96,
+        saturation: 118,
+        waveAmount: 6,
+        waveSize: 28,
+        waveSpeed: 11,
+        blur: 1.2,
+        fade: 75,
+        pinkGlow: 24
+      },
+      astral: {
+        scaleY: 62,
+        opacity: 46,
+        brightness: 104,
+        saturation: 138,
+        waveAmount: 10,
+        waveSize: 20,
+        waveSpeed: 7,
+        blur: 2.2,
+        fade: 84,
+        pinkGlow: 48
+      }
+    };
+
+    function applyReflectionPreset(layer, presetName) {
+      const preset = REFLECTION_PRESETS[presetName];
+      if (!preset) return;
+      layer.scaleY = preset.scaleY;
+      layer.opacity = preset.opacity;
+      layer.brightness = preset.brightness;
+      layer.saturation = preset.saturation;
+      Object.assign(layer.reflection, {
+        preset: presetName,
+        waveAmount: preset.waveAmount,
+        waveSize: preset.waveSize,
+        waveSpeed: preset.waveSpeed,
+        blur: preset.blur,
+        fade: preset.fade,
+        pinkGlow: preset.pinkGlow
+      });
+    }
+
+    function createReflectionFromSelected() {
+      const source = selectedLayer();
+      if (!source) {
+        projectStatus.textContent = "Selecciona primero una imagen.";
+        return;
+      }
+      if (source.kind !== "image" || !source.src) {
+        projectStatus.textContent = "El reflejo automático funciona con capas de imagen.";
+        return;
+      }
+      if (source.reflection?.enabled) {
+        projectStatus.textContent = "Selecciona la capa original, no otro reflejo.";
+        return;
+      }
+
+      const sourceIndex = project.layers.findIndex(item => item.id === source.id);
+      const copy = defaultLayer(structuredClone(source));
+      copy.id = newId("reflection");
+      copy.name = `${source.name} — reflejo`;
+      copy.background = false;
+      copy.flipY = !Boolean(source.flipY);
+      copy.flipX = Boolean(source.flipX);
+      copy.scale = source.scale;
+      copy.scaleX = source.scaleX ?? 100;
+      copy.scaleY = 70;
+      copy.x = source.x;
+      copy.y = Number(source.y || 0) + 280;
+      copy.rotation = source.rotation;
+      copy.animation = "none";
+      copy.metalShine = false;
+      copy.glowEnabled = false;
+      copy.reflection = {
+        enabled: true,
+        sourceLayerId: source.id,
+        linked: true,
+        preset: "mkLake",
+        offsetX: 0,
+        offsetY: 280,
+        scaleRatio: 1,
+        rotationOffset: 0,
+        waveAmount: 6,
+        waveSize: 28,
+        waveSpeed: 11,
+        blur: 1.2,
+        fade: 75,
+        pinkGlow: 24
+      };
+      applyReflectionPreset(copy, "mkLake");
+
+      project.layers.splice(Math.max(0, sourceIndex), 0, copy);
+      project.selectedId = copy.id;
+      renderAll();
+      projectStatus.textContent = "Reflejo creado. Puedes moverlo y deformarlo.";
+    }
+
+    function syncLinkedReflections() {
+      project.layers.forEach(layer => {
+        if (!layer.reflection?.enabled || !layer.reflection.linked) return;
+        const source = project.layers.find(item => item.id === layer.reflection.sourceLayerId);
+        if (!source) {
+          layer.reflection.linked = false;
+          return;
+        }
+        layer.x = Number(source.x || 0) + Number(layer.reflection.offsetX || 0);
+        layer.y = Number(source.y || 0) + Number(layer.reflection.offsetY || 0);
+        layer.scale = Number(source.scale || 100) * Number(layer.reflection.scaleRatio || 1);
+        layer.rotation = Number(source.rotation || 0) + Number(layer.reflection.rotationOffset || 0);
+      });
+    }
+
+    function updateReflectionLinkOffsets(layer, changedProp) {
+      if (!layer.reflection?.enabled || !layer.reflection.linked) return;
+      const source = project.layers.find(item => item.id === layer.reflection.sourceLayerId);
+      if (!source) return;
+
+      if (changedProp === "x" || changedProp === "reflection.offsetX") {
+        layer.reflection.offsetX = Number(layer.x || 0) - Number(source.x || 0);
+      }
+      if (changedProp === "y") {
+        layer.reflection.offsetY = Number(layer.y || 0) - Number(source.y || 0);
+      }
+      if (changedProp === "reflection.offsetY") {
+        layer.y = Number(source.y || 0) + Number(layer.reflection.offsetY || 0);
+      }
+      if (changedProp === "scale") {
+        const sourceScale = Math.max(.01, Number(source.scale || 100));
+        layer.reflection.scaleRatio = Number(layer.scale || 100) / sourceScale;
+      }
+      if (changedProp === "rotation") {
+        layer.reflection.rotationOffset = Number(layer.rotation || 0) - Number(source.rotation || 0);
+      }
+    }
+
+    function createWaterReflectionCanvas(layer, sourceElement) {
+      const sourceWidth = sourceElement.naturalWidth || sourceElement.width || 1080;
+      const sourceHeight = sourceElement.naturalHeight || sourceElement.height || 1080;
+      const maxDimension = 950;
+      const ratio = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      const width = Math.max(2, Math.round(sourceWidth * ratio));
+      const height = Math.max(2, Math.round(sourceHeight * ratio));
+
+      const sourceCanvas = document.createElement("canvas");
+      sourceCanvas.width = width;
+      sourceCanvas.height = height;
+      const sourceCtx = sourceCanvas.getContext("2d");
+      sourceCtx.drawImage(sourceElement, 0, 0, width, height);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
+      const ctx = canvas.getContext("2d");
+
+      let lastDraw = 0;
+      let hasConnected = false;
+
+      function drawFrame(time) {
+        if (hasConnected && !canvas.isConnected) return;
+        hasConnected = hasConnected || canvas.isConnected;
+
+        if (time - lastDraw >= 40 && !document.body.classList.contains("paused")) {
+          lastDraw = time;
+          ctx.clearRect(0, 0, width, height);
+
+          const amplitude = Math.max(0, Number(layer.reflection?.waveAmount || 0));
+          const wavelength = Math.max(8, Number(layer.reflection?.waveSize || 28));
+          const duration = Math.max(2, Number(layer.reflection?.waveSpeed || 10));
+          const phase = (time / 1000) * ((Math.PI * 2) / duration);
+          const strip = 4;
+
+          for (let y = 0; y < height; y += strip) {
+            const stripHeight = Math.min(strip, height - y);
+            const depth = .35 + .65 * (1 - y / Math.max(1, height));
+            const shift = Math.sin(y / wavelength + phase) * amplitude * depth;
+            ctx.drawImage(
+              sourceCanvas,
+              0, y, width, stripHeight,
+              shift, y, width, stripHeight
+            );
+          }
+
+          const fade = Math.max(0, Math.min(100, Number(layer.reflection?.fade ?? 72))) / 100;
+          if (fade > 0) {
+            ctx.save();
+            ctx.globalCompositeOperation = "destination-in";
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, "rgba(0,0,0,0)");
+            gradient.addColorStop(Math.max(.03, Math.min(.97, fade)), "rgba(0,0,0,1)");
+            gradient.addColorStop(1, "rgba(0,0,0,1)");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore();
+          }
+        }
+
+        requestAnimationFrame(drawFrame);
+      }
+
+      requestAnimationFrame(drawFrame);
+      return canvas;
+    }
+
+
+    function addImageFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const layer = defaultLayer({
+          name: file.name.replace(/\.[^.]+$/, ""),
+          src: reader.result,
+          kind: "image"
+        });
+        project.layers.push(layer);
+        project.selectedId = layer.id;
+        renderAll();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addParticleLayer() {
+      const type = prompt("Tipo de partícula: stars, lights, petals o fireflies", "stars");
+      if (!type) return;
+
+      const cleanType = ["stars", "lights", "petals", "fireflies"].includes(type.toLowerCase())
+        ? type.toLowerCase()
+        : "stars";
+
+      const layer = defaultLayer({
+        name:
+          cleanType === "stars" ? "Estrellas" :
+          cleanType === "lights" ? "Luces" :
+          cleanType === "fireflies" ? "Luciérnagas" :
+          "Pétalos",
+        kind: "particles",
+        particleType: cleanType,
+        particleCount: cleanType === "petals" ? 36 : cleanType === "fireflies" ? 24 : 70,
+        particleSize: cleanType === "lights" ? 14 : cleanType === "fireflies" ? 11 : 8,
+        background: true,
+        animation:
+          cleanType === "stars" ? "twinkle" :
+          cleanType === "lights" ? "pulse" :
+          cleanType === "fireflies" ? "none" :
+          "petals",
+        duration:
+          cleanType === "petals" ? 16 :
+          cleanType === "lights" ? 8 :
+          cleanType === "fireflies" ? 6 :
+          5,
+        intensity:
+          cleanType === "petals" ? 58 :
+          cleanType === "lights" ? 3 :
+          4,
+        motionDirection: cleanType === "petals" ? "downLeft" : "rightToLeft",
+        motionMode: "loop",
+        motionDistance: cleanType === "petals" ? 1450 : 520,
+        motionRotation: cleanType === "petals" ? 230 : 0,
+        motionRandomStart: true,
+        opacity: cleanType === "lights" ? 55 : 80,
+        blend: cleanType === "lights" ? "screen" : "normal"
+      });
+
+      project.layers.push(layer);
+      project.selectedId = layer.id;
+      renderAll();
+    }
+
+
+    function addPetalsLayer() {
+      const layer = defaultLayer({
+        name: "Pétalos MK",
+        kind: "particles",
+        particleType: "petals",
+        particleCount: 46,
+        particleSize: 10,
+        background: true,
+        animation: "petals",
+        motionDirection: "downLeft",
+        motionMode: "loop",
+        duration: 17,
+        motionDistance: 1450,
+        intensity: 58,
+        motionRotation: 230,
+        plasticity: 72,
+        motionRandomStart: true,
+        opacity: 84,
+        saturation: 118,
+        blend: "screen"
+      });
+      project.layers.push(layer);
+      project.selectedId = layer.id;
+      renderAll();
+    }
+
+
+    function addFirefliesLayer() {
+      const layer = defaultLayer({
+        name: "Luciérnagas",
+        kind: "particles",
+        particleType: "fireflies",
+        particleCount: 24,
+        particleSize: 11,
+        background: true,
+        animation: "none",
+        duration: 6,
+        intensity: 12,
+        opacity: 88,
+        blend: "screen",
+        glowEnabled: true,
+        glowColor: "#eaff9a",
+        glowIntensity: 55,
+        glowBlur: 18
+      });
+      project.layers.push(layer);
+      project.selectedId = layer.id;
+      renderAll();
+    }
+
+    function exportProject() {
+      const blob = new Blob([JSON.stringify(project, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "mk-universe-project.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importProject(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!Array.isArray(parsed.layers)) throw new Error("Formato inválido");
+          project = {
+            ...structuredClone(defaultProject),
+            ...parsed,
+            version: 2.6,
+            layers: parsed.layers.map(layer => defaultLayer(layer))
+          };
+          if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
+            project.selectedId = null;
+          }
+          renderAll();
+          projectStatus.textContent = "Proyecto importado.";
+        } catch {
+          projectStatus.textContent = "No se pudo importar el archivo.";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    document.getElementById("addImageBtn").addEventListener("click", () => filePicker.click());
+    filePicker.addEventListener("change", () => {
+      addImageFile(filePicker.files[0]);
+      filePicker.value = "";
+    });
+
+    document.getElementById("addParticleBtn").addEventListener("click", addParticleLayer);
+    document.getElementById("addFirefliesBtn").addEventListener("click", addFirefliesLayer);
+    document.getElementById("addPetalsBtn").addEventListener("click", addPetalsLayer);
+
+    document.getElementById("pauseBtn").addEventListener("click", event => {
+      document.body.classList.toggle("paused");
+      event.currentTarget.textContent =
+        document.body.classList.contains("paused") ? "▶️ Reanudar" : "⏸️ Pausar";
+    });
+
+    document.getElementById("previewBtn").addEventListener("click", () => {
+      document.body.classList.add("preview-mode");
+    });
+
+    document.getElementById("exitPreviewBtn").addEventListener("click", () => {
+      document.body.classList.remove("preview-mode");
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => saveProject());
+    document.getElementById("exportBtn").addEventListener("click", exportProject);
+    document.getElementById("importBtn").addEventListener("click", () => jsonPicker.click());
+    jsonPicker.addEventListener("change", () => {
+      importProject(jsonPicker.files[0]);
+      jsonPicker.value = "";
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("¿Borrar todas las capas y comenzar de cero?")) return;
+      project = structuredClone(defaultProject);
+      renderAll();
+    });
+
+    document.getElementById("deleteSelectedBtn").addEventListener("click", () => {
+      const layer = selectedLayer();
+      if (layer) deleteLayer(layer.id);
+    });
+
+
+
+    document.getElementById("createReflectionBtn").addEventListener("click", createReflectionFromSelected);
+    document.getElementById("createReflectionBtn2").addEventListener("click", createReflectionFromSelected);
+    document.getElementById("petalsPresetBtn").addEventListener("click", () => applyMotionPreset("petals"));
+    [controls.petalColor1, controls.petalColor2, controls.petalColor3, controls.petalColor4, controls.petalColor5, controls.petalColor6]
+      .forEach((control, index) => {
+        control.addEventListener("input", () => updatePetalColor(index, control.value));
+        control.addEventListener("change", () => updatePetalColor(index, control.value));
+      });
+    document.getElementById("petalPaletteMkBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.mk, "Paleta MK aplicada."));
+    document.getElementById("petalPalettePastelBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.pastel, "Paleta pastel aplicada."));
+    document.getElementById("petalPaletteNeonBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.neon, "Paleta neón aplicada."));
+    document.getElementById("cloudsPresetBtn").addEventListener("click", () => applyMotionPreset("clouds"));
+    document.getElementById("fogPresetBtn").addEventListener("click", () => applyMotionPreset("fog"));
+    document.getElementById("organicPresetApplyBtn").addEventListener("click", () => {
+      const layer = selectedLayer();
+      applyOrganicPreset(layer?.organic?.preset || "grassSoft");
+    });
+    document.getElementById("breakReflectionLinkBtn").addEventListener("click", () => {
+      const layer = selectedLayer();
+      if (!layer?.reflection?.enabled) return;
+      layer.reflection.linked = false;
+      renderAll();
+      projectStatus.textContent = "Vínculo del reflejo eliminado.";
+    });
+
+    document.querySelectorAll(".tab").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(tab => tab.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+        button.classList.add("active");
+        document.querySelector(`[data-panel="${button.dataset.tab}"]`).classList.add("active");
+      });
+    });
+
+    document.getElementById("nudgeUpBtn").addEventListener("click", event => {
+      moveSelectedLayer(0, event.shiftKey ? -10 : -2);
+    });
+    document.getElementById("nudgeDownBtn").addEventListener("click", event => {
+      moveSelectedLayer(0, event.shiftKey ? 10 : 2);
+    });
+    document.getElementById("nudgeLeftBtn").addEventListener("click", event => {
+      moveSelectedLayer(event.shiftKey ? -10 : -2, 0);
+    });
+    document.getElementById("nudgeRightBtn").addEventListener("click", event => {
+      moveSelectedLayer(event.shiftKey ? 10 : 2, 0);
+    });
+
+    document.addEventListener("keydown", event => {
+      const tag = document.activeElement?.tagName;
+      if (["INPUT", "SELECT", "TEXTAREA"].includes(tag)) return;
+      const step = event.shiftKey ? 10 : 2;
+      const moves = {
+        ArrowUp: [0, -step],
+        ArrowDown: [0, step],
+        ArrowLeft: [-step, 0],
+        ArrowRight: [step, 0]
+      };
+      if (!moves[event.key]) return;
+      event.preventDefault();
+      moveSelectedLayer(...moves[event.key]);
+    });
+
+    async function loadViewerProject() {
+      const params = new URLSearchParams(location.search);
+      const requested = params.get("project") || "fondo vertical.json";
+      const candidates = [requested];
+      if (!requested.includes("/")) candidates.push(`projects/${requested}`);
+
+      let lastError = null;
+      for (const path of candidates) {
+        try {
+          const response = await fetch(encodeURI(path), { cache: "no-store" });
+          if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+          const imported = await response.json();
+          project = {
+            ...structuredClone(defaultProject),
+            ...imported,
+            layers: (imported.layers || []).map(layer => defaultLayer(layer))
+          };
+          project.selectedId = null;
+          renderStage();
+          document.title = `MK Universe — ${path.split("/").pop()}`;
+          return;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      const errorBox = document.getElementById("viewerError");
+      errorBox.style.display = "grid";
+      errorBox.innerHTML = `<div><strong>No pude cargar el proyecto.</strong><br><br>Busqué: ${candidates.map(item => `<code>${item}</code>`).join(" y ")}<br><br>Comprueba que el nombre y las mayúsculas coincidan exactamente.<br><small>${String(lastError || "Error desconocido")}</small></div>`;
+    }
+
+    bindInspector();
+    document.body.classList.add("viewer-live", "preview-mode");
+    loadViewerProject();
+  </script>
+</body>
+</html>

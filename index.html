@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 2.5 — Aura respirante de color libre</title>
+  <title>🌸 MK Universe 2.6 — Paleta de pétalos</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -588,6 +588,35 @@
       animation-timing-function: var(--easing, ease-in-out);
     }
 
+    .petal-palette-grid {
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .petal-color-box {
+      display:grid;
+      gap:5px;
+      padding:8px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:10px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .petal-color-box span {
+      font-size:11px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .petal-color-box input[type="color"] {
+      width:100%;
+      height:34px;
+      padding:2px;
+      cursor:pointer;
+    }
+
     .petal-field {
       display: block;
       width: 100%;
@@ -1152,6 +1181,25 @@
           Para nubes y niebla usa <strong>Desplazamiento continuo</strong>. Para pétalos usa el preset 🌸, que mueve cada pétalo de forma individual.
         </div>
 
+        <div class="reflection-note" style="margin-top:10px">
+          <strong>🌈 Paleta de pétalos:</strong> cada pétalo elige aleatoriamente uno de estos seis colores. Puedes combinarlos como quieras.
+        </div>
+
+        <div class="petal-palette-grid">
+          <label class="petal-color-box"><span>Color 1</span><input id="propPetalColor1" type="color" /></label>
+          <label class="petal-color-box"><span>Color 2</span><input id="propPetalColor2" type="color" /></label>
+          <label class="petal-color-box"><span>Color 3</span><input id="propPetalColor3" type="color" /></label>
+          <label class="petal-color-box"><span>Color 4</span><input id="propPetalColor4" type="color" /></label>
+          <label class="petal-color-box"><span>Color 5</span><input id="propPetalColor5" type="color" /></label>
+          <label class="petal-color-box"><span>Color 6</span><input id="propPetalColor6" type="color" /></label>
+        </div>
+
+        <div class="row-wrap" style="margin:10px 0 14px">
+          <button id="petalPaletteMkBtn" class="btn" type="button">Paleta MK</button>
+          <button id="petalPalettePastelBtn" class="btn" type="button">Pastel</button>
+          <button id="petalPaletteNeonBtn" class="btn" type="button">Neón</button>
+        </div>
+
         <div class="control">
           <label for="propAnimation">Tipo</label>
           <select id="propAnimation">
@@ -1316,7 +1364,7 @@
     const STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 2.5,
+      version: 2.6,
       selectedId: null,
       layers: []
     };
@@ -1404,7 +1452,13 @@
       organicBend: document.getElementById("propOrganicBend"),
       organicWave: document.getElementById("propOrganicWave"),
       organicFixedZone: document.getElementById("propOrganicFixedZone"),
-      organicQuality: document.getElementById("propOrganicQuality")
+      organicQuality: document.getElementById("propOrganicQuality"),
+      petalColor1: document.getElementById("propPetalColor1"),
+      petalColor2: document.getElementById("propPetalColor2"),
+      petalColor3: document.getElementById("propPetalColor3"),
+      petalColor4: document.getElementById("propPetalColor4"),
+      petalColor5: document.getElementById("propPetalColor5"),
+      petalColor6: document.getElementById("propPetalColor6")
     };
 
     function newId(prefix = "layer") {
@@ -1446,6 +1500,7 @@
         motionRotation: 0,
         plasticity: 80,
         motionRandomStart: true,
+        petalPalette: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
         glowEnabled: false,
         glowColor: "#ff8fd1",
         glowIntensity: 35,
@@ -2118,7 +2173,11 @@
       const rotationAmount = Math.max(0, Number(layer.motionRotation || 230));
       const randomStart = layer.motionRandomStart !== false;
       const mode = layer.motionMode || "loop";
-      const palette = ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8"];
+      const defaultPetalPalette = ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"];
+      const palette = Array.isArray(layer.petalPalette)
+        ? layer.petalPalette.filter(color => /^#[0-9a-f]{6}$/i.test(String(color))).slice(0, 6)
+        : defaultPetalPalette;
+      if (!palette.length) palette.push(...defaultPetalPalette);
 
       const petals = Array.from({ length: count }, (_, i) => {
         let startX;
@@ -2390,6 +2449,15 @@
       controls.organicWave.value = layer.organic?.wave ?? 2.5;
       controls.organicFixedZone.value = layer.organic?.fixedZone ?? 18;
       controls.organicQuality.value = layer.organic?.quality || "balanced";
+      const petalPalette = Array.isArray(layer.petalPalette) && layer.petalPalette.length
+        ? layer.petalPalette
+        : ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"];
+      controls.petalColor1.value = petalPalette[0] || "#ffd8ec";
+      controls.petalColor2.value = petalPalette[1] || "#ff9fd5";
+      controls.petalColor3.value = petalPalette[2] || "#efb4ff";
+      controls.petalColor4.value = petalPalette[3] || "#d8c4ff";
+      controls.petalColor5.value = petalPalette[4] || "#ff7fc8";
+      controls.petalColor6.value = petalPalette[5] || "#f7ecff";
 
       updateValueLabels(layer);
     }
@@ -2535,6 +2603,7 @@
       };
 
       Object.entries(controls).forEach(([key, control]) => {
+        if (key.startsWith("petalColor")) return;
         const handler = () => {
           const layer = selectedLayer();
           if (!layer) return;
@@ -2589,6 +2658,41 @@
         control.addEventListener(control.type === "text" ? "change" : "input", handler);
         control.addEventListener("change", handler);
       });
+    }
+
+    const PETAL_PALETTES = {
+      mk: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
+      pastel: ["#ffe8f4", "#ffc7e6", "#e9d5ff", "#d8dcff", "#fff0fa", "#f4c9ff"],
+      neon: ["#ff3fbf", "#ff75dc", "#d85cff", "#a972ff", "#ff9fe8", "#f5d8ff"]
+    };
+
+    function setPetalPalette(colors, message = "Paleta de pétalos actualizada.") {
+      const layer = selectedLayer();
+      if (!layer) {
+        projectStatus.textContent = "Selecciona primero una capa de pétalos.";
+        return;
+      }
+      layer.petalPalette = colors.slice(0, 6);
+      if (layer.kind === "particles") {
+        layer.particleType = "petals";
+        layer.animation = "petals";
+      }
+      renderStage();
+      renderInspector();
+      saveProject(message);
+    }
+
+    function updatePetalColor(index, value) {
+      const layer = selectedLayer();
+      if (!layer) return;
+      const palette = Array.isArray(layer.petalPalette)
+        ? [...layer.petalPalette]
+        : [...PETAL_PALETTES.mk];
+      while (palette.length < 6) palette.push(PETAL_PALETTES.mk[palette.length]);
+      palette[index] = value;
+      layer.petalPalette = palette;
+      renderStage();
+      saveProject("Color de pétalo actualizado.");
     }
 
     function moveSelectedLayer(dx, dy, message = "Posición actualizada.") {
@@ -3012,7 +3116,7 @@
           project = {
             ...structuredClone(defaultProject),
             ...parsed,
-            version: 2.5,
+            version: 2.6,
             layers: parsed.layers.map(layer => defaultLayer(layer))
           };
           if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
@@ -3083,6 +3187,14 @@
     document.getElementById("createReflectionBtn").addEventListener("click", createReflectionFromSelected);
     document.getElementById("createReflectionBtn2").addEventListener("click", createReflectionFromSelected);
     document.getElementById("petalsPresetBtn").addEventListener("click", () => applyMotionPreset("petals"));
+    [controls.petalColor1, controls.petalColor2, controls.petalColor3, controls.petalColor4, controls.petalColor5, controls.petalColor6]
+      .forEach((control, index) => {
+        control.addEventListener("input", () => updatePetalColor(index, control.value));
+        control.addEventListener("change", () => updatePetalColor(index, control.value));
+      });
+    document.getElementById("petalPaletteMkBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.mk, "Paleta MK aplicada."));
+    document.getElementById("petalPalettePastelBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.pastel, "Paleta pastel aplicada."));
+    document.getElementById("petalPaletteNeonBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.neon, "Paleta neón aplicada."));
     document.getElementById("cloudsPresetBtn").addEventListener("click", () => applyMotionPreset("clouds"));
     document.getElementById("fogPresetBtn").addEventListener("click", () => applyMotionPreset("fog"));
     document.getElementById("organicPresetApplyBtn").addEventListener("click", () => {

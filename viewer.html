@@ -817,6 +817,78 @@
   body.viewer-live #stage { cursor:none !important; }
   #viewerError { position:fixed; inset:0; display:none; place-items:center; padding:30px; background:#09030f; color:#ffd8ef; font:16px/1.5 system-ui,sans-serif; text-align:center; z-index:99999; }
 </style>
+
+<style id="mk-viewer-scale-fix">
+  html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background: #000;
+  }
+
+  body.viewer-live {
+    display: grid !important;
+    place-items: center !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.viewer-live .scene-shell {
+    position: fixed !important;
+    inset: 0 !important;
+    display: grid !important;
+    place-items: center !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #000 !important;
+  }
+
+  /*
+    El editor MK Universe compone las capas sobre una mesa lógica
+    de 540 × 960 px. El visor conserva exactamente esas coordenadas
+    y escala la mesa completa, en vez de agrandar cada capa por separado.
+  */
+  body.viewer-live .stage-wrap {
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    width: 540px !important;
+    height: 960px !important;
+    min-width: 540px !important;
+    min-height: 960px !important;
+    max-width: none !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden !important;
+    transform:
+      translate(-50%, -50%)
+      scale(var(--viewer-scale, 1)) !important;
+    transform-origin: center center !important;
+    background: #000 !important;
+  }
+
+  body.viewer-live #stage {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 540px !important;
+    height: 960px !important;
+    overflow: hidden !important;
+    cursor: none !important;
+  }
+</style>
+
 </head>
 
 <body class="viewer-live preview-mode"><div id="viewerError"></div>
@@ -3291,5 +3363,36 @@
     document.body.classList.add("viewer-live", "preview-mode");
     loadViewerProject();
   </script>
+
+<script id="mk-viewer-scale-script">
+(() => {
+  const LOGICAL_WIDTH = 540;
+  const LOGICAL_HEIGHT = 960;
+
+  function fitViewer() {
+    const scale = Math.min(
+      window.innerWidth / LOGICAL_WIDTH,
+      window.innerHeight / LOGICAL_HEIGHT
+    );
+
+    document.documentElement.style.setProperty(
+      "--viewer-scale",
+      String(scale || 1)
+    );
+  }
+
+  window.addEventListener("resize", fitViewer, { passive: true });
+  window.addEventListener("orientationchange", fitViewer, { passive: true });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", fitViewer, { once: true });
+  } else {
+    fitViewer();
+  }
+
+  requestAnimationFrame(fitViewer);
+})();
+</script>
+
 </body>
 </html>

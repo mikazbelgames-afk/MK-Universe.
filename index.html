@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 2.6 — Paleta de pétalos</title>
+  <title>🌸 MK Universe 3.0 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -806,19 +806,226 @@
         height: auto;
       }
     }
+
+
+    /* MK Universe 3.0 */
+    .stage-viewport {
+      position: relative;
+      flex: 0 0 auto;
+      overflow: visible;
+    }
+
+    .stage-wrap {
+      width: var(--logical-width, 540px) !important;
+      height: var(--logical-height, 960px) !important;
+      max-width: none !important;
+      aspect-ratio: auto !important;
+      transform: scale(var(--editor-scale, 1));
+      transform-origin: top left;
+      border-radius: 12px;
+    }
+
+    #stage {
+      width: 100%;
+      height: 100%;
+    }
+
+    .format-grid,
+    .export-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .format-grid label,
+    .export-grid label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .format-grid select,
+    .export-grid select,
+    .export-grid input,
+    .format-grid input {
+      width: 100%;
+    }
+
+    .effect-palette-grid {
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .effect-color-box {
+      display:grid;
+      gap:5px;
+      padding:8px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:10px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .effect-color-box span {
+      font-size:11px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .effect-color-box input[type="color"] {
+      width:100%;
+      height:34px;
+      padding:2px;
+      cursor:pointer;
+    }
+
+    .image-tools-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .focus-stack {
+      position: relative;
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .focus-stack > .focus-base,
+    .focus-stack > .focus-motion {
+      width: 100%;
+    }
+
+    .focus-stack > .focus-motion {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      transform-origin: center;
+      pointer-events: none;
+    }
+
+    .focus-stack > .focus-base {
+      position: relative;
+      z-index: 2;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(3,2,6,.86);
+      backdrop-filter: blur(10px);
+    }
+
+    .modal-backdrop.hidden { display:none !important; }
+
+    .image-lab {
+      width: min(1180px, 96vw);
+      height: min(850px, 94vh);
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 290px;
+      gap:12px;
+      padding:14px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:#120d18;
+      box-shadow:0 28px 90px rgba(0,0,0,.65);
+    }
+
+    .lab-canvas-shell {
+      min-width:0;
+      min-height:0;
+      display:grid;
+      place-items:center;
+      overflow:auto;
+      border-radius:14px;
+      background:
+        linear-gradient(45deg,#29202f 25%,transparent 25%) 0 0/24px 24px,
+        linear-gradient(-45deg,#29202f 25%,transparent 25%) 0 12px/24px 24px,
+        linear-gradient(45deg,transparent 75%,#29202f 75%) 12px -12px/24px 24px,
+        linear-gradient(-45deg,transparent 75%,#29202f 75%) -12px 0/24px 24px,
+        #1b1520;
+    }
+
+    #imageLabCanvas {
+      display:block;
+      max-width:100%;
+      max-height:100%;
+      touch-action:none;
+      cursor:crosshair;
+      box-shadow:0 10px 35px rgba(0,0,0,.4);
+    }
+
+    .lab-sidebar {
+      min-height:0;
+      overflow:auto;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      background:rgba(255,255,255,.035);
+    }
+
+    .lab-sidebar h2 { margin:0 0 8px; }
+    .lab-sidebar .btn { width:100%; margin-bottom:8px; }
+
+    .progress-track {
+      width:100%;
+      height:10px;
+      overflow:hidden;
+      border-radius:999px;
+      background:rgba(255,255,255,.1);
+      margin-top:10px;
+    }
+
+    .progress-bar {
+      width:0%;
+      height:100%;
+      background:linear-gradient(90deg,#ff65bd,#b66cff,#72d8ff);
+      transition:width .15s linear;
+    }
+
+    .vfx-badge {
+      display:inline-flex;
+      align-items:center;
+      margin-left:6px;
+      padding:2px 6px;
+      border-radius:999px;
+      font-size:10px;
+      color:#ffeafa;
+      background:rgba(255,105,205,.16);
+      border:1px solid rgba(255,150,220,.22);
+    }
+
+    @media (max-width: 900px) {
+      .image-lab { grid-template-columns:1fr; height:96vh; }
+      .lab-sidebar { max-height:34vh; }
+    }
+
   </style>
 </head>
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 2.5 🌸</h1>
-    <p class="subtitle">Overlays vivos: reflejos, pétalos, movimiento orgánico y aura respirante de cualquier color.</p>
+    <h1>🌸 MK Universe 3.0 🌸</h1>
+    <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente y exportación de video.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
       <button id="addParticleBtn" class="btn" type="button">✨ Partículas</button>
       <button id="addFirefliesBtn" class="btn" type="button">🪲 Luciérnagas</button>
       <button id="addPetalsBtn" class="btn" type="button">🌸 Pétalos</button>
+      <button id="addSmokeBtn" class="btn" type="button">💨 Humo</button>
+      <button id="addFogFxBtn" class="btn" type="button">🌫️ Neblina</button>
+      <button id="addCloudFxBtn" class="btn" type="button">☁️ Nube</button>
+      <button id="addExplosionBtn" class="btn" type="button">💥 Explosión</button>
       <button id="pauseBtn" class="btn" type="button">⏸️ Pausar</button>
       <button id="previewBtn" class="btn" type="button">👁️ Vista limpia</button>
     </div>
@@ -834,6 +1041,56 @@
         <button id="resetBtn" class="btn btn-danger" type="button">↩️ Restablecer</button>
       </div>
       <input id="jsonPicker" type="file" accept=".json,application/json" class="hidden" />
+
+      <div class="format-grid">
+        <label>Formato del lienzo
+          <select id="sceneFormat">
+            <option value="vertical">Vertical 1080 × 1920</option>
+            <option value="horizontal">Horizontal 1920 × 1080</option>
+          </select>
+        </label>
+        <label>Fondo de exportación
+          <input id="sceneBackground" type="color" value="#000000" />
+        </label>
+      </div>
+
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-weight:800">🎬 Exportación de alta calidad</summary>
+        <div class="export-grid">
+          <label>Duración del loop
+            <select id="videoDuration">
+              <option value="6">6 segundos</option>
+              <option value="10">10 segundos</option>
+              <option value="12" selected>12 segundos</option>
+              <option value="15">15 segundos</option>
+              <option value="20">20 segundos</option>
+              <option value="30">30 segundos</option>
+            </select>
+          </label>
+          <label>Fotogramas
+            <select id="videoFps">
+              <option value="30" selected>30 FPS</option>
+              <option value="60">60 FPS</option>
+            </select>
+          </label>
+          <label>Calidad
+            <select id="videoQuality">
+              <option value="high" selected>Alta</option>
+              <option value="ultra">Ultra</option>
+            </select>
+          </label>
+          <label>Formato preferido
+            <select id="videoFormat">
+              <option value="mp4" selected>MP4</option>
+              <option value="webm">WebM</option>
+            </select>
+          </label>
+        </div>
+        <button id="exportVideoBtn" class="btn btn-primary" type="button" style="width:100%;margin-top:10px">🎬 Exportar loop de video</button>
+        <div class="progress-track"><div id="videoProgressBar" class="progress-bar"></div></div>
+        <div id="videoStatus" class="status" aria-live="polite"></div>
+      </details>
+
       <div id="projectStatus" class="status" aria-live="polite"></div>
     </section>
 
@@ -844,9 +1101,11 @@
     </section>
   </aside>
 
-  <main class="scene-shell">
-    <div class="stage-wrap">
-      <div id="stage" aria-label="Escena vertical 1080 por 1920"></div>
+  <main class="scene-shell" id="sceneShell">
+    <div class="stage-viewport" id="stageViewport">
+      <div class="stage-wrap" id="stageWrap">
+        <div id="stage" aria-label="Escena vertical 1080 por 1920"></div>
+      </div>
     </div>
   </main>
 
@@ -1077,6 +1336,22 @@
           </div>
         </div>
 
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:10px">🧩 Laboratorio de imagen</h3>
+          <div class="reflection-note">Herramientas locales: quitar fondo, retocar bordes, separar objetos transparentes y elegir exactamente qué zona se anima.</div>
+          <div class="image-tools-grid">
+            <button id="removeBackgroundBtn" class="btn btn-primary" type="button">✂️ Quitar fondo</button>
+            <button id="restoreOriginalBtn" class="btn" type="button">↩️ Restaurar original</button>
+            <button id="separateLayersBtn" class="btn" type="button">🧩 Separar por capas</button>
+            <button id="editAnimationMaskBtn" class="btn" type="button">🎯 Zona animada</button>
+          </div>
+          <div class="check-row" style="margin-top:10px">
+            <input id="propAnimationFocusEnabled" type="checkbox" />
+            <label for="propAnimationFocusEnabled">Animar solo la zona pintada</label>
+          </div>
+          <button id="clearAnimationMaskBtn" class="btn btn-danger" type="button" style="width:100%;margin-top:8px">Borrar máscara de animación</button>
+        </div>
+
         <div class="control">
           <label for="propBlend">Modo de mezcla</label>
           <select id="propBlend">
@@ -1182,22 +1457,73 @@
         </div>
 
         <div class="reflection-note" style="margin-top:10px">
-          <strong>🌈 Paleta de pétalos:</strong> cada pétalo elige aleatoriamente uno de estos seis colores. Puedes combinarlos como quieras.
+          <strong>🌈 Paleta del preset:</strong> estrellas, puntos luminosos, pétalos, luciérnagas, humo, neblina, nubes y explosiones usan estos colores.
         </div>
 
-        <div class="petal-palette-grid">
-          <label class="petal-color-box"><span>Color 1</span><input id="propPetalColor1" type="color" /></label>
-          <label class="petal-color-box"><span>Color 2</span><input id="propPetalColor2" type="color" /></label>
-          <label class="petal-color-box"><span>Color 3</span><input id="propPetalColor3" type="color" /></label>
-          <label class="petal-color-box"><span>Color 4</span><input id="propPetalColor4" type="color" /></label>
-          <label class="petal-color-box"><span>Color 5</span><input id="propPetalColor5" type="color" /></label>
-          <label class="petal-color-box"><span>Color 6</span><input id="propPetalColor6" type="color" /></label>
+        <div class="effect-palette-grid">
+          <label class="effect-color-box"><span>Color 1</span><input id="propEffectColor1" type="color" /></label>
+          <label class="effect-color-box"><span>Color 2</span><input id="propEffectColor2" type="color" /></label>
+          <label class="effect-color-box"><span>Color 3</span><input id="propEffectColor3" type="color" /></label>
+          <label class="effect-color-box"><span>Color 4</span><input id="propEffectColor4" type="color" /></label>
+          <label class="effect-color-box"><span>Color 5</span><input id="propEffectColor5" type="color" /></label>
+          <label class="effect-color-box"><span>Color 6</span><input id="propEffectColor6" type="color" /></label>
         </div>
 
         <div class="row-wrap" style="margin:10px 0 14px">
-          <button id="petalPaletteMkBtn" class="btn" type="button">Paleta MK</button>
-          <button id="petalPalettePastelBtn" class="btn" type="button">Pastel</button>
-          <button id="petalPaletteNeonBtn" class="btn" type="button">Neón</button>
+          <button id="effectPaletteMkBtn" class="btn" type="button">Paleta MK</button>
+          <button id="effectPalettePastelBtn" class="btn" type="button">Pastel</button>
+          <button id="effectPaletteNeonBtn" class="btn" type="button">Neón</button>
+          <button id="effectPaletteColdBtn" class="btn" type="button">Fría</button>
+          <button id="effectPaletteWarmBtn" class="btn" type="button">Cálida</button>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-bottom:10px">✨ Configuración de partículas y VFX</h3>
+          <div class="control">
+            <label for="propParticleType">Preset visual</label>
+            <select id="propParticleType">
+              <option value="stars">Estrellas</option>
+              <option value="lights">Luces suaves</option>
+              <option value="petals">Pétalos</option>
+              <option value="fireflies">Luciérnagas</option>
+              <option value="smoke">Humo</option>
+              <option value="fogfx">Neblina</option>
+              <option value="cloudfx">Nube</option>
+              <option value="explosion">Explosión</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="propStarStyle">Estilo de estrella</label>
+            <select id="propStarStyle">
+              <option value="sparkle">Estrella con destello</option>
+              <option value="dot">Solo punto luminoso</option>
+              <option value="mixed">Mezcla de ambos</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="propParticleCount">Cantidad <span id="propParticleCountValue" class="value"></span></label>
+            <input id="propParticleCount" type="range" min="1" max="240" step="1" />
+          </div>
+          <div class="control">
+            <label for="propParticleSize">Tamaño <span id="propParticleSizeValue" class="value"></span></label>
+            <input id="propParticleSize" type="range" min="1" max="160" step="1" />
+          </div>
+          <div class="control">
+            <label for="propVfxSpread">Dispersión <span id="propVfxSpreadValue" class="value"></span></label>
+            <input id="propVfxSpread" type="range" min="1" max="100" step="1" />
+          </div>
+          <div class="control">
+            <label for="propVfxSoftness">Suavidad <span id="propVfxSoftnessValue" class="value"></span></label>
+            <input id="propVfxSoftness" type="range" min="0" max="100" step="1" />
+          </div>
+          <div class="control">
+            <label for="propVfxCenterX">Centro X <span id="propVfxCenterXValue" class="value"></span></label>
+            <input id="propVfxCenterX" type="range" min="0" max="100" step="1" />
+          </div>
+          <div class="control">
+            <label for="propVfxCenterY">Centro Y <span id="propVfxCenterYValue" class="value"></span></label>
+            <input id="propVfxCenterY" type="range" min="0" max="100" step="1" />
+          </div>
         </div>
 
         <div class="control">
@@ -1349,6 +1675,8 @@
           <button id="petalsPresetBtn" class="btn btn-primary" type="button">🌸 Pétalos</button>
           <button id="cloudsPresetBtn" class="btn" type="button">☁️ Nubes</button>
           <button id="fogPresetBtn" class="btn" type="button">🌫️ Niebla</button>
+          <button id="smokePresetBtn" class="btn" type="button">💨 Humo</button>
+          <button id="explosionPresetBtn" class="btn" type="button">💥 Explosión</button>
         </div>
       </section>
 
@@ -1358,18 +1686,56 @@
     </div>
   </aside>
 
+
+  <div id="imageLabModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="imageLabTitle">
+    <div class="image-lab">
+      <div class="lab-canvas-shell"><canvas id="imageLabCanvas"></canvas></div>
+      <aside class="lab-sidebar">
+        <h2 id="imageLabTitle">Laboratorio de imagen</h2>
+        <p id="imageLabHelp" class="notice"></p>
+        <div class="control">
+          <label for="labBrushSize">Tamaño del pincel <span id="labBrushSizeValue" class="value">42px</span></label>
+          <input id="labBrushSize" type="range" min="2" max="240" value="42" />
+        </div>
+        <div class="control">
+          <label for="labTolerance">Tolerancia del fondo <span id="labToleranceValue" class="value">38</span></label>
+          <input id="labTolerance" type="range" min="1" max="140" value="38" />
+        </div>
+        <button id="labAutoRemoveBtn" class="btn btn-primary" type="button">✨ Quitar fondo automáticamente</button>
+        <button id="labEraseBtn" class="btn" type="button">🧽 Pincel borrar</button>
+        <button id="labRestoreBtn" class="btn" type="button">🖌️ Pincel restaurar</button>
+        <button id="labMaskPaintBtn" class="btn" type="button">🎯 Pintar zona animada</button>
+        <button id="labMaskEraseBtn" class="btn" type="button">🧼 Borrar zona animada</button>
+        <button id="labResetBtn" class="btn btn-danger" type="button">Restablecer edición</button>
+        <hr style="border-color:rgba(255,255,255,.1);margin:14px 0" />
+        <button id="labApplyBtn" class="btn btn-primary" type="button">✅ Aplicar</button>
+        <button id="labCancelBtn" class="btn" type="button">Cancelar</button>
+      </aside>
+    </div>
+  </div>
+
   <button id="exitPreviewBtn" class="btn preview-exit" type="button">🎛️ Volver al editor</button>
 
   <script>
-    const STORAGE_KEY = "mkUniverse2DEngine_v1";
+    const STORAGE_KEY = "mkUniverse3DEngine_v1";
+    const LEGACY_STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 2.6,
+      version: 3.0,
       selectedId: null,
+      canvas: {
+        orientation: "vertical",
+        logicalWidth: 540,
+        logicalHeight: 960,
+        outputWidth: 1080,
+        outputHeight: 1920,
+        background: "#000000"
+      },
+      export: { duration: 12, fps: 30, quality: "high", format: "mp4" },
       layers: []
     };
 
-    let project = loadProject() || structuredClone(defaultProject);
+    let project = migrateProject(loadProject() || structuredClone(defaultProject));
     project.layers = (project.layers || []).map(layer => defaultLayer(layer));
     if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
       project.selectedId = null;
@@ -1384,6 +1750,14 @@
     const inspector = document.getElementById("inspector");
     const emptyInspector = document.getElementById("emptyInspector");
     const projectStatus = document.getElementById("projectStatus");
+    const sceneShell = document.getElementById("sceneShell");
+    const stageViewport = document.getElementById("stageViewport");
+    const stageWrap = document.getElementById("stageWrap");
+    const sceneFormat = document.getElementById("sceneFormat");
+    const sceneBackground = document.getElementById("sceneBackground");
+    const videoProgressBar = document.getElementById("videoProgressBar");
+    const videoStatus = document.getElementById("videoStatus");
+    let editorScale = 1;
 
     const controls = {
       name: document.getElementById("propName"),
@@ -1453,12 +1827,21 @@
       organicWave: document.getElementById("propOrganicWave"),
       organicFixedZone: document.getElementById("propOrganicFixedZone"),
       organicQuality: document.getElementById("propOrganicQuality"),
-      petalColor1: document.getElementById("propPetalColor1"),
-      petalColor2: document.getElementById("propPetalColor2"),
-      petalColor3: document.getElementById("propPetalColor3"),
-      petalColor4: document.getElementById("propPetalColor4"),
-      petalColor5: document.getElementById("propPetalColor5"),
-      petalColor6: document.getElementById("propPetalColor6")
+      animationFocusEnabled: document.getElementById("propAnimationFocusEnabled"),
+      particleType: document.getElementById("propParticleType"),
+      starStyle: document.getElementById("propStarStyle"),
+      particleCount: document.getElementById("propParticleCount"),
+      particleSize: document.getElementById("propParticleSize"),
+      vfxSpread: document.getElementById("propVfxSpread"),
+      vfxSoftness: document.getElementById("propVfxSoftness"),
+      vfxCenterX: document.getElementById("propVfxCenterX"),
+      vfxCenterY: document.getElementById("propVfxCenterY"),
+      effectColor1: document.getElementById("propEffectColor1"),
+      effectColor2: document.getElementById("propEffectColor2"),
+      effectColor3: document.getElementById("propEffectColor3"),
+      effectColor4: document.getElementById("propEffectColor4"),
+      effectColor5: document.getElementById("propEffectColor5"),
+      effectColor6: document.getElementById("propEffectColor6")
     };
 
     function newId(prefix = "layer") {
@@ -1500,7 +1883,16 @@
         motionRotation: 0,
         plasticity: 80,
         motionRandomStart: true,
+        effectPalette: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
         petalPalette: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
+        particleType: "stars",
+        particleCount: 70,
+        particleSize: 8,
+        starStyle: "sparkle",
+        originalSrc: null,
+        maskSrc: null,
+        animationFocus: { enabled: false },
+        vfx: { spread: 58, softness: 72, centerX: 50, centerY: 55 },
         glowEnabled: false,
         glowColor: "#ff8fd1",
         glowIntensity: 35,
@@ -1574,6 +1966,22 @@
           quality: "balanced",
           ...(overrides.organic || {})
         },
+        animationFocus: {
+          enabled: false,
+          ...(overrides.animationFocus || {})
+        },
+        vfx: {
+          spread: 58,
+          softness: 72,
+          centerX: 50,
+          centerY: 55,
+          ...(overrides.vfx || {})
+        },
+        effectPalette: Array.isArray(overrides.effectPalette)
+          ? overrides.effectPalette.slice(0, 6)
+          : Array.isArray(overrides.petalPalette)
+            ? overrides.petalPalette.slice(0, 6)
+            : ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
         reflection: {
           enabled: false,
           sourceLayerId: null,
@@ -1594,9 +2002,39 @@
       };
     }
 
+    function migrateProject(raw) {
+      const next = {
+        ...structuredClone(defaultProject),
+        ...(raw || {}),
+        version: 3.0,
+        canvas: {
+          ...structuredClone(defaultProject.canvas),
+          ...((raw || {}).canvas || {})
+        },
+        export: {
+          ...structuredClone(defaultProject.export),
+          ...((raw || {}).export || {})
+        }
+      };
+      if (next.canvas.orientation === "horizontal") {
+        next.canvas.logicalWidth = 960;
+        next.canvas.logicalHeight = 540;
+        next.canvas.outputWidth = 1920;
+        next.canvas.outputHeight = 1080;
+      } else {
+        next.canvas.orientation = "vertical";
+        next.canvas.logicalWidth = 540;
+        next.canvas.logicalHeight = 960;
+        next.canvas.outputWidth = 1080;
+        next.canvas.outputHeight = 1920;
+      }
+      next.layers = Array.isArray(next.layers) ? next.layers : [];
+      return next;
+    }
+
     function loadProject() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
         return raw ? JSON.parse(raw) : null;
       } catch {
         return null;
@@ -1604,7 +2042,9 @@
     }
 
     function saveProject(message = "Proyecto guardado.") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+      project.version = 3.0;
+      project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
       setTimeout(() => {
         if (projectStatus.textContent === message) projectStatus.textContent = "";
@@ -1708,6 +2148,18 @@
         motionRotation: 0,
         plasticity: 92,
         motionRandomStart: true
+      },
+      smoke: {
+        animation: "none",
+        duration: 12,
+        intensity: 34,
+        motionRandomStart: true
+      },
+      explosion: {
+        animation: "none",
+        duration: 4,
+        intensity: 78,
+        motionRandomStart: false
       }
     };
 
@@ -1770,7 +2222,7 @@
         layer.background = true;
       }
       renderAll();
-      projectStatus.textContent = `Preset ${name === "petals" ? "Pétalos" : name === "clouds" ? "Nubes" : "Niebla"} aplicado.`;
+      projectStatus.textContent = `Preset ${name === "petals" ? "Pétalos" : name === "clouds" ? "Nubes" : name === "fog" ? "Niebla" : name === "smoke" ? "Humo" : "Explosión"} aplicado.`;
     }
 
     function renderAll() {
@@ -1782,6 +2234,7 @@
 
     function renderStage() {
       syncLinkedReflections();
+      updateSceneGeometry();
       stage.innerHTML = "";
 
       project.layers.forEach((layer, index) => {
@@ -1809,7 +2262,8 @@
         const motion = document.createElement("div");
         const individualPetals = layer.kind === "particles" && layer.particleType === "petals";
         const directOrganic = layer.kind === "image" && layer.animation === "organic";
-        motion.className = `motion anim-${individualPetals || directOrganic ? "none" : layer.animation}`;
+        const focusedAnimation = layer.kind === "image" && layer.animationFocus?.enabled && Boolean(layer.maskSrc);
+        motion.className = `motion anim-${individualPetals || directOrganic || focusedAnimation ? "none" : layer.animation}`;
         motion.style.setProperty("--duration", `${layer.duration}s`);
         motion.style.setProperty("--intensity", `${layer.intensity}px`);
         motion.style.setProperty("--intensity-scale", layer.intensity / 100);
@@ -1831,11 +2285,49 @@
     function loadImageLayer(layer, motion) {
       const img = new Image();
       img.alt = layer.name;
-      img.onload = () => {
+      img.onload = async () => {
         const processed = processImage(layer, img);
         const reflected = layer.reflection?.enabled
           ? createWaterReflectionCanvas(layer, processed)
           : processed;
+
+        if (layer.animationFocus?.enabled && layer.maskSrc && !layer.reflection?.enabled) {
+          try {
+            const masked = await createMaskedCanvas(reflected, layer.maskSrc);
+            const stack = document.createElement("div");
+            stack.className = "focus-stack";
+
+            const baseWrap = document.createElement("div");
+            baseWrap.className = "focus-base visual-stack";
+            const baseAura = createAuraLayer(layer);
+            if (baseAura) baseWrap.appendChild(baseAura);
+            styleVisual(layer, reflected);
+            baseWrap.appendChild(reflected);
+            addMetalShine(layer, baseWrap);
+
+            const focusMotion = document.createElement("div");
+            focusMotion.className = `focus-motion anim-${layer.animation === "organic" ? "none" : layer.animation}`;
+            focusMotion.style.setProperty("--duration", `${layer.duration}s`);
+            focusMotion.style.setProperty("--intensity", `${layer.intensity}px`);
+            focusMotion.style.setProperty("--intensity-scale", layer.intensity / 100);
+            focusMotion.style.setProperty("--intensity-deg", `${Math.max(1, layer.intensity / 6)}deg`);
+            focusMotion.style.setProperty("--easing", easingFromPlasticity(layer.plasticity));
+            setMotionVariables(layer, focusMotion);
+
+            const focusVisual = layer.animation === "organic"
+              ? createOrganicMotionCanvas(layer, masked)
+              : masked;
+            styleVisual(layer, focusVisual);
+            focusMotion.appendChild(focusVisual);
+            stack.append(baseWrap, focusMotion);
+            motion.replaceChildren(stack);
+          } catch {
+            layer.animationFocus.enabled = false;
+            loadImageLayer(layer, motion);
+          }
+          return;
+        }
+
         const visual = layer.animation === "organic" && !layer.reflection?.enabled
           ? createOrganicMotionCanvas(layer, reflected)
           : reflected;
@@ -1857,6 +2349,23 @@
         motion.replaceChildren(msg);
       };
       img.src = layer.src;
+    }
+
+    async function createMaskedCanvas(sourceElement, maskSrc) {
+      const width = sourceElement.naturalWidth || sourceElement.width;
+      const height = sourceElement.naturalHeight || sourceElement.height;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(sourceElement, 0, 0, width, height);
+      const mask = await loadImageSource(maskSrc);
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(mask, 0, 0, width, height);
+      ctx.globalCompositeOperation = "source-over";
+      canvas.style.width = "100%";
+      canvas.style.height = "auto";
+      return canvas;
     }
 
     function processImage(layer, img) {
@@ -2089,10 +2598,15 @@
         drawAnimatedPetals(layer, motion);
         return;
       }
+      if (["smoke", "fogfx", "cloudfx", "explosion"].includes(layer.particleType || "")) {
+        drawVfxLayer(layer, motion);
+        return;
+      }
 
       const canvas = document.createElement("canvas");
-      canvas.width = 1080;
-      canvas.height = 1920;
+      const renderSize = getRenderSize();
+      canvas.width = renderSize.width;
+      canvas.height = renderSize.height;
       canvas.style.width = "100%";
       canvas.style.height = "100%";
       const ctx = canvas.getContext("2d");
@@ -2100,6 +2614,8 @@
       const count = Math.max(8, Math.min(220, Math.round(layer.particleCount || 60)));
       const type = layer.particleType || "stars";
       const size = layer.particleSize || 9;
+      const palette = normalizedPalette(layer);
+      const starStyle = layer.starStyle || "sparkle";
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -2113,24 +2629,34 @@
         ctx.globalAlpha = a;
 
         if (type === "stars") {
-          ctx.fillStyle = "white";
+          const color = palette[i % palette.length];
+          const useDot = starStyle === "dot" || (starStyle === "mixed" && i % 2 === 0);
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, s * (useDot ? 1.8 : 1.25));
+          gradient.addColorStop(0, hexToRgba(color, .98));
+          gradient.addColorStop(.28, hexToRgba(color, .62));
+          gradient.addColorStop(1, hexToRgba(color, 0));
+          ctx.fillStyle = gradient;
           ctx.beginPath();
-          ctx.arc(x, y, s * 0.28, 0, Math.PI * 2);
+          ctx.arc(x, y, s * (useDot ? 1.8 : 1.25), 0, Math.PI * 2);
           ctx.fill();
-
-          ctx.strokeStyle = "rgba(255,255,255,.8)";
-          ctx.lineWidth = Math.max(1, s * 0.08);
+          ctx.fillStyle = hexToRgba(color, .96);
           ctx.beginPath();
-          ctx.moveTo(x - s, y);
-          ctx.lineTo(x + s, y);
-          ctx.moveTo(x, y - s);
-          ctx.lineTo(x, y + s);
-          ctx.stroke();
+          ctx.arc(x, y, s * (useDot ? .24 : .20), 0, Math.PI * 2);
+          ctx.fill();
+          if (!useDot) {
+            ctx.strokeStyle = hexToRgba(color, .82);
+            ctx.lineWidth = Math.max(1, s * .07);
+            ctx.beginPath();
+            ctx.moveTo(x - s, y); ctx.lineTo(x + s, y);
+            ctx.moveTo(x, y - s); ctx.lineTo(x, y + s);
+            ctx.stroke();
+          }
         } else if (type === "lights") {
+          const color = palette[i % palette.length];
           const gradient = ctx.createRadialGradient(x, y, 0, x, y, s * 2.2);
-          gradient.addColorStop(0, "rgba(255,245,220,.95)");
-          gradient.addColorStop(.35, "rgba(255,195,225,.55)");
-          gradient.addColorStop(1, "rgba(255,155,207,0)");
+          gradient.addColorStop(0, hexToRgba(color, .96));
+          gradient.addColorStop(.35, hexToRgba(color, .52));
+          gradient.addColorStop(1, hexToRgba(color, 0));
           ctx.fillStyle = gradient;
           ctx.beginPath();
           ctx.arc(x, y, s * 2.2, 0, Math.PI * 2);
@@ -2138,7 +2664,7 @@
         } else {
           ctx.translate(x, y);
           ctx.rotate(Math.random() * Math.PI);
-          ctx.fillStyle = "rgba(255,210,230,.92)";
+          ctx.fillStyle = palette[i % palette.length];
           ctx.beginPath();
           ctx.ellipse(0, 0, s * .55, s, 0, 0, Math.PI * 2);
           ctx.fill();
@@ -2155,8 +2681,9 @@
     function drawAnimatedPetals(layer, motion) {
       const canvas = document.createElement("canvas");
       canvas.className = "petal-field";
-      canvas.width = 1080;
-      canvas.height = 1920;
+      const renderSize = getRenderSize();
+      canvas.width = renderSize.width;
+      canvas.height = renderSize.height;
       const ctx = canvas.getContext("2d");
 
       const count = Math.max(8, Math.min(140, Math.round(layer.particleCount || 42)));
@@ -2173,11 +2700,7 @@
       const rotationAmount = Math.max(0, Number(layer.motionRotation || 230));
       const randomStart = layer.motionRandomStart !== false;
       const mode = layer.motionMode || "loop";
-      const defaultPetalPalette = ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"];
-      const palette = Array.isArray(layer.petalPalette)
-        ? layer.petalPalette.filter(color => /^#[0-9a-f]{6}$/i.test(String(color))).slice(0, 6)
-        : defaultPetalPalette;
-      if (!palette.length) palette.push(...defaultPetalPalette);
+      const palette = normalizedPalette(layer);
 
       const petals = Array.from({ length: count }, (_, i) => {
         let startX;
@@ -2264,6 +2787,7 @@
 
       const count = Math.max(4, Math.min(90, Number(layer.particleCount || 24)));
       const baseSize = Math.max(3, Number(layer.particleSize || 10));
+      const palette = normalizedPalette(layer);
 
       for (let i = 0; i < count; i++) {
         const dot = document.createElement("span");
@@ -2275,6 +2799,9 @@
         dot.style.setProperty("--fly-duration", `${4 + Math.random() * 7}s`);
         dot.style.setProperty("--blink-duration", `${1.6 + Math.random() * 3.6}s`);
         dot.style.setProperty("--delay", `${-Math.random() * 8}s`);
+        const color = palette[i % palette.length];
+        dot.style.background = `radial-gradient(circle, #ffffff 0 15%, ${hexToRgba(color,.95)} 28%, ${hexToRgba(color,.38)} 56%, transparent 75%)`;
+        dot.style.boxShadow = `0 0 ${size*.8}px ${hexToRgba(color,.9)}, 0 0 ${size*2.2}px ${hexToRgba(color,.62)}`;
         field.appendChild(dot);
       }
 
@@ -2296,7 +2823,7 @@
 
         card.innerHTML = `
           <div class="layer-title">
-            <span class="layer-name" title="${escapeHtml(layer.name)}">${escapeHtml(layer.name)}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}</span>
+            <span class="layer-name" title="${escapeHtml(layer.name)}">${escapeHtml(layer.name)}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
             <div class="row">
               <button class="btn btn-mini move-up" type="button" title="Adelante">▲</button>
               <button class="btn btn-mini move-down" type="button" title="Atrás">▼</button>
@@ -2449,15 +2976,22 @@
       controls.organicWave.value = layer.organic?.wave ?? 2.5;
       controls.organicFixedZone.value = layer.organic?.fixedZone ?? 18;
       controls.organicQuality.value = layer.organic?.quality || "balanced";
-      const petalPalette = Array.isArray(layer.petalPalette) && layer.petalPalette.length
-        ? layer.petalPalette
-        : ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"];
-      controls.petalColor1.value = petalPalette[0] || "#ffd8ec";
-      controls.petalColor2.value = petalPalette[1] || "#ff9fd5";
-      controls.petalColor3.value = petalPalette[2] || "#efb4ff";
-      controls.petalColor4.value = petalPalette[3] || "#d8c4ff";
-      controls.petalColor5.value = petalPalette[4] || "#ff7fc8";
-      controls.petalColor6.value = petalPalette[5] || "#f7ecff";
+      controls.animationFocusEnabled.checked = Boolean(layer.animationFocus?.enabled);
+      controls.particleType.value = layer.particleType || "stars";
+      controls.starStyle.value = layer.starStyle || "sparkle";
+      controls.particleCount.value = layer.particleCount ?? 70;
+      controls.particleSize.value = layer.particleSize ?? 8;
+      controls.vfxSpread.value = layer.vfx?.spread ?? 58;
+      controls.vfxSoftness.value = layer.vfx?.softness ?? 72;
+      controls.vfxCenterX.value = layer.vfx?.centerX ?? 50;
+      controls.vfxCenterY.value = layer.vfx?.centerY ?? 55;
+      const effectPalette = normalizedPalette(layer);
+      controls.effectColor1.value = effectPalette[0];
+      controls.effectColor2.value = effectPalette[1];
+      controls.effectColor3.value = effectPalette[2];
+      controls.effectColor4.value = effectPalette[3];
+      controls.effectColor5.value = effectPalette[4];
+      controls.effectColor6.value = effectPalette[5];
 
       updateValueLabels(layer);
     }
@@ -2506,7 +3040,13 @@
         propOrganicStrengthValue: `${layer.organic?.strength ?? 10}px`,
         propOrganicBendValue: `${layer.organic?.bend ?? 45}%`,
         propOrganicWaveValue: `${layer.organic?.wave ?? 2.5}`,
-        propOrganicFixedZoneValue: `${layer.organic?.fixedZone ?? 18}%`
+        propOrganicFixedZoneValue: `${layer.organic?.fixedZone ?? 18}%`,
+        propParticleCountValue: `${layer.particleCount ?? 70}`,
+        propParticleSizeValue: `${layer.particleSize ?? 8}px`,
+        propVfxSpreadValue: `${layer.vfx?.spread ?? 58}%`,
+        propVfxSoftnessValue: `${layer.vfx?.softness ?? 72}%`,
+        propVfxCenterXValue: `${layer.vfx?.centerX ?? 50}%`,
+        propVfxCenterYValue: `${layer.vfx?.centerY ?? 55}%`
       };
 
       Object.entries(values).forEach(([id, text]) => {
@@ -2599,11 +3139,20 @@
         organicBend: "organic.bend",
         organicWave: "organic.wave",
         organicFixedZone: "organic.fixedZone",
-        organicQuality: "organic.quality"
+        organicQuality: "organic.quality",
+        animationFocusEnabled: "animationFocus.enabled",
+        particleType: "particleType",
+        starStyle: "starStyle",
+        particleCount: "particleCount",
+        particleSize: "particleSize",
+        vfxSpread: "vfx.spread",
+        vfxSoftness: "vfx.softness",
+        vfxCenterX: "vfx.centerX",
+        vfxCenterY: "vfx.centerY"
       };
 
       Object.entries(controls).forEach(([key, control]) => {
-        if (key.startsWith("petalColor")) return;
+        if (key.startsWith("effectColor")) return;
         const handler = () => {
           const layer = selectedLayer();
           if (!layer) return;
@@ -2624,6 +3173,12 @@
             if (reflectionProp === "preset" && value !== "custom") {
               applyReflectionPreset(layer, value);
             }
+          } else if (prop.startsWith("animationFocus.")) {
+            const focusProp = prop.split(".")[1];
+            layer.animationFocus[focusProp] = value;
+          } else if (prop.startsWith("vfx.")) {
+            const vfxProp = prop.split(".")[1];
+            layer.vfx[vfxProp] = value;
           } else if (prop.startsWith("organic.")) {
             const organicProp = prop.split(".")[1];
             layer.organic[organicProp] = value;
@@ -2660,39 +3215,51 @@
       });
     }
 
-    const PETAL_PALETTES = {
+    const EFFECT_PALETTES = {
       mk: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],
       pastel: ["#ffe8f4", "#ffc7e6", "#e9d5ff", "#d8dcff", "#fff0fa", "#f4c9ff"],
-      neon: ["#ff3fbf", "#ff75dc", "#d85cff", "#a972ff", "#ff9fe8", "#f5d8ff"]
+      neon: ["#ff3fbf", "#ff75dc", "#d85cff", "#a972ff", "#52e4ff", "#f5d8ff"],
+      cold: ["#dff7ff", "#8eeaff", "#77b7ff", "#a998ff", "#d9c8ff", "#ffffff"],
+      warm: ["#fff2c4", "#ffd27c", "#ff9a62", "#ff5e8a", "#ffb3d9", "#ffffff"]
     };
 
-    function setPetalPalette(colors, message = "Paleta de pétalos actualizada.") {
+    function normalizedPalette(layer) {
+      const source = Array.isArray(layer?.effectPalette) && layer.effectPalette.length
+        ? layer.effectPalette
+        : Array.isArray(layer?.petalPalette) && layer.petalPalette.length
+          ? layer.petalPalette
+          : EFFECT_PALETTES.mk;
+      const clean = source.filter(color => /^#[0-9a-f]{6}$/i.test(String(color))).slice(0, 6);
+      while (clean.length < 6) clean.push(EFFECT_PALETTES.mk[clean.length]);
+      return clean;
+    }
+
+    function setEffectPalette(colors, message = "Paleta actualizada.") {
       const layer = selectedLayer();
       if (!layer) {
-        projectStatus.textContent = "Selecciona primero una capa de pétalos.";
+        projectStatus.textContent = "Selecciona primero una capa.";
         return;
       }
-      layer.petalPalette = colors.slice(0, 6);
-      if (layer.kind === "particles") {
-        layer.particleType = "petals";
-        layer.animation = "petals";
+      layer.effectPalette = colors.slice(0, 6);
+      layer.petalPalette = layer.effectPalette.slice();
+      if (layer.kind === "image") {
+        layer.glowColor = colors[0];
+        layer.aura.color = colors[1] || colors[0];
       }
       renderStage();
       renderInspector();
       saveProject(message);
     }
 
-    function updatePetalColor(index, value) {
+    function updateEffectColor(index, value) {
       const layer = selectedLayer();
       if (!layer) return;
-      const palette = Array.isArray(layer.petalPalette)
-        ? [...layer.petalPalette]
-        : [...PETAL_PALETTES.mk];
-      while (palette.length < 6) palette.push(PETAL_PALETTES.mk[palette.length]);
+      const palette = normalizedPalette(layer);
       palette[index] = value;
-      layer.petalPalette = palette;
+      layer.effectPalette = palette;
+      layer.petalPalette = palette.slice();
       renderStage();
-      saveProject("Color de pétalo actualizado.");
+      saveProject("Color del preset actualizado.");
     }
 
     function moveSelectedLayer(dx, dy, message = "Posición actualizada.") {
@@ -2742,8 +3309,8 @@
       const layer = selectedLayer();
       if (!layer) return;
 
-      layer.x = Math.round(stageDrag.layerX + event.clientX - stageDrag.startX);
-      layer.y = Math.round(stageDrag.layerY + event.clientY - stageDrag.startY);
+      layer.x = Math.round(stageDrag.layerX + (event.clientX - stageDrag.startX) / Math.max(.01, editorScale));
+      layer.y = Math.round(stageDrag.layerY + (event.clientY - stageDrag.startY) / Math.max(.01, editorScale));
       layer.x = Math.max(-1000, Math.min(1000, layer.x));
       layer.y = Math.max(-1800, Math.min(1800, layer.y));
       updateReflectionLinkOffsets(layer, "x");
@@ -2982,6 +3549,564 @@
     }
 
 
+
+    function getRenderSize() {
+      return {
+        width: Number(project.canvas?.outputWidth || 1080),
+        height: Number(project.canvas?.outputHeight || 1920)
+      };
+    }
+
+    function getLogicalSize() {
+      return {
+        width: Number(project.canvas?.logicalWidth || 540),
+        height: Number(project.canvas?.logicalHeight || 960)
+      };
+    }
+
+    function updateSceneGeometry() {
+      const logical = getLogicalSize();
+      stageWrap.style.background = project.canvas?.background || "#000000";
+      stageWrap.style.setProperty("--logical-width", `${logical.width}px`);
+      stageWrap.style.setProperty("--logical-height", `${logical.height}px`);
+      stageWrap.style.width = `${logical.width}px`;
+      stageWrap.style.height = `${logical.height}px`;
+      stage.style.width = `${logical.width}px`;
+      stage.style.height = `${logical.height}px`;
+      stage.setAttribute("aria-label", `Escena ${project.canvas.orientation} ${project.canvas.outputWidth} por ${project.canvas.outputHeight}`);
+
+      requestAnimationFrame(() => {
+        const availableW = Math.max(100, sceneShell.clientWidth - 28);
+        const availableH = Math.max(100, sceneShell.clientHeight - 28);
+        editorScale = Math.min(1, availableW / logical.width, availableH / logical.height);
+        stageWrap.style.setProperty("--editor-scale", editorScale);
+        stageViewport.style.width = `${logical.width * editorScale}px`;
+        stageViewport.style.height = `${logical.height * editorScale}px`;
+      });
+    }
+
+    function setSceneFormat(orientation, reflow = true) {
+      const old = getLogicalSize();
+      const horizontal = orientation === "horizontal";
+      const next = horizontal
+        ? { orientation: "horizontal", logicalWidth: 960, logicalHeight: 540, outputWidth: 1920, outputHeight: 1080 }
+        : { orientation: "vertical", logicalWidth: 540, logicalHeight: 960, outputWidth: 1080, outputHeight: 1920 };
+      if (reflow && old.width !== next.logicalWidth) {
+        const ratioX = next.logicalWidth / old.width;
+        const ratioY = next.logicalHeight / old.height;
+        project.layers.forEach(layer => {
+          if (!layer.background) {
+            layer.x = Math.round(Number(layer.x || 0) * ratioX);
+            layer.y = Math.round(Number(layer.y || 0) * ratioY);
+          }
+        });
+      }
+      project.canvas = { ...project.canvas, ...next };
+      sceneFormat.value = next.orientation;
+      renderAll();
+      projectStatus.textContent = `Lienzo ${horizontal ? "horizontal" : "vertical"} activado.`;
+    }
+
+    function loadImageSource(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function seededNumber(seedText, index = 0) {
+      let h = 2166136261;
+      const text = `${seedText}:${index}`;
+      for (let i = 0; i < text.length; i++) {
+        h ^= text.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      h += h << 13; h ^= h >>> 7; h += h << 3; h ^= h >>> 17; h += h << 5;
+      return (h >>> 0) / 4294967295;
+    }
+
+    function drawVfxLayer(layer, motion) {
+      const canvas = document.createElement("canvas");
+      const size = getRenderSize();
+      canvas.width = size.width;
+      canvas.height = size.height;
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+      const ctx = canvas.getContext("2d");
+      const type = layer.particleType || "smoke";
+      const count = Math.max(3, Math.min(180, Number(layer.particleCount || 48)));
+      const baseSize = Math.max(4, Number(layer.particleSize || 38));
+      const palette = normalizedPalette(layer);
+      const duration = Math.max(1, Number(layer.duration || 12));
+      const spread = Math.max(.05, Number(layer.vfx?.spread ?? 58) / 100);
+      const softness = Math.max(0, Number(layer.vfx?.softness ?? 72) / 100);
+      const centerX = size.width * Number(layer.vfx?.centerX ?? 50) / 100;
+      const centerY = size.height * Number(layer.vfx?.centerY ?? 55) / 100;
+      const items = Array.from({ length: count }, (_, i) => ({
+        phase: seededNumber(layer.id, i * 9),
+        x: seededNumber(layer.id, i * 9 + 1),
+        y: seededNumber(layer.id, i * 9 + 2),
+        size: .45 + seededNumber(layer.id, i * 9 + 3) * 1.5,
+        speed: .65 + seededNumber(layer.id, i * 9 + 4) * .9,
+        sway: seededNumber(layer.id, i * 9 + 5) * Math.PI * 2,
+        color: palette[i % palette.length]
+      }));
+      let last = 0;
+      let connected = false;
+
+      function blob(x, y, radius, color, alpha, stretchX = 1, stretchY = 1) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(stretchX, stretchY);
+        const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+        gradient.addColorStop(0, hexToRgba(color, alpha * .85));
+        gradient.addColorStop(.42, hexToRgba(color, alpha * .45));
+        gradient.addColorStop(1, hexToRgba(color, 0));
+        ctx.fillStyle = gradient;
+        ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+
+      function frame(time) {
+        if (connected && !canvas.isConnected) return;
+        connected = connected || canvas.isConnected;
+        if (time - last > 32 && !document.body.classList.contains("paused")) {
+          last = time;
+          ctx.clearRect(0, 0, size.width, size.height);
+          ctx.globalCompositeOperation = layer.blend === "screen" ? "screen" : "source-over";
+          const seconds = time / 1000;
+          items.forEach((item, i) => {
+            let p = ((seconds * item.speed / duration) + item.phase) % 1;
+            const fade = Math.sin(Math.PI * p);
+            if (type === "smoke") {
+              const x = centerX + (item.x - .5) * size.width * spread * .55 + Math.sin(p * 8 + item.sway) * baseSize * 1.8;
+              const y = centerY + size.height * .28 - p * size.height * .62;
+              blob(x, y, baseSize * item.size * (1 + p * 1.7), item.color, fade * .32 * layer.opacity / 100, 1.25, .9);
+            } else if (type === "fogfx") {
+              const x = ((item.x + p * .42) % 1.25 - .12) * size.width;
+              const y = centerY + (item.y - .5) * size.height * spread * .28;
+              blob(x, y, baseSize * item.size * 5.5, item.color, fade * .16 * layer.opacity / 100, 3.6, .65);
+            } else if (type === "cloudfx") {
+              const x = ((item.x + p * .15) % 1.2 - .1) * size.width;
+              const y = centerY + (item.y - .5) * size.height * spread * .34;
+              blob(x, y, baseSize * item.size * 4.2, item.color, (.25 + fade * .16) * layer.opacity / 100, 2.1, .85);
+            } else {
+              const burst = p < .72 ? p / .72 : 1;
+              const fadeOut = p < .55 ? 1 : Math.max(0, (1 - p) / .45);
+              const angle = item.sway;
+              const radius = burst * Math.min(size.width, size.height) * spread * (.12 + item.x * .36);
+              const x = centerX + Math.cos(angle) * radius;
+              const y = centerY + Math.sin(angle) * radius;
+              blob(x, y, baseSize * item.size * (1.25 - burst * .55), item.color, fadeOut * .8 * layer.opacity / 100, 1, 1);
+              if (i < 5) blob(centerX, centerY, baseSize * (6 - p * 3), palette[i % palette.length], fadeOut * .28, 1, 1);
+            }
+          });
+          ctx.globalCompositeOperation = "source-over";
+          if (softness > 0) canvas.style.filter = `blur(${softness * 1.4}px) brightness(${layer.brightness}%) saturate(${layer.saturation}%)`;
+        }
+        requestAnimationFrame(frame);
+      }
+      motion.appendChild(canvas);
+      requestAnimationFrame(frame);
+    }
+
+    function addEffectLayer(type) {
+      const configs = {
+        smoke: { name: "Humo", count: 54, size: 42, duration: 13, opacity: 55, palette: EFFECT_PALETTES.pastel, centerY: 76 },
+        fogfx: { name: "Neblina", count: 28, size: 54, duration: 24, opacity: 46, palette: EFFECT_PALETTES.cold, centerY: 72 },
+        cloudfx: { name: "Nube", count: 18, size: 62, duration: 34, opacity: 52, palette: EFFECT_PALETTES.pastel, centerY: 35 },
+        explosion: { name: "Explosión", count: 72, size: 20, duration: 4, opacity: 92, palette: EFFECT_PALETTES.warm, centerY: 55 }
+      };
+      const cfg = configs[type];
+      if (!cfg) return;
+      const layer = defaultLayer({
+        name: cfg.name,
+        kind: "particles",
+        particleType: type,
+        particleCount: cfg.count,
+        particleSize: cfg.size,
+        effectPalette: cfg.palette.slice(),
+        petalPalette: cfg.palette.slice(),
+        background: true,
+        animation: "none",
+        duration: cfg.duration,
+        intensity: type === "explosion" ? 80 : 28,
+        opacity: cfg.opacity,
+        blend: "screen",
+        vfx: { spread: type === "explosion" ? 75 : 62, softness: 78, centerX: 50, centerY: cfg.centerY }
+      });
+      project.layers.push(layer);
+      project.selectedId = layer.id;
+      renderAll();
+    }
+
+    // Laboratorio local de imagen y máscara
+    const imageLabModal = document.getElementById("imageLabModal");
+    const imageLabCanvas = document.getElementById("imageLabCanvas");
+    const imageLabCtx = imageLabCanvas.getContext("2d", { willReadFrequently: true });
+    const labBrushSize = document.getElementById("labBrushSize");
+    const labTolerance = document.getElementById("labTolerance");
+    let imageLabState = null;
+
+    async function openImageLab(mode = "background") {
+      const layer = selectedLayer();
+      if (!layer || layer.kind !== "image" || !layer.src) {
+        projectStatus.textContent = "Selecciona una capa de imagen.";
+        return;
+      }
+      const img = await loadImageSource(layer.src);
+      const max = 2048;
+      const ratio = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      imageLabCanvas.width = Math.max(2, Math.round(img.naturalWidth * ratio));
+      imageLabCanvas.height = Math.max(2, Math.round(img.naturalHeight * ratio));
+      imageLabCtx.clearRect(0, 0, imageLabCanvas.width, imageLabCanvas.height);
+
+      if (mode === "mask") {
+        if (layer.maskSrc) {
+          const mask = await loadImageSource(layer.maskSrc);
+          imageLabCtx.drawImage(mask, 0, 0, imageLabCanvas.width, imageLabCanvas.height);
+        }
+      } else {
+        imageLabCtx.drawImage(img, 0, 0, imageLabCanvas.width, imageLabCanvas.height);
+      }
+
+      imageLabState = {
+        mode,
+        layerId: layer.id,
+        originalData: imageLabCtx.getImageData(0, 0, imageLabCanvas.width, imageLabCanvas.height),
+        originalCanvas: (() => { const c=document.createElement("canvas"); c.width=imageLabCanvas.width; c.height=imageLabCanvas.height; c.getContext("2d").drawImage(imageLabCanvas,0,0); return c; })(),
+        sourceImage: img,
+        tool: mode === "mask" ? "maskPaint" : "erase",
+        drawing: false
+      };
+      document.getElementById("imageLabTitle").textContent = mode === "mask" ? "🎯 Focalización de animación" : "✂️ Quitar fondo";
+      document.getElementById("imageLabHelp").textContent = mode === "mask"
+        ? "Pinta de blanco únicamente el elemento que deseas animar. El resto de la imagen permanecerá quieto."
+        : "Usa el borrado automático y luego retoca con los pinceles. Todo se procesa localmente en tu navegador.";
+      document.getElementById("labAutoRemoveBtn").style.display = mode === "mask" ? "none" : "block";
+      document.getElementById("labEraseBtn").style.display = mode === "mask" ? "none" : "block";
+      document.getElementById("labRestoreBtn").style.display = mode === "mask" ? "none" : "block";
+      document.getElementById("labMaskPaintBtn").style.display = mode === "mask" ? "block" : "none";
+      document.getElementById("labMaskEraseBtn").style.display = mode === "mask" ? "block" : "none";
+      imageLabModal.classList.remove("hidden");
+    }
+
+    function colorDistance(data, index, target) {
+      const dr = data[index] - target[0];
+      const dg = data[index + 1] - target[1];
+      const db = data[index + 2] - target[2];
+      return Math.sqrt(dr*dr + dg*dg + db*db);
+    }
+
+    function autoRemoveEdgeBackground() {
+      if (!imageLabState || imageLabState.mode === "mask") return;
+      const w = imageLabCanvas.width, h = imageLabCanvas.height;
+      const imageData = imageLabCtx.getImageData(0, 0, w, h);
+      const data = imageData.data;
+      const corners = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+      const target = [0,1,2].map(c => Math.round(corners.reduce((sum,[x,y]) => sum + data[(y*w+x)*4+c], 0) / 4));
+      const tolerance = Number(labTolerance.value);
+      const visited = new Uint8Array(w*h);
+      const queue = new Int32Array(w*h);
+      let head = 0, tail = 0;
+      const push = (idx) => { if (!visited[idx]) { visited[idx]=1; queue[tail++]=idx; } };
+      for (let x=0;x<w;x++) { push(x); push((h-1)*w+x); }
+      for (let y=0;y<h;y++) { push(y*w); push(y*w+w-1); }
+      while (head < tail) {
+        const idx = queue[head++];
+        const p = idx*4;
+        if (colorDistance(data,p,target) > tolerance || data[p+3] < 4) continue;
+        data[p+3] = 0;
+        const x = idx % w, y = (idx / w) | 0;
+        if (x>0) push(idx-1); if (x<w-1) push(idx+1); if (y>0) push(idx-w); if (y<h-1) push(idx+w);
+      }
+      imageLabCtx.putImageData(imageData,0,0);
+    }
+
+    function labPaintAt(event) {
+      if (!imageLabState) return;
+      const rect = imageLabCanvas.getBoundingClientRect();
+      const x = (event.clientX - rect.left) * imageLabCanvas.width / rect.width;
+      const y = (event.clientY - rect.top) * imageLabCanvas.height / rect.height;
+      const radius = Number(labBrushSize.value) * imageLabCanvas.width / Math.max(1, rect.width);
+      imageLabCtx.save();
+      if (imageLabState.mode === "mask") {
+        imageLabCtx.globalCompositeOperation = imageLabState.tool === "maskErase" ? "destination-out" : "source-over";
+        imageLabCtx.fillStyle = "rgba(255,255,255,1)";
+      } else if (imageLabState.tool === "restore") {
+        imageLabCtx.globalCompositeOperation = "source-over";
+        imageLabCtx.beginPath(); imageLabCtx.arc(x,y,radius,0,Math.PI*2); imageLabCtx.clip();
+        imageLabCtx.drawImage(imageLabState.originalCanvas,0,0);
+        imageLabCtx.restore();
+        return;
+      } else {
+        imageLabCtx.globalCompositeOperation = "destination-out";
+        imageLabCtx.fillStyle = "rgba(0,0,0,1)";
+      }
+      imageLabCtx.beginPath(); imageLabCtx.arc(x,y,radius,0,Math.PI*2); imageLabCtx.fill();
+      imageLabCtx.restore();
+    }
+
+    imageLabCanvas.addEventListener("pointerdown", e => {
+      if (!imageLabState) return;
+      imageLabState.drawing = true;
+      imageLabCanvas.setPointerCapture?.(e.pointerId);
+      labPaintAt(e);
+    });
+    imageLabCanvas.addEventListener("pointermove", e => { if (imageLabState?.drawing) labPaintAt(e); });
+    ["pointerup","pointercancel","pointerleave"].forEach(type => imageLabCanvas.addEventListener(type, () => { if (imageLabState) imageLabState.drawing=false; }));
+
+    async function applyImageLab() {
+      if (!imageLabState) return;
+      const layer = project.layers.find(item => item.id === imageLabState.layerId);
+      if (!layer) return;
+      const dataUrl = imageLabCanvas.toDataURL("image/png");
+      if (imageLabState.mode === "mask") {
+        layer.maskSrc = dataUrl;
+        layer.animationFocus.enabled = true;
+      } else {
+        if (!layer.originalSrc) layer.originalSrc = layer.src;
+        layer.src = dataUrl;
+      }
+      imageLabModal.classList.add("hidden");
+      imageLabState = null;
+      renderAll();
+    }
+
+    async function separateSelectedLayer() {
+      const source = selectedLayer();
+      if (!source || source.kind !== "image" || !source.src) {
+        projectStatus.textContent = "Selecciona una imagen para analizar."; return;
+      }
+      projectStatus.textContent = "Analizando objetos separados…";
+      const img = await loadImageSource(source.src);
+      const max = 720;
+      const ratio = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.max(2, Math.round(img.naturalWidth*ratio));
+      const h = Math.max(2, Math.round(img.naturalHeight*ratio));
+      const small = document.createElement("canvas"); small.width=w; small.height=h;
+      const sctx = small.getContext("2d",{willReadFrequently:true}); sctx.drawImage(img,0,0,w,h);
+      const idata=sctx.getImageData(0,0,w,h), data=idata.data;
+      const labels=new Int32Array(w*h); let label=0; const components=[];
+      const queue=new Int32Array(w*h);
+      for(let start=0;start<w*h;start++){
+        if(labels[start] || data[start*4+3]<24) continue;
+        label++; let head=0,tail=0,area=0,minX=w,minY=h,maxX=0,maxY=0;
+        labels[start]=label; queue[tail++]=start;
+        while(head<tail){
+          const idx=queue[head++], x=idx%w, y=(idx/w)|0; area++; minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);
+          for(let yy=Math.max(0,y-1);yy<=Math.min(h-1,y+1);yy++) for(let xx=Math.max(0,x-1);xx<=Math.min(w-1,x+1);xx++){
+            const n=yy*w+xx; if(!labels[n] && data[n*4+3]>=24){labels[n]=label;queue[tail++]=n;}
+          }
+        }
+        if(area > w*h*.00055) components.push({label,area,minX,minY,maxX,maxY});
+      }
+      components.sort((a,b)=>b.area-a.area);
+      const chosen=components.slice(0,12);
+      if(chosen.length<2){ projectStatus.textContent="La imagen no contiene elementos transparentes claramente separados. Prueba quitar el fondo primero."; return; }
+      if(!confirm(`Se detectaron ${chosen.length} elementos. ¿Crear una capa independiente para cada uno y ocultar la original?`)) return;
+      const full=document.createElement("canvas"); full.width=img.naturalWidth; full.height=img.naturalHeight;
+      const fctx=full.getContext("2d",{willReadFrequently:true}); fctx.drawImage(img,0,0);
+      const fullData=fctx.getImageData(0,0,full.width,full.height);
+      const insertIndex=project.layers.indexOf(source)+1;
+      const newLayers=[];
+      chosen.forEach((component,i)=>{
+        const c=document.createElement("canvas"); c.width=full.width;c.height=full.height;
+        const cctx=c.getContext("2d"); const outData=new ImageData(new Uint8ClampedArray(fullData.data),full.width,full.height);
+        for(let y=0;y<full.height;y++){
+          const sy=Math.min(h-1,Math.floor(y*h/full.height));
+          for(let x=0;x<full.width;x++){
+            const sx=Math.min(w-1,Math.floor(x*w/full.width));
+            if(labels[sy*w+sx]!==component.label) outData.data[(y*full.width+x)*4+3]=0;
+          }
+        }
+        cctx.putImageData(outData,0,0);
+        const layer=defaultLayer({...structuredClone(source),id:newId(),name:`${source.name} — elemento ${i+1}`,src:c.toDataURL("image/png"),originalSrc:null,maskSrc:null,animationFocus:{enabled:false}});
+        newLayers.push(layer);
+      });
+      source.visible=false;
+      project.layers.splice(insertIndex,0,...newLayers);
+      project.selectedId=newLayers[0].id;
+      renderAll();
+      projectStatus.textContent=`${newLayers.length} capas creadas.`;
+    }
+
+    // Render determinista de alta calidad para video
+    const exportAssetCache = new Map();
+    async function preloadExportAssets() {
+      exportAssetCache.clear();
+      for (const layer of project.layers) {
+        if (layer.kind !== "image" || !layer.src) continue;
+        const img = await loadImageSource(layer.src);
+        const processed = processImage(layer, img);
+        const asset = { image: processed, width: processed.naturalWidth || processed.width, height: processed.naturalHeight || processed.height };
+        if (layer.maskSrc) asset.masked = await createMaskedCanvas(processed, layer.maskSrc);
+        exportAssetCache.set(layer.id, asset);
+      }
+    }
+
+    function exportProgress(value, message) {
+      videoProgressBar.style.width = `${Math.max(0,Math.min(100,value))}%`;
+      videoStatus.textContent = message || "";
+    }
+
+    function loopPhase(layer, seconds, loopDuration) {
+      const natural = Math.max(.2, Number(layer.duration || loopDuration));
+      const cycles = Math.max(1, Math.round(loopDuration / natural));
+      const offset = layer.motionRandomStart === false ? 0 : stableLayerRandom(layer.id);
+      return ((seconds / loopDuration) * cycles + offset) % 1;
+    }
+
+    function animationTransform(layer, seconds, loopDuration) {
+      let p = loopPhase(layer, seconds, loopDuration);
+      if (layer.motionMode === "pingpong") p = p < .5 ? p*2 : (1-p)*2;
+      const amount = Number(layer.intensity || 0);
+      const vector = motionVector(layer.motionDirection || "rightToLeft", Number(layer.motionDistance || 0));
+      const a = Math.PI*2*p;
+      const state={x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
+      switch(layer.animation){
+        case "float": state.y=Math.sin(a)*amount; break;
+        case "drift": state.x=Math.sin(a)*amount*1.6; state.y=Math.cos(a)*amount*.55; break;
+        case "travel": case "fall": state.x=(p-.5)*vector.x; state.y=(p-.5)*vector.y; state.rotation=p*Number(layer.motionRotation||0); break;
+        case "pulse": state.scaleX=state.scaleY=1+(.5+.5*Math.sin(a))*amount/220; break;
+        case "breathe": state.scaleX=state.scaleY=1+Math.sin(a)*amount/450; break;
+        case "sway": case "plant": state.rotation=Math.sin(a)*Math.max(1,amount/6); break;
+        case "water": case "ripple": state.scaleX=1+Math.sin(a)*amount/500; state.scaleY=1-Math.sin(a)*amount/700; break;
+        case "twinkle": state.opacity=.35+.65*(.5+.5*Math.sin(a)); break;
+      }
+      return state;
+    }
+
+    function canvasFilter(layer) {
+      const filters=[`brightness(${layer.brightness + (layer.emission||0)*.45}%)`,`contrast(${layer.contrast}%)`,`saturate(${layer.saturation+(layer.emission||0)*.25}%)`];
+      if(layer.reflection?.enabled && layer.reflection.blur>0) filters.push(`blur(${layer.reflection.blur}px)`);
+      return filters.join(" ");
+    }
+
+    function drawImageAsset(ctx, layer, asset, seconds, loopDuration, useAnimation=true, masked=false) {
+      const logical=getLogicalSize();
+      const image=masked && asset.masked ? asset.masked : asset.image;
+      const iw=asset.width, ih=asset.height;
+      let dw=logical.width, dh=logical.width*ih/iw;
+      if(layer.background){
+        const scale=Math.max(logical.width/iw,logical.height/ih); dw=iw*scale;dh=ih*scale;
+      }
+      const anim=useAnimation ? animationTransform(layer,seconds,loopDuration) : {x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
+      const gs=Number(layer.scale||100)/100;
+      const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
+      const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
+      ctx.save();
+      ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
+      ctx.globalAlpha=(Number(layer.opacity||100)/100)*anim.opacity;
+      ctx.translate(logical.width/2+Number(layer.x||0)+anim.x,logical.height/2+Number(layer.y||0)+anim.y);
+      ctx.rotate((Number(layer.rotation||0)+anim.rotation)*Math.PI/180);
+      const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
+      ctx.transform(1,ky,kx,1,0,0);
+      ctx.scale(sx,sy);
+      ctx.filter=canvasFilter(layer);
+      if(layer.glowEnabled){ctx.shadowColor=layer.glowColor;ctx.shadowBlur=Number(layer.glowBlur||0)*.7;}
+      if(layer.aura?.enabled){
+        ctx.save();ctx.globalAlpha*=Math.max(.05,Number(layer.aura.intensity||55)/160);ctx.shadowColor=layer.aura.color;ctx.shadowBlur=Number(layer.aura.blur||28)*1.4;ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();
+      }
+      if(layer.animation==="organic" && useAnimation){
+        const strips=42, phase=loopPhase(layer,seconds,loopDuration)*Math.PI*2, strength=Number(layer.organic?.strength||10);
+        for(let i=0;i<strips;i++){
+          const syi=ih*i/strips, shi=ih/strips+1, dyi=-dh/2+dh*i/strips, dhi=dh/strips+1;
+          const weight=Math.pow(i/(strips-1),1.4);
+          const shift=Math.sin(phase+i*.28)*strength*weight;
+          ctx.drawImage(image,0,syi,iw,shi,-dw/2+shift,dyi,dw,dhi);
+        }
+      } else ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
+      ctx.restore();
+    }
+
+    function drawParticleExport(ctx, layer, seconds, loopDuration) {
+      const logical=getLogicalSize(), palette=normalizedPalette(layer), count=Math.max(1,Math.min(240,Number(layer.particleCount||60))), base=Number(layer.particleSize||8), type=layer.particleType||"stars";
+      ctx.save();ctx.globalCompositeOperation=layer.blend==="normal"?"source-over":layer.blend;ctx.globalAlpha=Number(layer.opacity||100)/100;
+      const pGlobal=loopPhase(layer,seconds,loopDuration);
+      for(let i=0;i<count;i++){
+        const rx=seededNumber(layer.id,i*8), ry=seededNumber(layer.id,i*8+1), rs=.45+seededNumber(layer.id,i*8+2)*1.2, phase=seededNumber(layer.id,i*8+3), color=palette[i%palette.length];
+        const s=base*rs;
+        if(type==="stars"||type==="lights"){
+          const tw=.35+.65*(.5+.5*Math.sin(Math.PI*2*(pGlobal+phase)));
+          const x=rx*logical.width,y=ry*logical.height;
+          ctx.save();ctx.globalAlpha*=tw;ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=s*(type==="lights"?2.8:1.2);ctx.beginPath();ctx.arc(x,y,s*(type==="lights"?.7:.22),0,Math.PI*2);ctx.fill();
+          const dot=layer.starStyle==="dot"||(layer.starStyle==="mixed"&&i%2===0);if(type==="stars"&&!dot){ctx.strokeStyle=color;ctx.lineWidth=Math.max(.5,s*.07);ctx.beginPath();ctx.moveTo(x-s,y);ctx.lineTo(x+s,y);ctx.moveTo(x,y-s);ctx.lineTo(x,y+s);ctx.stroke();}ctx.restore();
+        }else if(type==="petals"){
+          const p=(pGlobal+phase)%1, vector=motionVector(layer.motionDirection||"downLeft",1), len=Math.hypot(vector.x,vector.y)||1,nx=vector.x/len,ny=vector.y/len;
+          const x=rx*logical.width+nx*(logical.width+logical.height)*p+(-ny)*Math.sin(p*Math.PI*6+phase*9)*Number(layer.intensity||40);
+          const y=ry*logical.height+ny*(logical.width+logical.height)*p+(nx)*Math.sin(p*Math.PI*6+phase*9)*Number(layer.intensity||40);
+          ctx.save();ctx.translate((x+logical.width)%logical.width,(y+logical.height)%logical.height);ctx.rotate(p*Math.PI*2+phase*6);ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,s*.55,s,0,0,Math.PI*2);ctx.fill();ctx.restore();
+        }else if(type==="fireflies"){
+          const x=(rx+Math.sin((pGlobal+phase)*Math.PI*2)*.04)*logical.width,y=(ry+Math.cos((pGlobal+phase)*Math.PI*2)*.03)*logical.height;ctx.save();ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=s*2.5;ctx.globalAlpha*=.35+.65*Math.sin(Math.PI*((pGlobal+phase)%1));ctx.beginPath();ctx.arc(x,y,s*.35,0,Math.PI*2);ctx.fill();ctx.restore();
+        }else{
+          const spread=Number(layer.vfx?.spread??58)/100,cx=logical.width*Number(layer.vfx?.centerX??50)/100,cy=logical.height*Number(layer.vfx?.centerY??55)/100,p=(pGlobal+phase)%1,fade=Math.sin(Math.PI*p);
+          let x,y,r=s;
+          if(type==="smoke"){x=cx+(rx-.5)*logical.width*spread*.55+Math.sin(p*8+phase*8)*s*1.8;y=cy+logical.height*.25-p*logical.height*.62;r=s*(1+p*1.8);}
+          else if(type==="fogfx"){x=((rx+p*.42)%1.2-.1)*logical.width;y=cy+(ry-.5)*logical.height*spread*.28;r=s*5;}
+          else if(type==="cloudfx"){x=((rx+p*.15)%1.2-.1)*logical.width;y=cy+(ry-.5)*logical.height*spread*.35;r=s*4;}
+          else {const angle=phase*Math.PI*2,rad=p*Math.min(logical.width,logical.height)*spread*.45;x=cx+Math.cos(angle)*rad;y=cy+Math.sin(angle)*rad;r=s*(1.3-p*.7);}
+          const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,hexToRgba(color,fade*.65));g.addColorStop(1,hexToRgba(color,0));ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    function renderExportFrame(canvas, seconds, loopDuration) {
+      const ctx=canvas.getContext("2d");const logical=getLogicalSize();const sx=canvas.width/logical.width,sy=canvas.height/logical.height;
+      ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle=project.canvas.background||"#000";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(sx,sy);
+      project.layers.forEach(layer=>{
+        if(!layer.visible)return;
+        if(layer.kind==="particles") drawParticleExport(ctx,layer,seconds,loopDuration);
+        else {const asset=exportAssetCache.get(layer.id);if(!asset)return;if(layer.animationFocus?.enabled&&asset.masked){drawImageAsset(ctx,layer,asset,seconds,loopDuration,false,false);drawImageAsset(ctx,layer,asset,seconds,loopDuration,true,true);}else drawImageAsset(ctx,layer,asset,seconds,loopDuration,true,false);}
+      });
+    }
+
+    function downloadBlob(blob, filename) { const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000); }
+
+    async function exportMp4WebCodecs(canvas,duration,fps,bitrate){
+      const mod=await import("https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/+esm");
+      const target=new mod.ArrayBufferTarget();
+      const muxer=new mod.Muxer({target,video:{codec:"avc",width:canvas.width,height:canvas.height},fastStart:"in-memory"});
+      const candidates=["avc1.640028","avc1.4d4028","avc1.420028"];
+      let config=null;
+      for(const codec of candidates){const candidate={codec,width:canvas.width,height:canvas.height,bitrate,framerate:fps,avc:{format:"avc"}};try{const supported=await VideoEncoder.isConfigSupported(candidate);if(supported.supported){config=candidate;break;}}catch{}}
+      if(!config)throw new Error("H.264 no compatible");
+      const encoder=new VideoEncoder({output:(chunk,meta)=>muxer.addVideoChunk(chunk,meta),error:e=>{throw e;}});encoder.configure(config);
+      const total=Math.round(duration*fps);
+      for(let i=0;i<total;i++){
+        renderExportFrame(canvas,i/fps,duration);
+        const frame=new VideoFrame(canvas,{timestamp:Math.round(i*1_000_000/fps),duration:Math.round(1_000_000/fps)});
+        encoder.encode(frame,{keyFrame:i%(fps*2)===0});frame.close();
+        if(i%5===0){exportProgress(i/total*94,`Renderizando MP4 ${i+1}/${total}`);await new Promise(r=>setTimeout(r,0));}
+      }
+      await encoder.flush();encoder.close();muxer.finalize();return new Blob([target.buffer],{type:"video/mp4"});
+    }
+
+    async function exportMediaRecorder(canvas,duration,fps,bitrate,prefer){
+      const stream=canvas.captureStream(fps);const types=prefer==="mp4"?["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm"]:["video/webm;codecs=vp9","video/webm","video/mp4"];
+      const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||"";const chunks=[];const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:bitrate});recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
+      const done=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=reject;});recorder.start(500);const start=performance.now();
+      await new Promise(resolve=>{function tick(now){const sec=(now-start)/1000;renderExportFrame(canvas,Math.min(sec,duration-.001),duration);exportProgress(Math.min(95,sec/duration*95),`Grabando loop ${sec.toFixed(1)} / ${duration}s`);if(sec<duration)requestAnimationFrame(tick);else resolve();}requestAnimationFrame(tick);});
+      recorder.stop();await done;return new Blob(chunks,{type:mime||"video/webm"});
+    }
+
+    async function exportVideo() {
+      const button=document.getElementById("exportVideoBtn");button.disabled=true;exportProgress(1,"Preparando imágenes…");
+      try{
+        project.export={duration:Number(document.getElementById("videoDuration").value),fps:Number(document.getElementById("videoFps").value),quality:document.getElementById("videoQuality").value,format:document.getElementById("videoFormat").value};
+        await preloadExportAssets();const size=getRenderSize(),canvas=document.createElement("canvas");canvas.width=size.width;canvas.height=size.height;
+        const bitrate=(project.export.quality==="ultra"?22_000_000:14_000_000)*(project.export.fps===60?1.4:1);
+        let blob,ext=project.export.format;
+        if(project.export.format==="mp4"&&"VideoEncoder" in window&&"VideoFrame" in window){try{blob=await exportMp4WebCodecs(canvas,project.export.duration,project.export.fps,bitrate);ext="mp4";}catch(err){console.warn(err);exportProgress(3,"MP4 directo no disponible; usando el mejor formato compatible…");blob=await exportMediaRecorder(canvas,project.export.duration,project.export.fps,bitrate,"mp4");ext=blob.type.includes("mp4")?"mp4":"webm";}}
+        else{blob=await exportMediaRecorder(canvas,project.export.duration,project.export.fps,bitrate,project.export.format);ext=blob.type.includes("mp4")?"mp4":"webm";}
+        downloadBlob(blob,`mk-universe-${project.canvas.orientation}-${project.export.duration}s.${ext}`);exportProgress(100,`Video exportado en ${ext.toUpperCase()} con loop sincronizado.`);saveProject("Configuración de exportación guardada.");
+      }catch(error){console.error(error);exportProgress(0,"No se pudo exportar. Prueba 30 FPS o calidad Alta.");}
+      finally{button.disabled=false;}
+    }
+
     function addImageFile(file) {
       if (!file) return;
       const reader = new FileReader();
@@ -2989,6 +4114,7 @@
         const layer = defaultLayer({
           name: file.name.replace(/\.[^.]+$/, ""),
           src: reader.result,
+          originalSrc: reader.result,
           kind: "image"
         });
         project.layers.push(layer);
@@ -2999,10 +4125,10 @@
     }
 
     function addParticleLayer() {
-      const type = prompt("Tipo de partícula: stars, lights, petals o fireflies", "stars");
+      const type = prompt("Tipo: stars, lights, petals, fireflies, smoke, fogfx, cloudfx o explosion", "stars");
       if (!type) return;
 
-      const cleanType = ["stars", "lights", "petals", "fireflies"].includes(type.toLowerCase())
+      const cleanType = ["stars", "lights", "petals", "fireflies", "smoke", "fogfx", "cloudfx", "explosion"].includes(type.toLowerCase())
         ? type.toLowerCase()
         : "stars";
 
@@ -3113,12 +4239,8 @@
         try {
           const parsed = JSON.parse(reader.result);
           if (!Array.isArray(parsed.layers)) throw new Error("Formato inválido");
-          project = {
-            ...structuredClone(defaultProject),
-            ...parsed,
-            version: 2.6,
-            layers: parsed.layers.map(layer => defaultLayer(layer))
-          };
+          project = migrateProject(parsed);
+          project.layers = parsed.layers.map(layer => defaultLayer(layer));
           if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
             project.selectedId = null;
           }
@@ -3148,6 +4270,10 @@
     document.getElementById("addParticleBtn").addEventListener("click", addParticleLayer);
     document.getElementById("addFirefliesBtn").addEventListener("click", addFirefliesLayer);
     document.getElementById("addPetalsBtn").addEventListener("click", addPetalsLayer);
+    document.getElementById("addSmokeBtn").addEventListener("click", () => addEffectLayer("smoke"));
+    document.getElementById("addFogFxBtn").addEventListener("click", () => addEffectLayer("fogfx"));
+    document.getElementById("addCloudFxBtn").addEventListener("click", () => addEffectLayer("cloudfx"));
+    document.getElementById("addExplosionBtn").addEventListener("click", () => addEffectLayer("explosion"));
 
     document.getElementById("pauseBtn").addEventListener("click", event => {
       document.body.classList.toggle("paused");
@@ -3173,7 +4299,9 @@
 
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (!confirm("¿Borrar todas las capas y comenzar de cero?")) return;
-      project = structuredClone(defaultProject);
+      project = migrateProject(structuredClone(defaultProject));
+      sceneFormat.value = project.canvas.orientation;
+      sceneBackground.value = project.canvas.background;
       renderAll();
     });
 
@@ -3187,16 +4315,20 @@
     document.getElementById("createReflectionBtn").addEventListener("click", createReflectionFromSelected);
     document.getElementById("createReflectionBtn2").addEventListener("click", createReflectionFromSelected);
     document.getElementById("petalsPresetBtn").addEventListener("click", () => applyMotionPreset("petals"));
-    [controls.petalColor1, controls.petalColor2, controls.petalColor3, controls.petalColor4, controls.petalColor5, controls.petalColor6]
+    [controls.effectColor1, controls.effectColor2, controls.effectColor3, controls.effectColor4, controls.effectColor5, controls.effectColor6]
       .forEach((control, index) => {
-        control.addEventListener("input", () => updatePetalColor(index, control.value));
-        control.addEventListener("change", () => updatePetalColor(index, control.value));
+        control.addEventListener("input", () => updateEffectColor(index, control.value));
+        control.addEventListener("change", () => updateEffectColor(index, control.value));
       });
-    document.getElementById("petalPaletteMkBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.mk, "Paleta MK aplicada."));
-    document.getElementById("petalPalettePastelBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.pastel, "Paleta pastel aplicada."));
-    document.getElementById("petalPaletteNeonBtn").addEventListener("click", () => setPetalPalette(PETAL_PALETTES.neon, "Paleta neón aplicada."));
+    document.getElementById("effectPaletteMkBtn").addEventListener("click", () => setEffectPalette(EFFECT_PALETTES.mk, "Paleta MK aplicada."));
+    document.getElementById("effectPalettePastelBtn").addEventListener("click", () => setEffectPalette(EFFECT_PALETTES.pastel, "Paleta pastel aplicada."));
+    document.getElementById("effectPaletteNeonBtn").addEventListener("click", () => setEffectPalette(EFFECT_PALETTES.neon, "Paleta neón aplicada."));
+    document.getElementById("effectPaletteColdBtn").addEventListener("click", () => setEffectPalette(EFFECT_PALETTES.cold, "Paleta fría aplicada."));
+    document.getElementById("effectPaletteWarmBtn").addEventListener("click", () => setEffectPalette(EFFECT_PALETTES.warm, "Paleta cálida aplicada."));
     document.getElementById("cloudsPresetBtn").addEventListener("click", () => applyMotionPreset("clouds"));
     document.getElementById("fogPresetBtn").addEventListener("click", () => applyMotionPreset("fog"));
+    document.getElementById("smokePresetBtn").addEventListener("click", () => { const l=selectedLayer(); if(l?.kind==="particles"){l.particleType="smoke";Object.assign(l,MOTION_PRESETS.smoke);renderAll();} else addEffectLayer("smoke"); });
+    document.getElementById("explosionPresetBtn").addEventListener("click", () => { const l=selectedLayer(); if(l?.kind==="particles"){l.particleType="explosion";Object.assign(l,MOTION_PRESETS.explosion);renderAll();} else addEffectLayer("explosion"); });
     document.getElementById("organicPresetApplyBtn").addEventListener("click", () => {
       const layer = selectedLayer();
       applyOrganicPreset(layer?.organic?.preset || "grassSoft");
@@ -3208,6 +4340,34 @@
       renderAll();
       projectStatus.textContent = "Vínculo del reflejo eliminado.";
     });
+
+
+    sceneFormat.value = project.canvas.orientation;
+    sceneBackground.value = project.canvas.background || "#000000";
+    document.getElementById("videoDuration").value = String(project.export?.duration || 12);
+    document.getElementById("videoFps").value = String(project.export?.fps || 30);
+    document.getElementById("videoQuality").value = project.export?.quality || "high";
+    document.getElementById("videoFormat").value = project.export?.format || "mp4";
+    sceneFormat.addEventListener("change", () => setSceneFormat(sceneFormat.value, true));
+    sceneBackground.addEventListener("input", () => { project.canvas.background=sceneBackground.value;stageWrap.style.background=sceneBackground.value;saveProject(); });
+    document.getElementById("exportVideoBtn").addEventListener("click", exportVideo);
+
+    document.getElementById("removeBackgroundBtn").addEventListener("click", () => openImageLab("background"));
+    document.getElementById("restoreOriginalBtn").addEventListener("click", () => { const l=selectedLayer();if(l?.originalSrc){l.src=l.originalSrc;l.maskSrc=null;l.animationFocus.enabled=false;renderAll();}else projectStatus.textContent="Esta capa no tiene una copia original guardada."; });
+    document.getElementById("separateLayersBtn").addEventListener("click", separateSelectedLayer);
+    document.getElementById("editAnimationMaskBtn").addEventListener("click", () => openImageLab("mask"));
+    document.getElementById("clearAnimationMaskBtn").addEventListener("click", () => {const l=selectedLayer();if(l){l.maskSrc=null;l.animationFocus.enabled=false;renderAll();}});
+    document.getElementById("labAutoRemoveBtn").addEventListener("click", autoRemoveEdgeBackground);
+    document.getElementById("labEraseBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="erase";});
+    document.getElementById("labRestoreBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="restore";});
+    document.getElementById("labMaskPaintBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="maskPaint";});
+    document.getElementById("labMaskEraseBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="maskErase";});
+    document.getElementById("labResetBtn").addEventListener("click", () => {if(imageLabState)imageLabCtx.putImageData(imageLabState.originalData,0,0);});
+    document.getElementById("labApplyBtn").addEventListener("click", applyImageLab);
+    document.getElementById("labCancelBtn").addEventListener("click", () => {imageLabModal.classList.add("hidden");imageLabState=null;});
+    labBrushSize.addEventListener("input",()=>document.getElementById("labBrushSizeValue").textContent=`${labBrushSize.value}px`);
+    labTolerance.addEventListener("input",()=>document.getElementById("labToleranceValue").textContent=labTolerance.value);
+    window.addEventListener("resize", updateSceneGeometry);
 
     document.querySelectorAll(".tab").forEach(button => {
       button.addEventListener("click", () => {
@@ -3247,6 +4407,7 @@
     });
 
     bindInspector();
+    updateSceneGeometry();
     renderAll();
   </script>
 </body>

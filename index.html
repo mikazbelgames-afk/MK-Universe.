@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.4 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.5 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -749,10 +749,10 @@
     }
 
     @keyframes fireflyMove {
-      0% { transform: translate3d(-8px, 8px, 0) scale(.75); }
-      35% { transform: translate3d(16px, -12px, 0) scale(1); }
-      70% { transform: translate3d(-13px, -23px, 0) scale(.86); }
-      100% { transform: translate3d(24px, 10px, 0) scale(1.08); }
+      0% { transform: translate3d(calc(var(--move, 18px) * -.35), calc(var(--move, 18px) * .35), 0) scale(.78); }
+      35% { transform: translate3d(calc(var(--move, 18px) * .7), calc(var(--move, 18px) * -.52), 0) scale(1); }
+      70% { transform: translate3d(calc(var(--move, 18px) * -.56), calc(var(--move, 18px) * -.95), 0) scale(.88); }
+      100% { transform: translate3d(var(--move, 18px), calc(var(--move, 18px) * .42), 0) scale(1.05); }
     }
 
     @keyframes fireflyBlink {
@@ -808,7 +808,7 @@
     }
 
 
-    /* MK Universe 3.4 */
+    /* MK Universe 3.5 */
     .stage-viewport {
       position: relative;
       flex: 0 0 auto;
@@ -955,14 +955,62 @@
         #1b1520;
     }
 
-    #imageLabCanvas {
+    .lab-canvas-stack {
+      position:relative;
+      display:grid;
+      place-items:center;
+      max-width:100%;
+      max-height:100%;
+      line-height:0;
+      box-shadow:0 10px 35px rgba(0,0,0,.4);
+    }
+
+    #imageLabCanvas,
+    #imageLabOverlayCanvas {
+      grid-area:1 / 1;
       display:block;
       max-width:100%;
       max-height:100%;
+    }
+
+    #imageLabCanvas {
       touch-action:none;
       cursor:crosshair;
-      box-shadow:0 10px 35px rgba(0,0,0,.4);
     }
+
+    #imageLabOverlayCanvas {
+      width:100%;
+      height:100%;
+      pointer-events:none;
+    }
+
+    .animation-context {
+      padding:10px 12px;
+      border:1px solid rgba(255,143,209,.28);
+      border-radius:12px;
+      background:rgba(255,143,209,.07);
+      margin-bottom:12px;
+    }
+
+    .mask-guide-note {
+      padding:9px 10px;
+      border-radius:10px;
+      background:rgba(255,143,209,.08);
+      border:1px solid rgba(255,143,209,.2);
+      font-size:.88rem;
+      line-height:1.35;
+      margin-bottom:10px;
+    }
+
+    .mask-animation-controls {
+      padding:10px;
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:12px;
+      background:rgba(255,255,255,.03);
+      margin-bottom:10px;
+    }
+
+    .hidden-by-layer { display:none !important; }
 
     .lab-sidebar {
       min-height:0;
@@ -1014,7 +1062,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.4 🌸</h1>
+    <h1>🌸 MK Universe 3.5 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente y exportación de video.</p>
 
     <div class="toolbar row-wrap">
@@ -1452,15 +1500,15 @@
       </section>
 
       <section class="tab-panel" data-panel="animation">
-        <div class="reflection-note">
+        <div id="animationContextNote" class="reflection-note animation-context">
           Para nubes y niebla usa <strong>Desplazamiento continuo</strong>. Para pétalos usa el preset 🌸, que mueve cada pétalo de forma individual.
         </div>
 
-        <div class="reflection-note" style="margin-top:10px">
+        <div id="particlePaletteNote" class="reflection-note" style="margin-top:10px">
           <strong>🌈 Paleta del preset:</strong> estrellas, puntos luminosos, pétalos, luciérnagas, humo, neblina, nubes y explosiones usan estos colores.
         </div>
 
-        <div class="effect-palette-grid">
+        <div id="particlePaletteGrid" class="effect-palette-grid">
           <label class="effect-color-box"><span>Color 1</span><input id="propEffectColor1" type="color" /></label>
           <label class="effect-color-box"><span>Color 2</span><input id="propEffectColor2" type="color" /></label>
           <label class="effect-color-box"><span>Color 3</span><input id="propEffectColor3" type="color" /></label>
@@ -1469,7 +1517,7 @@
           <label class="effect-color-box"><span>Color 6</span><input id="propEffectColor6" type="color" /></label>
         </div>
 
-        <div class="row-wrap" style="margin:10px 0 14px">
+        <div id="particlePaletteButtons" class="row-wrap" style="margin:10px 0 14px">
           <button id="effectPaletteMkBtn" class="btn" type="button">Paleta MK</button>
           <button id="effectPalettePastelBtn" class="btn" type="button">Pastel</button>
           <button id="effectPaletteNeonBtn" class="btn" type="button">Neón</button>
@@ -1477,8 +1525,8 @@
           <button id="effectPaletteWarmBtn" class="btn" type="button">Cálida</button>
         </div>
 
-        <div class="card">
-          <h3 style="margin-bottom:10px">✨ Configuración de partículas y VFX</h3>
+        <div id="particleSettingsCard" class="card">
+          <h3 style="margin-bottom:10px">✨ Apariencia de partículas y VFX</h3>
           <div class="control">
             <label for="propParticleType">Preset visual</label>
             <select id="propParticleType">
@@ -1526,8 +1574,14 @@
           </div>
         </div>
 
+        <div id="imageFocusAnimationCard" class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:8px">🎯 Animar una zona específica</h3>
+          <div class="reflection-note">Pinta solamente la rama, planta, tela, agua u objeto que debe moverse. En la misma ventana podrás elegir el movimiento, la velocidad y la intensidad.</div>
+          <button id="openFocusFromAnimationBtn" class="btn btn-primary" type="button" style="width:100%">🎨 Pintar zona y elegir animación</button>
+        </div>
+
         <div class="control">
-          <label for="propAnimation">Tipo</label>
+          <label for="propAnimation">Tipo de movimiento</label>
           <select id="propAnimation">
             <option value="none">Sin animación</option>
             <option value="float">Flotar</option>
@@ -1598,7 +1652,7 @@
           <label for="propMotionRandomStart">Inicio aleatorio para evitar sincronización</label>
         </div>
 
-        <div class="card" style="margin-top:14px">
+        <div id="organicSettingsCard" class="card" style="margin-top:14px">
           <h3 style="margin-bottom:10px">🌿 Movimiento orgánico directo</h3>
           <div class="reflection-note">
             Deforma suavemente el PNG completo: la base puede permanecer fija mientras la parte superior se mueve como pasto, flores, ramas o arbustos. No necesitas separar cada hoja.
@@ -1671,7 +1725,7 @@
           </button>
         </div>
 
-        <div class="row-wrap" style="margin-top:14px">
+        <div id="particlePresetButtons" class="row-wrap" style="margin-top:14px">
           <button id="petalsPresetBtn" class="btn btn-primary" type="button">🌸 Pétalos</button>
           <button id="cloudsPresetBtn" class="btn" type="button">☁️ Nubes</button>
           <button id="fogPresetBtn" class="btn" type="button">🌫️ Niebla</button>
@@ -1689,10 +1743,53 @@
 
   <div id="imageLabModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="imageLabTitle">
     <div class="image-lab">
-      <div class="lab-canvas-shell"><canvas id="imageLabCanvas"></canvas></div>
+      <div class="lab-canvas-shell">
+        <div class="lab-canvas-stack">
+          <canvas id="imageLabCanvas"></canvas>
+          <canvas id="imageLabOverlayCanvas"></canvas>
+        </div>
+      </div>
       <aside class="lab-sidebar">
         <h2 id="imageLabTitle">Laboratorio de imagen</h2>
         <p id="imageLabHelp" class="notice"></p>
+        <div id="labMaskGuideNote" class="mask-guide-note" style="display:none">
+          <strong>La selección rosada es solo una guía.</strong> Nunca se mezcla con la imagen ni aparece en el video exportado.
+        </div>
+        <div id="labMaskAnimationControls" class="mask-animation-controls" style="display:none">
+          <h3 style="margin:0 0 8px">🎬 Movimiento de esta zona</h3>
+          <div class="control">
+            <label for="labFocusAnimation">Tipo de animación</label>
+            <select id="labFocusAnimation">
+              <option value="organic">Viento orgánico — ramas, flores y telas</option>
+              <option value="sway">Balanceo suave</option>
+              <option value="float">Flotar</option>
+              <option value="breathe">Respirar suavemente</option>
+              <option value="pulse">Pulso de luz</option>
+              <option value="twinkle">Destello</option>
+              <option value="water">Ondulación de agua</option>
+              <option value="drift">Deriva suave</option>
+            </select>
+          </div>
+          <div id="labOrganicPresetControl" class="control">
+            <label for="labFocusOrganicPreset">Preset orgánico</label>
+            <select id="labFocusOrganicPreset">
+              <option value="branchLight">Rama ligera</option>
+              <option value="flowerSwing">Flor balanceándose</option>
+              <option value="grassSoft">Pasto suave</option>
+              <option value="grassWind">Pasto con viento</option>
+              <option value="bushMagic">Arbusto mágico</option>
+              <option value="waterPlant">Planta acuática</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="labFocusDuration">Duración <span id="labFocusDurationValue" class="value">6s</span></label>
+            <input id="labFocusDuration" type="range" min="1" max="30" step="0.5" value="6" />
+          </div>
+          <div class="control">
+            <label for="labFocusIntensity">Intensidad <span id="labFocusIntensityValue" class="value">8</span></label>
+            <input id="labFocusIntensity" type="range" min="1" max="80" step="1" value="8" />
+          </div>
+        </div>
         <div class="control">
           <label for="labBrushSize">Tamaño del pincel <span id="labBrushSizeValue" class="value">42px</span></label>
           <input id="labBrushSize" type="range" min="2" max="240" value="42" />
@@ -1721,7 +1818,7 @@
     const LEGACY_STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 3.3,
+      version: 3.5,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2006,7 +2103,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.3,
+        version: 3.5,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2162,6 +2259,38 @@
         motionRandomStart: false
       }
     };
+
+    function applyParticleTypeDefaults(layer, type) {
+      if (!layer || layer.kind !== "particles") return;
+      if (type === "petals") {
+        Object.assign(layer, MOTION_PRESETS.petals);
+      } else if (type === "fireflies") {
+        layer.animation = "none";
+        layer.duration = 7;
+        layer.intensity = 18;
+        layer.motionRandomStart = true;
+      } else if (type === "stars") {
+        layer.animation = "twinkle";
+        layer.duration = 4.8;
+        layer.intensity = 24;
+      } else if (type === "lights") {
+        layer.animation = "breathe";
+        layer.duration = 5.8;
+        layer.intensity = 20;
+      } else if (type === "smoke") {
+        Object.assign(layer, MOTION_PRESETS.smoke);
+      } else if (type === "fogfx") {
+        layer.animation = "none";
+        layer.duration = 24;
+        layer.intensity = 14;
+      } else if (type === "cloudfx") {
+        layer.animation = "none";
+        layer.duration = 34;
+        layer.intensity = 8;
+      } else if (type === "explosion") {
+        Object.assign(layer, MOTION_PRESETS.explosion);
+      }
+    }
 
     const ORGANIC_PRESETS = {
       grassSoft: { duration: 5.6, intensity: 8, anchor: "bottom", direction: "balanced", strength: 7, bend: 48, wave: 3.2, fixedZone: 20, quality: "balanced" },
@@ -2848,6 +2977,8 @@
 
       const count = Math.max(4, Math.min(90, Number(layer.particleCount || 24)));
       const baseSize = Math.max(3, Number(layer.particleSize || 10));
+      const baseDuration = Math.max(2, Number(layer.duration || 7));
+      const moveAmount = Math.max(4, Number(layer.intensity || 18));
       const palette = normalizedPalette(layer);
 
       for (let i = 0; i < count; i++) {
@@ -2858,9 +2989,10 @@
         dot.style.setProperty("--size", `${size}px`);
         dot.style.setProperty("--left", `${4 + seededNumber(layer.id, seedBase) * 92}%`);
         dot.style.setProperty("--top", `${8 + seededNumber(layer.id, seedBase + 1) * 84}%`);
-        dot.style.setProperty("--fly-duration", `${4 + seededNumber(layer.id, seedBase + 3) * 7}s`);
-        dot.style.setProperty("--blink-duration", `${1.6 + seededNumber(layer.id, seedBase + 4) * 3.6}s`);
-        dot.style.setProperty("--delay", `${-seededNumber(layer.id, seedBase + 5) * 8}s`);
+        dot.style.setProperty("--fly-duration", `${baseDuration * (.72 + seededNumber(layer.id, seedBase + 3) * .65)}s`);
+        dot.style.setProperty("--blink-duration", `${Math.max(1.2, baseDuration * (.22 + seededNumber(layer.id, seedBase + 4) * .34))}s`);
+        dot.style.setProperty("--delay", `${-seededNumber(layer.id, seedBase + 5) * baseDuration}s`);
+        dot.style.setProperty("--move", `${moveAmount * (.65 + seededNumber(layer.id, seedBase + 6) * .7)}px`);
         const color = palette[i % palette.length];
         dot.style.background = `radial-gradient(circle, #ffffff 0 15%, ${hexToRgba(color,.95)} 28%, ${hexToRgba(color,.38)} 56%, transparent 75%)`;
         dot.style.boxShadow = `0 0 ${size*.8}px ${hexToRgba(color,.9)}, 0 0 ${size*2.2}px ${hexToRgba(color,.62)}`;
@@ -2871,6 +3003,101 @@
       field.style.filter =
         `brightness(${layer.brightness}%) contrast(${layer.contrast}%) saturate(${layer.saturation}%)`;
       motion.appendChild(field);
+    }
+
+    function setupAnimationInspectorLayout() {
+      if (document.getElementById("motionSettingsCard")) return;
+      const first = controls.animation.closest(".control");
+      const last = controls.motionRandomStart.closest(".check-row");
+      if (!first || !last) return;
+      const card = document.createElement("div");
+      card.id = "motionSettingsCard";
+      card.className = "card";
+      card.style.marginTop = "14px";
+      first.parentNode.insertBefore(card, first);
+
+      const heading = document.createElement("h3");
+      heading.id = "motionSettingsTitle";
+      heading.style.marginBottom = "8px";
+      heading.textContent = "🎬 Movimiento de imagen";
+      const help = document.createElement("div");
+      help.id = "motionSettingsHelp";
+      help.className = "reflection-note";
+      help.textContent = "Elige cómo se moverá la imagen completa o la zona que pintaste.";
+      card.append(heading, help);
+
+      let node = first;
+      while (node) {
+        const next = node.nextSibling;
+        card.appendChild(node);
+        if (node === last) break;
+        node = next;
+      }
+    }
+
+    function setControlVisible(control, visible) {
+      const wrapper = control?.closest?.(".control, .check-row");
+      if (wrapper) wrapper.style.display = visible ? "" : "none";
+    }
+
+    function updateAnimationInspectorLayout(layer) {
+      if (!layer) return;
+      setupAnimationInspectorLayout();
+      const isParticle = layer.kind === "particles";
+      const particleType = layer.particleType || "stars";
+      const particleOnlyIds = [
+        "particlePaletteNote", "particlePaletteGrid", "particlePaletteButtons",
+        "particleSettingsCard", "particlePresetButtons"
+      ];
+      particleOnlyIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isParticle ? "" : "none";
+      });
+      const imageOnlyIds = ["imageFocusAnimationCard", "organicSettingsCard"];
+      imageOnlyIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = isParticle ? "none" : "";
+      });
+
+      const context = document.getElementById("animationContextNote");
+      const title = document.getElementById("motionSettingsTitle");
+      const help = document.getElementById("motionSettingsHelp");
+      if (isParticle) {
+        context.innerHTML = `<strong>✨ Capa de partículas:</strong> ${escapeHtml(layer.name)}. Primero eliges su apariencia; debajo ajustas únicamente el movimiento que corresponde a ese efecto.`;
+        title.textContent = "🧭 Movimiento de partículas";
+        help.textContent = particleType === "petals"
+          ? "Los pétalos usan dirección, recorrido, duración, giro e intensidad."
+          : particleType === "fireflies"
+            ? "Las luciérnagas se mueven y parpadean individualmente. Ajusta duración e intensidad sin mezclarlo con animaciones de imagen."
+            : ["smoke", "fogfx", "cloudfx", "explosion"].includes(particleType)
+              ? "Este VFX tiene movimiento propio. Ajusta duración e intensidad; su apariencia está en el bloque superior."
+              : "Las estrellas y luces usan su animación propia. Ajusta duración e intensidad sin mover toda la capa como una imagen.";
+      } else {
+        context.innerHTML = `<strong>🖼️ Capa de imagen:</strong> ${escapeHtml(layer.name)}. Puedes mover toda la imagen o pintar una zona específica.`;
+        title.textContent = "🎬 Movimiento de imagen";
+        help.textContent = layer.animationFocus?.enabled && layer.maskSrc
+          ? "Está activa una zona pintada: solo esa selección recibirá el movimiento elegido."
+          : "Sin zona pintada, el movimiento se aplica a toda la imagen.";
+      }
+
+      // El selector de tipo de movimiento solo pertenece a imágenes.
+      setControlVisible(controls.animation, !isParticle);
+      setControlVisible(controls.plasticity, !isParticle);
+
+      const petalControls = particleType === "petals";
+      const showDirectional = !isParticle || petalControls;
+      setControlVisible(controls.motionDirection, showDirectional);
+      setControlVisible(controls.motionMode, showDirectional);
+      setControlVisible(controls.motionDistance, showDirectional);
+      setControlVisible(controls.motionRotation, showDirectional);
+      setControlVisible(controls.motionRandomStart, showDirectional);
+      setControlVisible(controls.duration, true);
+      setControlVisible(controls.intensity, true);
+
+      setControlVisible(controls.starStyle, isParticle && particleType === "stars");
+      const isVfx = isParticle && ["smoke", "fogfx", "cloudfx", "explosion"].includes(particleType);
+      [controls.vfxSpread, controls.vfxSoftness, controls.vfxCenterX, controls.vfxCenterY]
+        .forEach(control => setControlVisible(control, isVfx));
     }
 
     function renderLayersList() {
@@ -3055,6 +3282,7 @@
       controls.effectColor5.value = effectPalette[4];
       controls.effectColor6.value = effectPalette[5];
 
+      updateAnimationInspectorLayout(layer);
       updateValueLabels(layer);
     }
 
@@ -3263,6 +3491,7 @@
             }
           } else {
             layer[prop] = value;
+            if (prop === "particleType") applyParticleTypeDefaults(layer, value);
           }
 
           updateReflectionLinkOffsets(layer, prop);
@@ -3808,34 +4037,46 @@
     const imageLabModal = document.getElementById("imageLabModal");
     const imageLabCanvas = document.getElementById("imageLabCanvas");
     const imageLabCtx = imageLabCanvas.getContext("2d", { willReadFrequently: true });
+    const imageLabOverlayCanvas = document.getElementById("imageLabOverlayCanvas");
+    const imageLabOverlayCtx = imageLabOverlayCanvas.getContext("2d");
     const labBrushSize = document.getElementById("labBrushSize");
     const labTolerance = document.getElementById("labTolerance");
+    const labFocusAnimation = document.getElementById("labFocusAnimation");
+    const labFocusOrganicPreset = document.getElementById("labFocusOrganicPreset");
+    const labFocusDuration = document.getElementById("labFocusDuration");
+    const labFocusIntensity = document.getElementById("labFocusIntensity");
     let imageLabState = null;
+
+    function updateLabAnimationControlVisibility() {
+      document.getElementById("labOrganicPresetControl").style.display = labFocusAnimation.value === "organic" ? "block" : "none";
+      document.getElementById("labFocusDurationValue").textContent = `${labFocusDuration.value}s`;
+      document.getElementById("labFocusIntensityValue").textContent = labFocusIntensity.value;
+    }
 
     function renderImageLabMaskPreview() {
       if (!imageLabState || imageLabState.mode !== "mask") return;
-      imageLabCtx.save();
-      imageLabCtx.setTransform(1, 0, 0, 1, 0, 0);
-      imageLabCtx.globalCompositeOperation = "source-over";
-      imageLabCtx.globalAlpha = 1;
-      imageLabCtx.clearRect(0, 0, imageLabCanvas.width, imageLabCanvas.height);
-      imageLabCtx.drawImage(imageLabState.sourceImage, 0, 0, imageLabCanvas.width, imageLabCanvas.height);
+      imageLabOverlayCtx.save();
+      imageLabOverlayCtx.setTransform(1, 0, 0, 1, 0, 0);
+      imageLabOverlayCtx.globalCompositeOperation = "source-over";
+      imageLabOverlayCtx.globalAlpha = 1;
+      imageLabOverlayCtx.clearRect(0, 0, imageLabOverlayCanvas.width, imageLabOverlayCanvas.height);
 
-      // La máscara se muestra como una selección rosada semitransparente,
-      // pero el archivo guardado sigue siendo una máscara blanca limpia.
+      // La selección se dibuja en un canvas independiente. Nunca toca la imagen original.
       const tint = document.createElement("canvas");
-      tint.width = imageLabCanvas.width;
-      tint.height = imageLabCanvas.height;
+      tint.width = imageLabOverlayCanvas.width;
+      tint.height = imageLabOverlayCanvas.height;
       const tintCtx = tint.getContext("2d");
       tintCtx.drawImage(imageLabState.maskCanvas, 0, 0);
       tintCtx.globalCompositeOperation = "source-in";
-      tintCtx.fillStyle = "rgba(255, 70, 190, .78)";
+      tintCtx.fillStyle = "rgba(255, 72, 194, .56)";
       tintCtx.fillRect(0, 0, tint.width, tint.height);
       tintCtx.globalCompositeOperation = "source-over";
 
-      imageLabCtx.globalAlpha = .72;
-      imageLabCtx.drawImage(tint, 0, 0);
-      imageLabCtx.restore();
+      imageLabOverlayCtx.shadowColor = "rgba(255, 208, 244, .95)";
+      imageLabOverlayCtx.shadowBlur = 4;
+      imageLabOverlayCtx.drawImage(tint, 0, 0);
+      imageLabOverlayCtx.shadowBlur = 0;
+      imageLabOverlayCtx.restore();
     }
 
     async function openImageLab(mode = "background") {
@@ -3849,7 +4090,11 @@
       const ratio = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
       imageLabCanvas.width = Math.max(2, Math.round(img.naturalWidth * ratio));
       imageLabCanvas.height = Math.max(2, Math.round(img.naturalHeight * ratio));
+      imageLabOverlayCanvas.width = imageLabCanvas.width;
+      imageLabOverlayCanvas.height = imageLabCanvas.height;
       imageLabCtx.clearRect(0, 0, imageLabCanvas.width, imageLabCanvas.height);
+      imageLabOverlayCtx.clearRect(0, 0, imageLabOverlayCanvas.width, imageLabOverlayCanvas.height);
+      imageLabCtx.drawImage(img, 0, 0, imageLabCanvas.width, imageLabCanvas.height);
 
       const maskCanvas = document.createElement("canvas");
       maskCanvas.width = imageLabCanvas.width;
@@ -3859,10 +4104,6 @@
       if (mode === "mask" && layer.maskSrc) {
         const mask = await loadImageSource(layer.maskSrc);
         maskCtx.drawImage(mask, 0, 0, maskCanvas.width, maskCanvas.height);
-      }
-
-      if (mode !== "mask") {
-        imageLabCtx.drawImage(img, 0, 0, imageLabCanvas.width, imageLabCanvas.height);
       }
 
       imageLabState = {
@@ -3877,16 +4118,34 @@
         drawing: false
       };
 
-      if (mode === "mask") renderImageLabMaskPreview();
-      document.getElementById("imageLabTitle").textContent = mode === "mask" ? "🎯 Focalización de animación" : "✂️ Quitar fondo";
-      document.getElementById("imageLabHelp").textContent = mode === "mask"
-        ? "La imagen ahora se ve como guía. Pinta de rosado únicamente el elemento que deseas animar; el resto permanecerá quieto."
+      const isMask = mode === "mask";
+      document.getElementById("imageLabTitle").textContent = isMask ? "🎯 Zona animada" : "✂️ Quitar fondo";
+      document.getElementById("imageLabHelp").textContent = isMask
+        ? "1. Pinta el objeto. 2. Elige cómo se moverá. 3. Aplica. Todo lo no pintado quedará quieto."
         : "Usa el borrado automático y luego retoca con los pinceles. Todo se procesa localmente en tu navegador.";
-      document.getElementById("labAutoRemoveBtn").style.display = mode === "mask" ? "none" : "block";
-      document.getElementById("labEraseBtn").style.display = mode === "mask" ? "none" : "block";
-      document.getElementById("labRestoreBtn").style.display = mode === "mask" ? "none" : "block";
-      document.getElementById("labMaskPaintBtn").style.display = mode === "mask" ? "block" : "none";
-      document.getElementById("labMaskEraseBtn").style.display = mode === "mask" ? "block" : "none";
+      document.getElementById("labMaskGuideNote").style.display = isMask ? "block" : "none";
+      document.getElementById("labMaskAnimationControls").style.display = isMask ? "block" : "none";
+      document.getElementById("labAutoRemoveBtn").style.display = isMask ? "none" : "block";
+      document.getElementById("labEraseBtn").style.display = isMask ? "none" : "block";
+      document.getElementById("labRestoreBtn").style.display = isMask ? "none" : "block";
+      document.getElementById("labMaskPaintBtn").style.display = isMask ? "block" : "none";
+      document.getElementById("labMaskEraseBtn").style.display = isMask ? "block" : "none";
+      labTolerance.closest(".control").style.display = isMask ? "none" : "block";
+
+      if (isMask) {
+        const allowedFocusAnimations = ["organic", "sway", "float", "breathe", "pulse", "twinkle", "water", "drift"];
+        labFocusAnimation.value = allowedFocusAnimations.includes(layer.animation)
+          ? layer.animation
+          : "organic";
+        labFocusOrganicPreset.value = layer.organic?.preset && layer.organic.preset !== "custom"
+          ? layer.organic.preset
+          : "branchLight";
+        labFocusDuration.value = String(Math.max(1, Math.min(30, Number(layer.duration || 6))));
+        labFocusIntensity.value = String(Math.max(1, Math.min(80, Number(layer.intensity || 8))));
+        updateLabAnimationControlVisibility();
+        renderImageLabMaskPreview();
+      }
+
       imageLabModal.classList.remove("hidden");
     }
 
@@ -3970,13 +4229,39 @@
       const layer = project.layers.find(item => item.id === imageLabState.layerId);
       if (!layer) return;
       if (imageLabState.mode === "mask") {
+        const bounds = alphaBoundsFromCanvas(imageLabState.maskCanvas);
+        if (!bounds) {
+          projectStatus.textContent = "Pinta primero la zona que deseas animar.";
+          return;
+        }
         layer.maskSrc = imageLabState.maskCanvas.toDataURL("image/png");
         layer.animationFocus.enabled = true;
+        layer.animation = labFocusAnimation.value;
+        layer.duration = Number(labFocusDuration.value);
+        layer.intensity = Number(labFocusIntensity.value);
+
+        if (layer.animation === "organic") {
+          const presetName = labFocusOrganicPreset.value || "branchLight";
+          const preset = ORGANIC_PRESETS[presetName] || ORGANIC_PRESETS.branchLight;
+          layer.organic = {
+            ...(layer.organic || {}),
+            preset: presetName,
+            anchor: preset.anchor,
+            direction: preset.direction,
+            strength: Math.max(1, Number(layer.intensity)),
+            bend: preset.bend,
+            wave: preset.wave,
+            fixedZone: preset.fixedZone,
+            quality: preset.quality
+          };
+        }
+        projectStatus.textContent = "Zona animada guardada. El rosado era solo una guía y no se exportará.";
       } else {
         const dataUrl = imageLabCanvas.toDataURL("image/png");
         if (!layer.originalSrc) layer.originalSrc = layer.src;
         layer.src = dataUrl;
       }
+      imageLabOverlayCtx.clearRect(0, 0, imageLabOverlayCanvas.width, imageLabOverlayCanvas.height);
       imageLabModal.classList.add("hidden");
       imageLabState = null;
       renderAll();
@@ -4398,9 +4683,11 @@
             const baseX = (.04 + seededNumber(layer.id, seedBase) * .92) * logical.width;
             const baseY = (.08 + seededNumber(layer.id, seedBase + 1) * .84) * logical.height;
             const size = rawBase * (.45 + seededNumber(layer.id, seedBase + 2) * 1.15);
-            const flyDuration = 4 + seededNumber(layer.id, seedBase + 3) * 7;
-            const blinkDuration = 1.6 + seededNumber(layer.id, seedBase + 4) * 3.6;
-            const delay = seededNumber(layer.id, seedBase + 5) * 8;
+            const baseDuration = Math.max(2, Number(layer.duration || 7));
+            const flyDuration = baseDuration * (.72 + seededNumber(layer.id, seedBase + 3) * .65);
+            const blinkDuration = Math.max(1.2, baseDuration * (.22 + seededNumber(layer.id, seedBase + 4) * .34));
+            const delay = seededNumber(layer.id, seedBase + 5) * baseDuration;
+            const moveAmount = Math.max(4, Number(layer.intensity || 18)) * (.65 + seededNumber(layer.id, seedBase + 6) * .7);
 
             const localFly = Math.max(0, seconds + delay) / flyDuration;
             const flyCycle = Math.floor(localFly);
@@ -4408,10 +4695,10 @@
             if (flyCycle % 2 === 1) flyT = 1 - flyT;
 
             const moveFrames = [
-              { t: 0, x: -8, y: 8, s: .75 },
-              { t: .35, x: 16, y: -12, s: 1 },
-              { t: .70, x: -13, y: -23, s: .86 },
-              { t: 1, x: 24, y: 10, s: 1.08 }
+              { t: 0, x: moveAmount * -.35, y: moveAmount * .35, s: .78 },
+              { t: .35, x: moveAmount * .70, y: moveAmount * -.52, s: 1 },
+              { t: .70, x: moveAmount * -.56, y: moveAmount * -.95, s: .88 },
+              { t: 1, x: moveAmount, y: moveAmount * .42, s: 1.05 }
             ];
             let aFrame = moveFrames[0], bFrame = moveFrames[1];
             for (let k = 0; k < moveFrames.length - 1; k++) {
@@ -4441,33 +4728,27 @@
             const blink = ba.a + (bb.a - ba.a) * bt;
             const x = localX(baseX + moveX);
             const y = localY(baseY + moveY);
-            const coreRadius = Math.max(.8, size * moveScale * .5);
+            const coreRadius = Math.max(.7, size * moveScale * .34);
 
             ctx.save();
             ctx.globalAlpha *= blink;
 
-            const farGlow = ctx.createRadialGradient(x, y, 0, x, y, coreRadius * 4.4);
-            farGlow.addColorStop(0, hexToRgba(color, .42));
-            farGlow.addColorStop(.28, hexToRgba(color, .24));
+            const farGlow = ctx.createRadialGradient(x, y, 0, x, y, coreRadius * 3.1);
+            farGlow.addColorStop(0, hexToRgba(color, .38));
+            farGlow.addColorStop(.34, hexToRgba(color, .20));
             farGlow.addColorStop(1, hexToRgba(color, 0));
             ctx.fillStyle = farGlow;
-            ctx.beginPath(); ctx.arc(x, y, coreRadius * 4.4, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y, coreRadius * 3.1, 0, Math.PI * 2); ctx.fill();
 
-            const nearGlow = ctx.createRadialGradient(x, y, 0, x, y, coreRadius * 1.8);
-            nearGlow.addColorStop(0, hexToRgba(color, .88));
-            nearGlow.addColorStop(.55, hexToRgba(color, .35));
+            const nearGlow = ctx.createRadialGradient(x, y, 0, x, y, coreRadius * 1.65);
+            nearGlow.addColorStop(0, hexToRgba(color, .92));
+            nearGlow.addColorStop(.48, hexToRgba(color, .34));
             nearGlow.addColorStop(1, hexToRgba(color, 0));
             ctx.fillStyle = nearGlow;
-            ctx.beginPath(); ctx.arc(x, y, coreRadius * 1.8, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x, y, coreRadius * 1.65, 0, Math.PI * 2); ctx.fill();
 
-            const core = ctx.createRadialGradient(x - coreRadius * .12, y - coreRadius * .12, 0, x, y, coreRadius);
-            core.addColorStop(0, "rgba(255,255,255,1)");
-            core.addColorStop(.18, "rgba(255,255,232,1)");
-            core.addColorStop(.32, hexToRgba(color, .96));
-            core.addColorStop(.62, hexToRgba(color, .42));
-            core.addColorStop(1, hexToRgba(color, 0));
-            ctx.fillStyle = core;
-            ctx.beginPath(); ctx.arc(x, y, coreRadius, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "rgba(255,255,244,.98)";
+            ctx.beginPath(); ctx.arc(x, y, Math.max(.55, coreRadius * .42), 0, Math.PI * 2); ctx.fill();
             ctx.restore();
             continue;
           }
@@ -4842,17 +5123,33 @@
     document.getElementById("restoreOriginalBtn").addEventListener("click", () => { const l=selectedLayer();if(l?.originalSrc){l.src=l.originalSrc;l.maskSrc=null;l.animationFocus.enabled=false;renderAll();}else projectStatus.textContent="Esta capa no tiene una copia original guardada."; });
     document.getElementById("separateLayersBtn").addEventListener("click", separateSelectedLayer);
     document.getElementById("editAnimationMaskBtn").addEventListener("click", () => openImageLab("mask"));
+    document.getElementById("openFocusFromAnimationBtn").addEventListener("click", () => openImageLab("mask"));
     document.getElementById("clearAnimationMaskBtn").addEventListener("click", () => {const l=selectedLayer();if(l){l.maskSrc=null;l.animationFocus.enabled=false;renderAll();}});
     document.getElementById("labAutoRemoveBtn").addEventListener("click", autoRemoveEdgeBackground);
     document.getElementById("labEraseBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="erase";});
     document.getElementById("labRestoreBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="restore";});
     document.getElementById("labMaskPaintBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="maskPaint";});
     document.getElementById("labMaskEraseBtn").addEventListener("click", () => {if(imageLabState)imageLabState.tool="maskErase";});
-    document.getElementById("labResetBtn").addEventListener("click", () => {if(imageLabState)imageLabCtx.putImageData(imageLabState.originalData,0,0);});
+    document.getElementById("labResetBtn").addEventListener("click", () => {
+      if (!imageLabState) return;
+      if (imageLabState.mode === "mask") {
+        imageLabState.maskCtx.clearRect(0, 0, imageLabState.maskCanvas.width, imageLabState.maskCanvas.height);
+        renderImageLabMaskPreview();
+      } else {
+        imageLabCtx.putImageData(imageLabState.originalData, 0, 0);
+      }
+    });
     document.getElementById("labApplyBtn").addEventListener("click", applyImageLab);
-    document.getElementById("labCancelBtn").addEventListener("click", () => {imageLabModal.classList.add("hidden");imageLabState=null;});
+    document.getElementById("labCancelBtn").addEventListener("click", () => {
+      imageLabOverlayCtx.clearRect(0, 0, imageLabOverlayCanvas.width, imageLabOverlayCanvas.height);
+      imageLabModal.classList.add("hidden");
+      imageLabState = null;
+    });
     labBrushSize.addEventListener("input",()=>document.getElementById("labBrushSizeValue").textContent=`${labBrushSize.value}px`);
     labTolerance.addEventListener("input",()=>document.getElementById("labToleranceValue").textContent=labTolerance.value);
+    labFocusAnimation.addEventListener("change", updateLabAnimationControlVisibility);
+    labFocusDuration.addEventListener("input", updateLabAnimationControlVisibility);
+    labFocusIntensity.addEventListener("input", updateLabAnimationControlVisibility);
     window.addEventListener("resize", updateSceneGeometry);
 
     document.querySelectorAll(".tab").forEach(button => {
@@ -4892,6 +5189,7 @@
       moveSelectedLayer(...moves[event.key]);
     });
 
+    setupAnimationInspectorLayout();
     bindInspector();
     updateSceneGeometry();
     renderAll();

@@ -1578,6 +1578,7 @@
           <h3 style="margin-bottom:8px">🎯 Animar una zona específica</h3>
           <div class="reflection-note">Pinta solamente la rama, planta, tela, agua u objeto que debe moverse. En la misma ventana podrás elegir el movimiento, la velocidad y la intensidad.</div>
           <button id="openFocusFromAnimationBtn" class="btn btn-primary" type="button" style="width:100%">🎨 Pintar zona y elegir animación</button>
+          <div class="hint" style="margin-top:8px">Cuando una capa usa zona animada, la imagen completa queda quieta y solo se mueve la parte pintada.</div>
         </div>
 
         <div class="control">
@@ -2423,6 +2424,7 @@
         if (layer.animationFocus?.enabled && layer.maskSrc && !layer.reflection?.enabled) {
           try {
             const masked = await createMaskedCanvas(reflected, layer.maskSrc);
+            const baseWithoutMask = await createBaseWithoutMask(reflected, layer.maskSrc);
             const stack = document.createElement("div");
             stack.className = "focus-stack";
 
@@ -2430,8 +2432,8 @@
             baseWrap.className = "focus-base visual-stack";
             const baseAura = createAuraLayer(layer);
             if (baseAura) baseWrap.appendChild(baseAura);
-            styleVisual(layer, reflected);
-            baseWrap.appendChild(reflected);
+            styleVisual(layer, baseWithoutMask);
+            baseWrap.appendChild(baseWithoutMask);
             addMetalShine(layer, baseWrap);
 
             const focusMotion = document.createElement("div");
@@ -2450,7 +2452,8 @@
             focusMotion.appendChild(focusVisual);
             stack.append(baseWrap, focusMotion);
             motion.replaceChildren(stack);
-          } catch {
+          } catch (error) {
+            console.warn("No se pudo aplicar la animación focal; se volverá al modo normal.", error);
             layer.animationFocus.enabled = false;
             loadImageLayer(layer, motion);
           }
@@ -4079,6 +4082,15 @@
       imageLabOverlayCtx.restore();
     }
 
+    function clearImageLabMaskPreview() {
+      imageLabOverlayCtx.save();
+      imageLabOverlayCtx.setTransform(1, 0, 0, 1, 0, 0);
+      imageLabOverlayCtx.globalCompositeOperation = "source-over";
+      imageLabOverlayCtx.globalAlpha = 1;
+      imageLabOverlayCtx.clearRect(0, 0, imageLabOverlayCanvas.width, imageLabOverlayCanvas.height);
+      imageLabOverlayCtx.restore();
+    }
+
     async function openImageLab(mode = "background") {
       const layer = selectedLayer();
       if (!layer || layer.kind !== "image" || !layer.src) {
@@ -4255,13 +4267,13 @@
             quality: preset.quality
           };
         }
-        projectStatus.textContent = "Zona animada guardada. El rosado era solo una guía y no se exportará.";
+        projectStatus.textContent = "Zona animada guardada. El rosado era solo una guía y no se exportará. La capa completa queda quieta y solo se animará la zona pintada.";
       } else {
         const dataUrl = imageLabCanvas.toDataURL("image/png");
         if (!layer.originalSrc) layer.originalSrc = layer.src;
         layer.src = dataUrl;
       }
-      imageLabOverlayCtx.clearRect(0, 0, imageLabOverlayCanvas.width, imageLabOverlayCanvas.height);
+      clearImageLabMaskPreview();
       imageLabModal.classList.add("hidden");
       imageLabState = null;
       renderAll();
@@ -4820,13 +4832,15 @@
         if(layer.kind==="particles") drawParticleExport(ctx,layer,seconds,loopDuration);
         else {
           const asset=exportAssetCache.get(layer.id);if(!asset)return;
-          if(layer.animationFocus?.enabled&&asset.masked){
+          if(layer.animationFocus?.enabled && asset.masked){
             const staticAsset = asset.baseWithoutMask
               ? { ...asset, image: asset.baseWithoutMask }
               : asset;
-            drawImageAsset(ctx,layer,staticAsset,seconds,loopDuration,false,false);
-            drawFocusedMaskedAsset(ctx,layer,asset,seconds,loopDuration);
-          } else drawImageAsset(ctx,layer,asset,seconds,loopDuration,true,false);
+            drawImageAsset(ctx, layer, staticAsset, seconds, loopDuration, false, false);
+            drawFocusedMaskedAsset(ctx, layer, asset, seconds, loopDuration);
+          } else {
+            drawImageAsset(ctx, layer, asset, seconds, loopDuration, true, false);
+          }
         }
       });
     }
@@ -5141,7 +5155,7 @@
     });
     document.getElementById("labApplyBtn").addEventListener("click", applyImageLab);
     document.getElementById("labCancelBtn").addEventListener("click", () => {
-      imageLabOverlayCtx.clearRect(0, 0, imageLabOverlayCanvas.width, imageLabOverlayCanvas.height);
+      clearImageLabMaskPreview();
       imageLabModal.classList.add("hidden");
       imageLabState = null;
     });

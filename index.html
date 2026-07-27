@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.5 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.6 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -808,7 +808,7 @@
     }
 
 
-    /* MK Universe 3.5 */
+    /* MK Universe 3.6 — corrección de animación focal y máscara */
     .stage-viewport {
       position: relative;
       flex: 0 0 auto;
@@ -1062,7 +1062,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.5 🌸</h1>
+    <h1>🌸 MK Universe 3.6 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente y exportación de video.</p>
 
     <div class="toolbar row-wrap">
@@ -1819,7 +1819,7 @@
     const LEGACY_STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 3.5,
+      version: 3.6,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2104,7 +2104,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.5,
+        version: 3.6,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})

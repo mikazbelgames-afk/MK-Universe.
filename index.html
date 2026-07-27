@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.0 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.1 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -808,7 +808,7 @@
     }
 
 
-    /* MK Universe 3.0 */
+    /* MK Universe 3.1 */
     .stage-viewport {
       position: relative;
       flex: 0 0 auto;
@@ -1014,7 +1014,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.0 🌸</h1>
+    <h1>🌸 MK Universe 3.1 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente y exportación de video.</p>
 
     <div class="toolbar row-wrap">
@@ -1721,7 +1721,7 @@
     const LEGACY_STORAGE_KEY = "mkUniverse2DEngine_v1";
 
     const defaultProject = {
-      version: 3.0,
+      version: 3.1,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2006,7 +2006,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.0,
+        version: 3.1,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2042,7 +2042,7 @@
     }
 
     function saveProject(message = "Proyecto guardado.") {
-      project.version = 3.0;
+      project.version = 3.1;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -2368,6 +2368,36 @@
       return canvas;
     }
 
+    function alphaBoundsFromCanvas(sourceCanvas) {
+      const width = sourceCanvas.width;
+      const height = sourceCanvas.height;
+      const ctx = sourceCanvas.getContext("2d", { willReadFrequently: true });
+      const data = ctx.getImageData(0, 0, width, height).data;
+      let minX = width, minY = height, maxX = -1, maxY = -1;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const alpha = data[(y * width + x) * 4 + 3];
+          if (alpha > 3) {
+            if (x < minX) minX = x;
+            if (y < minY) minY = y;
+            if (x > maxX) maxX = x;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (maxX < minX || maxY < minY) return null;
+      return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+    }
+
+    function cropCanvasArea(sourceCanvas, bounds) {
+      const canvas = document.createElement("canvas");
+      canvas.width = bounds.width;
+      canvas.height = bounds.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(sourceCanvas, bounds.x, bounds.y, bounds.width, bounds.height, 0, 0, bounds.width, bounds.height);
+      return canvas;
+    }
+
     function processImage(layer, img) {
       if (!layer.removeBlack) return img;
 
@@ -2620,10 +2650,10 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       for (let i = 0; i < count; i++) {
-        const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height;
-        const s = size * (0.45 + Math.random() * 1.2);
-        const a = 0.25 + Math.random() * 0.75;
+        const x = seededNumber(layer.id, i * 8) * canvas.width;
+        const y = seededNumber(layer.id, i * 8 + 1) * canvas.height;
+        const s = size * (0.45 + seededNumber(layer.id, i * 8 + 2) * 1.2);
+        const a = 0.25 + seededNumber(layer.id, i * 8 + 4) * 0.75;
 
         ctx.save();
         ctx.globalAlpha = a;
@@ -2663,7 +2693,7 @@
           ctx.fill();
         } else {
           ctx.translate(x, y);
-          ctx.rotate(Math.random() * Math.PI);
+          ctx.rotate(seededNumber(layer.id, i * 8 + 5) * Math.PI);
           ctx.fillStyle = palette[i % palette.length];
           ctx.beginPath();
           ctx.ellipse(0, 0, s * .55, s, 0, 0, Math.PI * 2);
@@ -2703,30 +2733,34 @@
       const palette = normalizedPalette(layer);
 
       const petals = Array.from({ length: count }, (_, i) => {
+        const seedBase = i * 16;
+        const r0 = seededNumber(layer.id, seedBase);
+        const r1 = seededNumber(layer.id, seedBase + 1);
+        const r2 = seededNumber(layer.id, seedBase + 2);
         let startX;
         let startY;
-        if (Math.abs(nx) > .2) startX = nx > 0 ? -margin - Math.random() * 260 : canvas.width + margin + Math.random() * 260;
-        else startX = Math.random() * canvas.width;
-        if (Math.abs(ny) > .2) startY = ny > 0 ? -margin - Math.random() * 320 : canvas.height + margin + Math.random() * 320;
-        else startY = Math.random() * canvas.height;
+        if (Math.abs(nx) > .2) startX = nx > 0 ? -margin - r0 * 260 : canvas.width + margin + r0 * 260;
+        else startX = r0 * canvas.width;
+        if (Math.abs(ny) > .2) startY = ny > 0 ? -margin - r1 * 320 : canvas.height + margin + r1 * 320;
+        else startY = r1 * canvas.height;
 
         const travel = Math.abs(nx) > Math.abs(ny)
-          ? canvas.width + margin * 2 + Math.random() * 300
-          : canvas.height + margin * 2 + Math.random() * 420;
+          ? canvas.width + margin * 2 + r2 * 300
+          : canvas.height + margin * 2 + r2 * 420;
 
         return {
           startX,
           startY,
           travel,
-          phase: randomStart ? Math.random() : (i / count),
-          speed: .72 + Math.random() * .65,
-          sway: (18 + Math.random() * 50) * (swayAmount / 55),
-          swaySpeed: 1.5 + Math.random() * 2.8,
-          size: baseSize * (.55 + Math.random() * 1.35),
-          rotation: Math.random() * Math.PI * 2,
-          rotationSpeed: (.4 + Math.random() * 1.5) * (rotationAmount / 180),
-          alpha: .42 + Math.random() * .55,
-          color: palette[Math.floor(Math.random() * palette.length)]
+          phase: randomStart ? seededNumber(layer.id, seedBase + 3) : (i / count),
+          speed: .72 + seededNumber(layer.id, seedBase + 4) * .65,
+          sway: (18 + seededNumber(layer.id, seedBase + 5) * 50) * (swayAmount / 55),
+          swaySpeed: 1.5 + seededNumber(layer.id, seedBase + 6) * 2.8,
+          size: baseSize * (.55 + seededNumber(layer.id, seedBase + 7) * 1.35),
+          rotation: seededNumber(layer.id, seedBase + 8) * Math.PI * 2,
+          rotationSpeed: (.4 + seededNumber(layer.id, seedBase + 9) * 1.5) * (rotationAmount / 180),
+          alpha: .42 + seededNumber(layer.id, seedBase + 10) * .55,
+          color: palette[Math.floor(seededNumber(layer.id, seedBase + 11) * palette.length) % palette.length]
         };
       });
 
@@ -2792,13 +2826,14 @@
       for (let i = 0; i < count; i++) {
         const dot = document.createElement("span");
         dot.className = "firefly";
-        const size = baseSize * (.45 + Math.random() * 1.15);
+        const seedBase = i * 10;
+        const size = baseSize * (.45 + seededNumber(layer.id, seedBase + 2) * 1.15);
         dot.style.setProperty("--size", `${size}px`);
-        dot.style.setProperty("--left", `${4 + Math.random() * 92}%`);
-        dot.style.setProperty("--top", `${8 + Math.random() * 84}%`);
-        dot.style.setProperty("--fly-duration", `${4 + Math.random() * 7}s`);
-        dot.style.setProperty("--blink-duration", `${1.6 + Math.random() * 3.6}s`);
-        dot.style.setProperty("--delay", `${-Math.random() * 8}s`);
+        dot.style.setProperty("--left", `${4 + seededNumber(layer.id, seedBase) * 92}%`);
+        dot.style.setProperty("--top", `${8 + seededNumber(layer.id, seedBase + 1) * 84}%`);
+        dot.style.setProperty("--fly-duration", `${4 + seededNumber(layer.id, seedBase + 3) * 7}s`);
+        dot.style.setProperty("--blink-duration", `${1.6 + seededNumber(layer.id, seedBase + 4) * 3.6}s`);
+        dot.style.setProperty("--delay", `${-seededNumber(layer.id, seedBase + 5) * 8}s`);
         const color = palette[i % palette.length];
         dot.style.background = `radial-gradient(circle, #ffffff 0 15%, ${hexToRgba(color,.95)} 28%, ${hexToRgba(color,.38)} 56%, transparent 75%)`;
         dot.style.boxShadow = `0 0 ${size*.8}px ${hexToRgba(color,.9)}, 0 0 ${size*2.2}px ${hexToRgba(color,.62)}`;
@@ -3942,7 +3977,11 @@
         const img = await loadImageSource(layer.src);
         const processed = processImage(layer, img);
         const asset = { image: processed, width: processed.naturalWidth || processed.width, height: processed.naturalHeight || processed.height };
-        if (layer.maskSrc) asset.masked = await createMaskedCanvas(processed, layer.maskSrc);
+        if (layer.maskSrc) {
+          asset.masked = await createMaskedCanvas(processed, layer.maskSrc);
+          asset.maskBounds = alphaBoundsFromCanvas(asset.masked);
+          if (asset.maskBounds) asset.maskCrop = cropCanvasArea(asset.masked, asset.maskBounds);
+        }
         exportAssetCache.set(layer.id, asset);
       }
     }
@@ -4022,36 +4061,299 @@
       ctx.restore();
     }
 
-    function drawParticleExport(ctx, layer, seconds, loopDuration) {
-      const logical=getLogicalSize(), palette=normalizedPalette(layer), count=Math.max(1,Math.min(240,Number(layer.particleCount||60))), base=Number(layer.particleSize||8), type=layer.particleType||"stars";
-      ctx.save();ctx.globalCompositeOperation=layer.blend==="normal"?"source-over":layer.blend;ctx.globalAlpha=Number(layer.opacity||100)/100;
-      const pGlobal=loopPhase(layer,seconds,loopDuration);
-      for(let i=0;i<count;i++){
-        const rx=seededNumber(layer.id,i*8), ry=seededNumber(layer.id,i*8+1), rs=.45+seededNumber(layer.id,i*8+2)*1.2, phase=seededNumber(layer.id,i*8+3), color=palette[i%palette.length];
-        const s=base*rs;
-        if(type==="stars"||type==="lights"){
-          const tw=.35+.65*(.5+.5*Math.sin(Math.PI*2*(pGlobal+phase)));
-          const x=rx*logical.width,y=ry*logical.height;
-          ctx.save();ctx.globalAlpha*=tw;ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=s*(type==="lights"?2.8:1.2);ctx.beginPath();ctx.arc(x,y,s*(type==="lights"?.7:.22),0,Math.PI*2);ctx.fill();
-          const dot=layer.starStyle==="dot"||(layer.starStyle==="mixed"&&i%2===0);if(type==="stars"&&!dot){ctx.strokeStyle=color;ctx.lineWidth=Math.max(.5,s*.07);ctx.beginPath();ctx.moveTo(x-s,y);ctx.lineTo(x+s,y);ctx.moveTo(x,y-s);ctx.lineTo(x,y+s);ctx.stroke();}ctx.restore();
-        }else if(type==="petals"){
-          const p=(pGlobal+phase)%1, vector=motionVector(layer.motionDirection||"downLeft",1), len=Math.hypot(vector.x,vector.y)||1,nx=vector.x/len,ny=vector.y/len;
-          const x=rx*logical.width+nx*(logical.width+logical.height)*p+(-ny)*Math.sin(p*Math.PI*6+phase*9)*Number(layer.intensity||40);
-          const y=ry*logical.height+ny*(logical.width+logical.height)*p+(nx)*Math.sin(p*Math.PI*6+phase*9)*Number(layer.intensity||40);
-          ctx.save();ctx.translate((x+logical.width)%logical.width,(y+logical.height)%logical.height);ctx.rotate(p*Math.PI*2+phase*6);ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,s*.55,s,0,0,Math.PI*2);ctx.fill();ctx.restore();
-        }else if(type==="fireflies"){
-          const x=(rx+Math.sin((pGlobal+phase)*Math.PI*2)*.04)*logical.width,y=(ry+Math.cos((pGlobal+phase)*Math.PI*2)*.03)*logical.height;ctx.save();ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=s*2.5;ctx.globalAlpha*=.35+.65*Math.sin(Math.PI*((pGlobal+phase)%1));ctx.beginPath();ctx.arc(x,y,s*.35,0,Math.PI*2);ctx.fill();ctx.restore();
-        }else{
-          const spread=Number(layer.vfx?.spread??58)/100,cx=logical.width*Number(layer.vfx?.centerX??50)/100,cy=logical.height*Number(layer.vfx?.centerY??55)/100,p=(pGlobal+phase)%1,fade=Math.sin(Math.PI*p);
-          let x,y,r=s;
-          if(type==="smoke"){x=cx+(rx-.5)*logical.width*spread*.55+Math.sin(p*8+phase*8)*s*1.8;y=cy+logical.height*.25-p*logical.height*.62;r=s*(1+p*1.8);}
-          else if(type==="fogfx"){x=((rx+p*.42)%1.2-.1)*logical.width;y=cy+(ry-.5)*logical.height*spread*.28;r=s*5;}
-          else if(type==="cloudfx"){x=((rx+p*.15)%1.2-.1)*logical.width;y=cy+(ry-.5)*logical.height*spread*.35;r=s*4;}
-          else {const angle=phase*Math.PI*2,rad=p*Math.min(logical.width,logical.height)*spread*.45;x=cx+Math.cos(angle)*rad;y=cy+Math.sin(angle)*rad;r=s*(1.3-p*.7);}
-          const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,hexToRgba(color,fade*.65));g.addColorStop(1,hexToRgba(color,0));ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+
+    function drawFocusedMaskedAsset(ctx, layer, asset, seconds, loopDuration) {
+      if (!asset.masked) {
+        drawImageAsset(ctx, layer, asset, seconds, loopDuration, true, true);
+        return;
+      }
+      const bounds = asset.maskBounds;
+      const image = asset.maskCrop || asset.masked;
+      if (!bounds || !image) {
+        drawImageAsset(ctx, layer, asset, seconds, loopDuration, true, true);
+        return;
+      }
+      const logical = getLogicalSize();
+      const iw = asset.width, ih = asset.height;
+      let fullDw = logical.width, fullDh = logical.width * ih / iw;
+      if (layer.background) {
+        const scale = Math.max(logical.width / iw, logical.height / ih);
+        fullDw = iw * scale;
+        fullDh = ih * scale;
+      }
+      const dw = bounds.width * fullDw / iw;
+      const dh = bounds.height * fullDh / ih;
+      const dx = -fullDw / 2 + bounds.x * fullDw / iw;
+      const dy = -fullDh / 2 + bounds.y * fullDh / ih;
+      const anim = animationTransform(layer, seconds, loopDuration);
+      const gs = Number(layer.scale || 100) / 100;
+      const sx = gs * (Number(layer.scaleX ?? 100) / 100) * (layer.flipX ? -1 : 1) * anim.scaleX;
+      const sy = gs * (Number(layer.scaleY ?? 100) / 100) * (layer.flipY ? -1 : 1) * anim.scaleY;
+
+      ctx.save();
+      ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
+      ctx.globalAlpha = (Number(layer.opacity || 100) / 100) * anim.opacity;
+      ctx.translate(logical.width / 2 + Number(layer.x || 0) + anim.x, logical.height / 2 + Number(layer.y || 0) + anim.y);
+      ctx.rotate((Number(layer.rotation || 0) + anim.rotation) * Math.PI / 180);
+      const kx = Math.tan(Number(layer.skewX || 0) * Math.PI / 180), ky = Math.tan(Number(layer.skewY || 0) * Math.PI / 180);
+      ctx.transform(1, ky, kx, 1, 0, 0);
+      ctx.scale(sx, sy);
+      ctx.filter = canvasFilter(layer);
+      if (layer.glowEnabled) { ctx.shadowColor = layer.glowColor; ctx.shadowBlur = Number(layer.glowBlur || 0) * .7; }
+      if (layer.aura?.enabled) {
+        ctx.save();
+        ctx.globalAlpha *= Math.max(.05, Number(layer.aura.intensity || 55) / 160);
+        ctx.shadowColor = layer.aura.color;
+        ctx.shadowBlur = Number(layer.aura.blur || 28) * 1.4;
+        ctx.drawImage(image, dx, dy, dw, dh);
+        ctx.restore();
+      }
+      if (layer.animation === "organic") {
+        const strips = 42, phase = loopPhase(layer, seconds, loopDuration) * Math.PI * 2, strength = Number(layer.organic?.strength || 10);
+        const sw = image.width, sh = image.height;
+        for (let i = 0; i < strips; i++) {
+          const syi = sh * i / strips, shi = sh / strips + 1, dyi = dy + dh * i / strips, dhi = dh / strips + 1;
+          const weight = Math.pow(i / (strips - 1), 1.4);
+          const shift = Math.sin(phase + i * .28) * strength * weight;
+          ctx.drawImage(image, 0, syi, sw, shi, dx + shift, dyi, dw, dhi);
         }
+      } else {
+        ctx.drawImage(image, dx, dy, dw, dh);
       }
       ctx.restore();
+    }
+
+    function particleCanvasUnitScale() {
+      const logical = getLogicalSize();
+      const output = getRenderSize();
+      return Math.min(
+        logical.width / Math.max(1, output.width),
+        logical.height / Math.max(1, output.height)
+      );
+    }
+
+    function withParticleExportTransform(ctx, layer, seconds, loopDuration, drawContent) {
+      const logical = getLogicalSize();
+      const internalMotion = layer.particleType === "petals";
+      const anim = internalMotion
+        ? { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, opacity: 1 }
+        : animationTransform(layer, seconds, loopDuration);
+      const globalScale = Number(layer.scale || 100) / 100;
+      const scaleX = globalScale * (Number(layer.scaleX ?? 100) / 100) * (layer.flipX ? -1 : 1) * anim.scaleX;
+      const scaleY = globalScale * (Number(layer.scaleY ?? 100) / 100) * (layer.flipY ? -1 : 1) * anim.scaleY;
+      const kx = Math.tan(Number(layer.skewX || 0) * Math.PI / 180);
+      const ky = Math.tan(Number(layer.skewY || 0) * Math.PI / 180);
+
+      ctx.save();
+      ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
+      ctx.globalAlpha = (Number(layer.opacity || 100) / 100) * anim.opacity;
+      ctx.translate(
+        logical.width / 2 + Number(layer.x || 0) + anim.x,
+        logical.height / 2 + Number(layer.y || 0) + anim.y
+      );
+      ctx.rotate((Number(layer.rotation || 0) + anim.rotation) * Math.PI / 180);
+      ctx.transform(1, ky, kx, 1, 0, 0);
+      ctx.scale(scaleX, scaleY);
+      ctx.filter = canvasFilter(layer);
+      drawContent(logical);
+      ctx.restore();
+    }
+
+    function drawParticleExport(ctx, layer, seconds, loopDuration) {
+      const palette = normalizedPalette(layer);
+      const count = Math.max(1, Math.min(240, Number(layer.particleCount || 60)));
+      const rawBase = Number(layer.particleSize || 8);
+      const type = layer.particleType || "stars";
+      const canvasScale = particleCanvasUnitScale();
+      const base = type === "fireflies" ? rawBase : rawBase * canvasScale;
+
+      withParticleExportTransform(ctx, layer, seconds, loopDuration, logical => {
+        const localX = x => x - logical.width / 2;
+        const localY = y => y - logical.height / 2;
+        const groupPhase = loopPhase(layer, seconds, loopDuration);
+
+        for (let i = 0; i < count; i++) {
+          const color = palette[i % palette.length];
+
+          if (type === "stars" || type === "lights") {
+            const seedBase = i * 8;
+            const rx = seededNumber(layer.id, seedBase);
+            const ry = seededNumber(layer.id, seedBase + 1);
+            const rs = .45 + seededNumber(layer.id, seedBase + 2) * 1.2;
+            const phase = seededNumber(layer.id, seedBase + 3);
+            const baseAlpha = .25 + seededNumber(layer.id, seedBase + 4) * .75;
+            const s = base * rs;
+            const twinkle = layer.animation === "twinkle"
+              ? 1
+              : .72 + .28 * (.5 + .5 * Math.sin(Math.PI * 2 * (groupPhase + phase)));
+            const x = localX(rx * logical.width);
+            const y = localY(ry * logical.height);
+            const useDot = layer.starStyle === "dot" || (layer.starStyle === "mixed" && i % 2 === 0);
+
+            ctx.save();
+            ctx.globalAlpha *= baseAlpha * twinkle;
+            const radius = s * (type === "lights" ? 2.2 : (useDot ? 1.8 : 1.25));
+            const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+            gradient.addColorStop(0, hexToRgba(color, .98));
+            gradient.addColorStop(type === "lights" ? .35 : .28, hexToRgba(color, type === "lights" ? .52 : .62));
+            gradient.addColorStop(1, hexToRgba(color, 0));
+            ctx.fillStyle = gradient;
+            ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+            if (type === "stars") {
+              ctx.fillStyle = hexToRgba(color, .96);
+              ctx.beginPath(); ctx.arc(x, y, s * (useDot ? .24 : .20), 0, Math.PI * 2); ctx.fill();
+              if (!useDot) {
+                ctx.strokeStyle = hexToRgba(color, .82);
+                ctx.lineWidth = Math.max(.5, s * .07);
+                ctx.beginPath();
+                ctx.moveTo(x - s, y); ctx.lineTo(x + s, y);
+                ctx.moveTo(x, y - s); ctx.lineTo(x, y + s);
+                ctx.stroke();
+              }
+            }
+            ctx.restore();
+            continue;
+          }
+
+          if (type === "petals") {
+            const seedBase = i * 16;
+            const vector = motionVector(layer.motionDirection || "downLeft", 1);
+            const axisLength = Math.hypot(vector.x, vector.y) || 1;
+            const nx = vector.x / axisLength;
+            const ny = vector.y / axisLength;
+            const margin = 170 * canvasScale;
+            const r0 = seededNumber(layer.id, seedBase);
+            const r1 = seededNumber(layer.id, seedBase + 1);
+            const r2 = seededNumber(layer.id, seedBase + 2);
+            let startX = Math.abs(nx) > .2
+              ? (nx > 0 ? -margin - r0 * 260 * canvasScale : logical.width + margin + r0 * 260 * canvasScale)
+              : r0 * logical.width;
+            let startY = Math.abs(ny) > .2
+              ? (ny > 0 ? -margin - r1 * 320 * canvasScale : logical.height + margin + r1 * 320 * canvasScale)
+              : r1 * logical.height;
+            const travel = Math.abs(nx) > Math.abs(ny)
+              ? logical.width + margin * 2 + r2 * 300 * canvasScale
+              : logical.height + margin * 2 + r2 * 420 * canvasScale;
+            const randomStart = layer.motionRandomStart !== false;
+            const phase = randomStart ? seededNumber(layer.id, seedBase + 3) : (i / count);
+            const speed = .72 + seededNumber(layer.id, seedBase + 4) * .65;
+            const sway = (18 + seededNumber(layer.id, seedBase + 5) * 50) * canvasScale * (Math.max(0, Number(layer.intensity || 0)) / 55);
+            const swaySpeed = 1.5 + seededNumber(layer.id, seedBase + 6) * 2.8;
+            const size = rawBase * canvasScale * (.55 + seededNumber(layer.id, seedBase + 7) * 1.35);
+            const initialRotation = seededNumber(layer.id, seedBase + 8) * Math.PI * 2;
+            const rotationSpeed = (.4 + seededNumber(layer.id, seedBase + 9) * 1.5) * (Math.max(0, Number(layer.motionRotation || 230)) / 180);
+            const alpha = .42 + seededNumber(layer.id, seedBase + 10) * .55;
+            const petalColor = palette[Math.floor(seededNumber(layer.id, seedBase + 11) * palette.length) % palette.length];
+            const duration = Math.max(2, Number(layer.duration || 17));
+            let progress = ((seconds * speed / duration) + phase) % 1;
+            if ((layer.motionMode || "loop") === "pingpong") progress = progress < .5 ? progress * 2 : (1 - progress) * 2;
+            const fade = Math.min(1, progress / .08, (1 - progress) / .10);
+            const wave = Math.sin((progress * Math.PI * 2 * swaySpeed) + phase * 12) * sway;
+            const x = startX + nx * travel * progress + (-ny) * wave;
+            const y = startY + ny * travel * progress + nx * wave + Math.sin(progress * Math.PI * 4) * 8 * canvasScale;
+            const angle = initialRotation + seconds * rotationSpeed + Math.sin(progress * Math.PI * 3) * .7;
+
+            ctx.save();
+            ctx.translate(localX(x), localY(y));
+            ctx.rotate(angle);
+            ctx.globalAlpha *= alpha * Math.max(0, fade);
+            ctx.shadowColor = "rgba(255,130,214,.45)";
+            ctx.shadowBlur = Math.max(0, size * .55);
+            ctx.fillStyle = petalColor;
+            ctx.beginPath();
+            ctx.moveTo(0, -size);
+            ctx.bezierCurveTo(size * .72, -size * .35, size * .62, size * .72, 0, size);
+            ctx.bezierCurveTo(-size * .62, size * .72, -size * .72, -size * .35, 0, -size);
+            ctx.fill();
+            ctx.restore();
+            continue;
+          }
+
+          if (type === "fireflies") {
+            const seedBase = i * 10;
+            const rx = .04 + seededNumber(layer.id, seedBase) * .92;
+            const ry = .08 + seededNumber(layer.id, seedBase + 1) * .84;
+            const size = rawBase * (.45 + seededNumber(layer.id, seedBase + 2) * 1.15);
+            const phase = seededNumber(layer.id, seedBase + 5) * Math.PI * 2;
+            const duration = 4 + seededNumber(layer.id, seedBase + 3) * 7;
+            const blinkDuration = 1.6 + seededNumber(layer.id, seedBase + 4) * 3.6;
+            const movePhase = seconds / duration * Math.PI * 2 + phase;
+            const blinkPhase = seconds / blinkDuration * Math.PI * 2 + phase;
+            const x = rx * logical.width + Math.sin(movePhase) * 16 + Math.sin(movePhase * .47) * 8;
+            const y = ry * logical.height + Math.cos(movePhase * .82) * 14 - Math.sin(movePhase * .41) * 10;
+            const blink = .12 + .88 * Math.pow(.5 + .5 * Math.sin(blinkPhase), 1.7);
+            const radius = size * 2.2;
+
+            ctx.save();
+            ctx.globalAlpha *= blink;
+            const gradient = ctx.createRadialGradient(localX(x), localY(y), 0, localX(x), localY(y), radius);
+            gradient.addColorStop(0, "rgba(255,255,255,1)");
+            gradient.addColorStop(.22, hexToRgba(color, .95));
+            gradient.addColorStop(.58, hexToRgba(color, .38));
+            gradient.addColorStop(1, hexToRgba(color, 0));
+            ctx.fillStyle = gradient;
+            ctx.beginPath(); ctx.arc(localX(x), localY(y), radius, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+            continue;
+          }
+
+          const seedBase = i * 9;
+          const phase = seededNumber(layer.id, seedBase);
+          const rx = seededNumber(layer.id, seedBase + 1);
+          const ry = seededNumber(layer.id, seedBase + 2);
+          const itemSize = .45 + seededNumber(layer.id, seedBase + 3) * 1.5;
+          const speed = .65 + seededNumber(layer.id, seedBase + 4) * .9;
+          const swayAngle = seededNumber(layer.id, seedBase + 5) * Math.PI * 2;
+          const duration = Math.max(1, Number(layer.duration || 12));
+          const spread = Math.max(.05, Number(layer.vfx?.spread ?? 58) / 100);
+          const cx = logical.width * Number(layer.vfx?.centerX ?? 50) / 100;
+          const cy = logical.height * Number(layer.vfx?.centerY ?? 55) / 100;
+          let p = ((seconds * speed / duration) + phase) % 1;
+          let x, y, radius, alpha, stretchX = 1, stretchY = 1;
+
+          if (type === "smoke") {
+            const fade = Math.sin(Math.PI * p);
+            x = cx + (rx - .5) * logical.width * spread * .55 + Math.sin(p * 8 + swayAngle) * base * 1.8;
+            y = cy + logical.height * .28 - p * logical.height * .62;
+            radius = base * itemSize * (1 + p * 1.7);
+            alpha = fade * .32;
+            stretchX = 1.25; stretchY = .9;
+          } else if (type === "fogfx") {
+            const fade = Math.sin(Math.PI * p);
+            x = ((rx + p * .42) % 1.25 - .12) * logical.width;
+            y = cy + (ry - .5) * logical.height * spread * .28;
+            radius = base * itemSize * 5.5;
+            alpha = fade * .16;
+            stretchX = 3.6; stretchY = .65;
+          } else if (type === "cloudfx") {
+            const fade = Math.sin(Math.PI * p);
+            x = ((rx + p * .15) % 1.2 - .1) * logical.width;
+            y = cy + (ry - .5) * logical.height * spread * .34;
+            radius = base * itemSize * 4.2;
+            alpha = .25 + fade * .16;
+            stretchX = 2.1; stretchY = .85;
+          } else {
+            const burst = p < .72 ? p / .72 : 1;
+            const fadeOut = p < .55 ? 1 : Math.max(0, (1 - p) / .45);
+            const radialDistance = burst * Math.min(logical.width, logical.height) * spread * (.12 + rx * .36);
+            x = cx + Math.cos(swayAngle) * radialDistance;
+            y = cy + Math.sin(swayAngle) * radialDistance;
+            radius = base * itemSize * (1.25 - burst * .55);
+            alpha = fadeOut * .8;
+          }
+
+          ctx.save();
+          ctx.translate(localX(x), localY(y));
+          ctx.scale(stretchX, stretchY);
+          const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, radius);
+          gradient.addColorStop(0, hexToRgba(color, alpha * .85));
+          gradient.addColorStop(.42, hexToRgba(color, alpha * .45));
+          gradient.addColorStop(1, hexToRgba(color, 0));
+          ctx.fillStyle = gradient;
+          ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill();
+          ctx.restore();
+        }
+      });
     }
 
     function renderExportFrame(canvas, seconds, loopDuration) {
@@ -4060,7 +4362,13 @@
       project.layers.forEach(layer=>{
         if(!layer.visible)return;
         if(layer.kind==="particles") drawParticleExport(ctx,layer,seconds,loopDuration);
-        else {const asset=exportAssetCache.get(layer.id);if(!asset)return;if(layer.animationFocus?.enabled&&asset.masked){drawImageAsset(ctx,layer,asset,seconds,loopDuration,false,false);drawImageAsset(ctx,layer,asset,seconds,loopDuration,true,true);}else drawImageAsset(ctx,layer,asset,seconds,loopDuration,true,false);}
+        else {
+          const asset=exportAssetCache.get(layer.id);if(!asset)return;
+          if(layer.animationFocus?.enabled&&asset.masked){
+            drawImageAsset(ctx,layer,asset,seconds,loopDuration,false,false);
+            drawFocusedMaskedAsset(ctx,layer,asset,seconds,loopDuration);
+          } else drawImageAsset(ctx,layer,asset,seconds,loopDuration,true,false);
+        }
       });
     }
 

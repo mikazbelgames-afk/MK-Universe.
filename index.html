@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.6 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.7 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -808,7 +808,7 @@
     }
 
 
-    /* MK Universe 3.6 — corrección de animación focal y máscara */
+    /* MK Universe 3.7 — corrección de animación focal y máscara */
     .stage-viewport {
       position: relative;
       flex: 0 0 auto;
@@ -1062,7 +1062,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.6 🌸</h1>
+    <h1>🌸 MK Universe 3.7 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente y exportación de video.</p>
 
     <div class="toolbar row-wrap">
@@ -1105,15 +1105,11 @@
       <details style="margin-top:10px">
         <summary style="cursor:pointer;font-weight:800">🎬 Exportación de alta calidad</summary>
         <div class="export-grid">
-          <label>Duración del loop
+          <label>Loop maestro
             <select id="videoDuration">
-              <option value="6">6 segundos</option>
-              <option value="10">10 segundos</option>
-              <option value="12" selected>12 segundos</option>
-              <option value="15">15 segundos</option>
-              <option value="20">20 segundos</option>
-              <option value="30">30 segundos</option>
+              <option value="15" selected>15 segundos · seamless</option>
             </select>
+            <small>Todos los movimientos, partículas y brillos vuelven exactamente al estado inicial.</small>
           </label>
           <label>Fotogramas
             <select id="videoFps">
@@ -1817,9 +1813,35 @@
   <script>
     const STORAGE_KEY = "mkUniverse3DEngine_v1";
     const LEGACY_STORAGE_KEY = "mkUniverse2DEngine_v1";
+    const MASTER_LOOP_SECONDS = 15;
+
+    function getMasterLoopSeconds() {
+      return MASTER_LOOP_SECONDS;
+    }
+
+    function synchronizedCycleCount(naturalDuration, loopDuration = getMasterLoopSeconds()) {
+      const natural = Math.max(.25, Number(naturalDuration || loopDuration));
+      return Math.max(1, Math.round(loopDuration / natural));
+    }
+
+    function synchronizedDuration(naturalDuration, loopDuration = getMasterLoopSeconds()) {
+      return loopDuration / synchronizedCycleCount(naturalDuration, loopDuration);
+    }
+
+    function synchronizedCssDuration(layer, loopDuration = getMasterLoopSeconds()) {
+      const cycles = synchronizedCycleCount(layer.duration, loopDuration);
+      const alternate = ["float", "drift", "sway", "plant"].includes(layer.animation)
+        || (layer.motionMode === "pingpong" && ["travel", "fall", "petals"].includes(layer.animation));
+      return loopDuration / (cycles * (alternate ? 2 : 1));
+    }
+
+    function masterProgress(seconds, loopDuration = getMasterLoopSeconds()) {
+      const duration = Math.max(.25, Number(loopDuration || getMasterLoopSeconds()));
+      return (((seconds % duration) + duration) % duration) / duration;
+    }
 
     const defaultProject = {
-      version: 3.6,
+      version: 3.7,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -1829,11 +1851,12 @@
         outputHeight: 1920,
         background: "#000000"
       },
-      export: { duration: 12, fps: 30, quality: "high", format: "mp4" },
+      export: { duration: 15, fps: 30, quality: "high", format: "mp4" },
       layers: []
     };
 
     let project = migrateProject(loadProject() || structuredClone(defaultProject));
+    project.export = { ...(project.export || {}), duration: MASTER_LOOP_SECONDS };
     project.layers = (project.layers || []).map(layer => defaultLayer(layer));
     if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
       project.selectedId = null;
@@ -2104,7 +2127,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.6,
+        version: 3.7,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2394,7 +2417,7 @@
         const directOrganic = layer.kind === "image" && layer.animation === "organic";
         const focusedAnimation = layer.kind === "image" && layer.animationFocus?.enabled && Boolean(layer.maskSrc);
         motion.className = `motion anim-${individualPetals || directOrganic || focusedAnimation ? "none" : layer.animation}`;
-        motion.style.setProperty("--duration", `${layer.duration}s`);
+        motion.style.setProperty("--duration", `${synchronizedCssDuration(layer)}s`);
         motion.style.setProperty("--intensity", `${layer.intensity}px`);
         motion.style.setProperty("--intensity-scale", layer.intensity / 100);
         motion.style.setProperty("--intensity-deg", `${Math.max(1, layer.intensity / 6)}deg`);
@@ -2438,7 +2461,7 @@
 
             const focusMotion = document.createElement("div");
             focusMotion.className = `focus-motion anim-${layer.animation === "organic" ? "none" : layer.animation}`;
-            focusMotion.style.setProperty("--duration", `${layer.duration}s`);
+            focusMotion.style.setProperty("--duration", `${synchronizedCssDuration(layer)}s`);
             focusMotion.style.setProperty("--intensity", `${layer.intensity}px`);
             focusMotion.style.setProperty("--intensity-scale", layer.intensity / 100);
             focusMotion.style.setProperty("--intensity-deg", `${Math.max(1, layer.intensity / 6)}deg`);
@@ -2632,8 +2655,9 @@
           lastDraw = time;
           ctx.clearRect(0, 0, width, height);
 
-          const duration = Math.max(.8, Number(layer.duration || 5.5));
-          const phase = (time / 1000) * (Math.PI * 2 / duration) + stablePhase;
+          const loopDuration = getMasterLoopSeconds();
+          const cycles = synchronizedCycleCount(layer.duration || 5.5, loopDuration);
+          const phase = masterProgress(time / 1000, loopDuration) * Math.PI * 2 * cycles + stablePhase;
           const strength = Math.max(0, Number(organic.strength ?? 10));
           const bend = Math.max(0, Number(organic.bend ?? 45));
           const wave = Math.max(0, Number(organic.wave ?? 2.5));
@@ -2914,10 +2938,10 @@
           phase: randomStart ? seededNumber(layer.id, seedBase + 3) : (i / count),
           speed: .72 + seededNumber(layer.id, seedBase + 4) * .65,
           sway: (18 + seededNumber(layer.id, seedBase + 5) * 50) * (swayAmount / 55),
-          swaySpeed: 1.5 + seededNumber(layer.id, seedBase + 6) * 2.8,
+          swayCycles: 1 + Math.floor(seededNumber(layer.id, seedBase + 6) * 4),
           size: baseSize * (.55 + seededNumber(layer.id, seedBase + 7) * 1.35),
           rotation: seededNumber(layer.id, seedBase + 8) * Math.PI * 2,
-          rotationSpeed: (.4 + seededNumber(layer.id, seedBase + 9) * 1.5) * (rotationAmount / 180),
+          rotationCycles: Math.max(1, Math.round((.4 + seededNumber(layer.id, seedBase + 9) * 1.5) * (rotationAmount / 180) * 2)),
           alpha: .42 + seededNumber(layer.id, seedBase + 10) * .55,
           color: palette[Math.floor(seededNumber(layer.id, seedBase + 11) * palette.length) % palette.length]
         };
@@ -2950,17 +2974,21 @@
           lastDraw = time;
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           const seconds = time / 1000;
+          const loopDuration = getMasterLoopSeconds();
+          const master = masterProgress(seconds, loopDuration);
 
           petals.forEach(petal => {
-            let progress = ((seconds * petal.speed / duration) + petal.phase) % 1;
+            const naturalPeriod = duration / Math.max(.05, petal.speed);
+            const travelCycles = synchronizedCycleCount(naturalPeriod, loopDuration);
+            let progress = (master * travelCycles + petal.phase) % 1;
             if (mode === "pingpong") progress = progress < .5 ? progress * 2 : (1 - progress) * 2;
             const fade = Math.min(1, progress / .08, (1 - progress) / .10);
             const perpendicularX = -ny;
             const perpendicularY = nx;
-            const wave = Math.sin((progress * Math.PI * 2 * petal.swaySpeed) + petal.phase * 12) * petal.sway;
+            const wave = Math.sin(master * Math.PI * 2 * petal.swayCycles + petal.phase * 12) * petal.sway;
             const x = petal.startX + nx * petal.travel * progress + perpendicularX * wave;
-            const y = petal.startY + ny * petal.travel * progress + perpendicularY * wave + Math.sin(progress * Math.PI * 4) * 8;
-            const angle = petal.rotation + seconds * petal.rotationSpeed + Math.sin(progress * Math.PI * 3) * .7;
+            const y = petal.startY + ny * petal.travel * progress + perpendicularY * wave + Math.sin(master * Math.PI * 4) * 8;
+            const angle = petal.rotation + master * Math.PI * 2 * petal.rotationCycles + Math.sin(master * Math.PI * 2 * petal.swayCycles) * .7;
             drawPetal(petal, x, y, angle, petal.alpha * Math.max(0, fade));
           });
         }
@@ -2992,9 +3020,15 @@
         dot.style.setProperty("--size", `${size}px`);
         dot.style.setProperty("--left", `${4 + seededNumber(layer.id, seedBase) * 92}%`);
         dot.style.setProperty("--top", `${8 + seededNumber(layer.id, seedBase + 1) * 84}%`);
-        dot.style.setProperty("--fly-duration", `${baseDuration * (.72 + seededNumber(layer.id, seedBase + 3) * .65)}s`);
-        dot.style.setProperty("--blink-duration", `${Math.max(1.2, baseDuration * (.22 + seededNumber(layer.id, seedBase + 4) * .34))}s`);
-        dot.style.setProperty("--delay", `${-seededNumber(layer.id, seedBase + 5) * baseDuration}s`);
+        const naturalMove = baseDuration * (.72 + seededNumber(layer.id, seedBase + 3) * .65);
+        const moveCycles = synchronizedCycleCount(naturalMove * 2, getMasterLoopSeconds());
+        const blinkNatural = Math.max(1.2, baseDuration * (.22 + seededNumber(layer.id, seedBase + 4) * .34));
+        const blinkCycles = synchronizedCycleCount(blinkNatural, getMasterLoopSeconds());
+        const flyDuration = getMasterLoopSeconds() / (moveCycles * 2);
+        const blinkDuration = getMasterLoopSeconds() / blinkCycles;
+        dot.style.setProperty("--fly-duration", `${flyDuration}s`);
+        dot.style.setProperty("--blink-duration", `${blinkDuration}s`);
+        dot.style.setProperty("--delay", `${-seededNumber(layer.id, seedBase + 5) * getMasterLoopSeconds()}s`);
         dot.style.setProperty("--move", `${moveAmount * (.65 + seededNumber(layer.id, seedBase + 6) * .7)}px`);
         const color = palette[i % palette.length];
         dot.style.background = `radial-gradient(circle, #ffffff 0 15%, ${hexToRgba(color,.95)} 28%, ${hexToRgba(color,.38)} 56%, transparent 75%)`;
@@ -3806,8 +3840,9 @@
 
           const amplitude = Math.max(0, Number(layer.reflection?.waveAmount || 0));
           const wavelength = Math.max(8, Number(layer.reflection?.waveSize || 28));
-          const duration = Math.max(2, Number(layer.reflection?.waveSpeed || 10));
-          const phase = (time / 1000) * ((Math.PI * 2) / duration);
+          const loopDuration = getMasterLoopSeconds();
+          const cycles = synchronizedCycleCount(layer.reflection?.waveSpeed || 10, loopDuration);
+          const phase = masterProgress(time / 1000, loopDuration) * Math.PI * 2 * cycles;
           const strip = 4;
 
           for (let y = 0; y < height; y += strip) {
@@ -3971,8 +4006,12 @@
           ctx.clearRect(0, 0, size.width, size.height);
           ctx.globalCompositeOperation = layer.blend === "screen" ? "screen" : "source-over";
           const seconds = time / 1000;
+          const loopDuration = getMasterLoopSeconds();
+          const master = masterProgress(seconds, loopDuration);
           items.forEach((item, i) => {
-            let p = ((seconds * item.speed / duration) + item.phase) % 1;
+            const naturalPeriod = duration / Math.max(.05, item.speed);
+            const cycles = synchronizedCycleCount(naturalPeriod, loopDuration);
+            let p = (master * cycles + item.phase) % 1;
             const fade = Math.sin(Math.PI * p);
             if (type === "smoke") {
               const x = centerX + (item.x - .5) * size.width * spread * .55 + Math.sin(p * 8 + item.sway) * baseSize * 1.8;
@@ -4659,20 +4698,23 @@
             const phase = randomStart ? seededNumber(layer.id, seedBase + 3) : (i / count);
             const speed = .72 + seededNumber(layer.id, seedBase + 4) * .65;
             const sway = (18 + seededNumber(layer.id, seedBase + 5) * 50) * canvasScale * (Math.max(0, Number(layer.intensity || 0)) / 55);
-            const swaySpeed = 1.5 + seededNumber(layer.id, seedBase + 6) * 2.8;
+            const swayCycles = 1 + Math.floor(seededNumber(layer.id, seedBase + 6) * 4);
             const size = rawBase * canvasScale * (.55 + seededNumber(layer.id, seedBase + 7) * 1.35);
             const initialRotation = seededNumber(layer.id, seedBase + 8) * Math.PI * 2;
-            const rotationSpeed = (.4 + seededNumber(layer.id, seedBase + 9) * 1.5) * (Math.max(0, Number(layer.motionRotation || 230)) / 180);
+            const rotationCycles = Math.max(1, Math.round((.4 + seededNumber(layer.id, seedBase + 9) * 1.5) * (Math.max(0, Number(layer.motionRotation || 230)) / 180) * 2));
             const alpha = .42 + seededNumber(layer.id, seedBase + 10) * .55;
             const petalColor = palette[Math.floor(seededNumber(layer.id, seedBase + 11) * palette.length) % palette.length];
             const duration = Math.max(2, Number(layer.duration || 17));
-            let progress = ((seconds * speed / duration) + phase) % 1;
+            const master = masterProgress(seconds, loopDuration);
+            const naturalPeriod = duration / Math.max(.05, speed);
+            const travelCycles = synchronizedCycleCount(naturalPeriod, loopDuration);
+            let progress = (master * travelCycles + phase) % 1;
             if ((layer.motionMode || "loop") === "pingpong") progress = progress < .5 ? progress * 2 : (1 - progress) * 2;
             const fade = Math.min(1, progress / .08, (1 - progress) / .10);
-            const wave = Math.sin((progress * Math.PI * 2 * swaySpeed) + phase * 12) * sway;
+            const wave = Math.sin(master * Math.PI * 2 * swayCycles + phase * 12) * sway;
             const x = startX + nx * travel * progress + (-ny) * wave;
-            const y = startY + ny * travel * progress + nx * wave + Math.sin(progress * Math.PI * 4) * 8 * canvasScale;
-            const angle = initialRotation + seconds * rotationSpeed + Math.sin(progress * Math.PI * 3) * .7;
+            const y = startY + ny * travel * progress + nx * wave + Math.sin(master * Math.PI * 4) * 8 * canvasScale;
+            const angle = initialRotation + master * Math.PI * 2 * rotationCycles + Math.sin(master * Math.PI * 2 * swayCycles) * .7;
 
             ctx.save();
             ctx.translate(localX(x), localY(y));
@@ -4701,7 +4743,10 @@
             const delay = seededNumber(layer.id, seedBase + 5) * baseDuration;
             const moveAmount = Math.max(4, Number(layer.intensity || 18)) * (.65 + seededNumber(layer.id, seedBase + 6) * .7);
 
-            const localFly = Math.max(0, seconds + delay) / flyDuration;
+            const master = masterProgress(seconds, loopDuration);
+            const moveCycles = synchronizedCycleCount(flyDuration * 2, loopDuration);
+            const phaseOffset = seededNumber(layer.id, seedBase + 5);
+            const localFly = master * moveCycles * 2 + phaseOffset * 2;
             const flyCycle = Math.floor(localFly);
             let flyT = localFly - flyCycle;
             if (flyCycle % 2 === 1) flyT = 1 - flyT;
@@ -4724,7 +4769,8 @@
             const moveY = aFrame.y + (bFrame.y - aFrame.y) * mt;
             const moveScale = aFrame.s + (bFrame.s - aFrame.s) * mt;
 
-            const blinkT = ((seconds + delay) / blinkDuration) % 1;
+            const blinkCycles = synchronizedCycleCount(blinkDuration, loopDuration);
+            const blinkT = (master * blinkCycles + phaseOffset) % 1;
             const blinkFrames = [
               { t: 0, a: .08 }, { t: .38, a: .92 }, { t: .55, a: .28 },
               { t: .75, a: 1 }, { t: 1, a: .08 }
@@ -4776,7 +4822,10 @@
           const spread = Math.max(.05, Number(layer.vfx?.spread ?? 58) / 100);
           const cx = logical.width * Number(layer.vfx?.centerX ?? 50) / 100;
           const cy = logical.height * Number(layer.vfx?.centerY ?? 55) / 100;
-          let p = ((seconds * speed / duration) + phase) % 1;
+          const master = masterProgress(seconds, loopDuration);
+          const naturalPeriod = duration / Math.max(.05, speed);
+          const cycles = synchronizedCycleCount(naturalPeriod, loopDuration);
+          let p = (master * cycles + phase) % 1;
           let x, y, radius, alpha, stretchX = 1, stretchY = 1;
 
           if (type === "smoke") {
@@ -4877,7 +4926,8 @@
     async function exportVideo() {
       const button=document.getElementById("exportVideoBtn");button.disabled=true;exportProgress(1,"Preparando imágenes…");
       try{
-        project.export={duration:Number(document.getElementById("videoDuration").value),fps:Number(document.getElementById("videoFps").value),quality:document.getElementById("videoQuality").value,format:document.getElementById("videoFormat").value};
+        project.export={duration:MASTER_LOOP_SECONDS,fps:Number(document.getElementById("videoFps").value),quality:document.getElementById("videoQuality").value,format:document.getElementById("videoFormat").value};
+        document.getElementById("videoDuration").value = String(MASTER_LOOP_SECONDS);
         await preloadExportAssets();const size=getRenderSize(),canvas=document.createElement("canvas");canvas.width=size.width;canvas.height=size.height;
         const bitrate=(project.export.quality==="ultra"?22_000_000:14_000_000)*(project.export.fps===60?1.4:1);
         let blob,ext=project.export.format;
@@ -5125,7 +5175,7 @@
 
     sceneFormat.value = project.canvas.orientation;
     sceneBackground.value = project.canvas.background || "#000000";
-    document.getElementById("videoDuration").value = String(project.export?.duration || 12);
+    document.getElementById("videoDuration").value = String(MASTER_LOOP_SECONDS);
     document.getElementById("videoFps").value = String(project.export?.fps || 30);
     document.getElementById("videoQuality").value = project.export?.quality || "high";
     document.getElementById("videoFormat").value = project.export?.format || "mp4";

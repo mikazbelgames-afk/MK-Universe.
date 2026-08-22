@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.9.1 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.9.3 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1058,7 +1058,7 @@
     }
 
   
-    /* MK Universe 3.9.1 — editor pro */
+    /* MK Universe 3.9.3 — editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1096,8 +1096,8 @@
     }
     @keyframes mkNeonRetro{
       0%,6%,11%,14%,65%,72%,100%{opacity:1}
-      7%,10%,66%,69%{opacity:.42}
-      12%,13%,70%,71%{opacity:.72}
+      7%,10%,66%,69%{opacity:.16}
+      12%,13%,70%,71%{opacity:.52}
     }
     @keyframes mkFireAura{
       0%,100%{opacity:.72;transform:scale(var(--fire-scale,1.08)) translateY(0)}
@@ -1110,8 +1110,8 @@
     }
     @keyframes mkNeonOutlineRetro{
       0%,6%,11%,14%,65%,72%,100%{opacity:1}
-      7%,10%,66%,69%{opacity:.36}
-      12%,13%,70%,71%{opacity:.68}
+      7%,10%,66%,69%{opacity:.14}
+      12%,13%,70%,71%{opacity:.48}
     }
     @keyframes mkNeonOutlineGlow{
       0%,100%{opacity:.72;filter:blur(var(--neon-blur,18px)) brightness(.96)}
@@ -1127,7 +1127,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.9.1 🌸</h1>
+    <h1>🌸 MK Universe 3.9.3 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1952,7 +1952,7 @@
     }
 
     const defaultProject = {
-      version: 3.91,
+      version: 3.93,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2083,12 +2083,20 @@
     }
 
     function neonFactor(layer, seconds, loopDuration){
-      const mode=layer.neon?.mode||"none"; if(mode==="none") return 1;
-      const speed=Math.max(.5,Number(layer.neon?.speed||4)); const cyc=Math.max(1,Math.round(loopDuration/speed));
-      const p=((seconds/loopDuration)*cyc)%1;
-      if(mode==="breathe") return .78+.22*(.5+.5*Math.sin(p*Math.PI*2));
-      const windows=[[.07,.10],[.12,.14],[.66,.69],[.70,.72]];
-      return windows.some(([a,b])=>p>=a&&p<=b)?.45:1;
+      const mode=layer.neon?.mode||"none";
+      if(mode==="none" || mode==="outlineChase") return 1;
+      const speed=Math.max(.5,Number(layer.neon?.speed||4));
+      const cycles=Math.max(1,Math.round(loopDuration/speed));
+      const p=((seconds/loopDuration)*cycles)%1;
+      if(mode==="breathe" || mode==="outlineBreathe"){
+        return .72+.28*(.5+.5*Math.sin(p*Math.PI*2));
+      }
+      if(mode==="retro" || mode==="outlineRetro"){
+        if((p>=.07&&p<.10)||(p>=.66&&p<.69)) return .16;
+        if((p>=.12&&p<.13)||(p>=.70&&p<.71)) return .52;
+        return 1;
+      }
+      return 1;
     }
 
     function neonImageState(layer, seconds, loopDuration) {
@@ -2137,6 +2145,13 @@
       const outer = radius * (1.75 + sparkle * 1.8 + (useDot ? .25 : 0));
       ctx.save();
       ctx.globalAlpha *= alpha;
+      const bloomRadius = outer * (2.15 + sparkle * .35);
+      const bloom = ctx.createRadialGradient(x, y, 0, x, y, bloomRadius);
+      bloom.addColorStop(0, hexToRgba(color, .22 + sparkle * .10));
+      bloom.addColorStop(.30, hexToRgba(color, .12 + sparkle * .08));
+      bloom.addColorStop(1, hexToRgba(color, 0));
+      ctx.fillStyle = bloom;
+      ctx.beginPath(); ctx.arc(x, y, bloomRadius, 0, Math.PI * 2); ctx.fill();
       const glow = ctx.createRadialGradient(x, y, 0, x, y, outer);
       glow.addColorStop(0, hexToRgba("#ffffff", .98));
       glow.addColorStop(.16, hexToRgba(color, .90));
@@ -2486,7 +2501,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.91,
+        version: 3.93,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2523,7 +2538,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 3.91;
+      project.version = 3.93;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -3059,7 +3074,7 @@
 
         const organic = layer.organic || {};
         const quality = organic.quality || "balanced";
-        const frameInterval = quality === "smooth" ? 28 : quality === "performance" ? 55 : 38;
+        const frameInterval = quality === "smooth" ? 20 : quality === "performance" ? 42 : 28;
 
         if (time - lastDraw >= frameInterval && !document.body.classList.contains("paused")) {
           lastDraw = time;
@@ -3080,22 +3095,24 @@
             for (let x = 0; x < width; x += strip) {
               const stripWidth = Math.min(strip + 1, width - x);
               const weight = organicWeight(x, width, anchor, fixedZone, bend);
-              const localPhase = phase + (x / Math.max(1, width)) * wave * Math.PI * 2;
+              const spatialPhase = (x / Math.max(1, width)) * wave * Math.PI * 2;
+              const localPhase = phase + spatialPhase;
               const primary = (Math.sin(phase) + directionBias) * strength * weight;
-              const detail = Math.sin(localPhase * 1.13 + Math.sin(phase * .7)) * strength * .24 * weight;
+              const detail = Math.sin(localPhase + Math.sin(phase * 2) * .35) * strength * .24 * weight;
               const verticalShift = primary + detail;
-              const horizontalBreath = Math.sin(localPhase * .55) * strength * .06 * weight;
+              const horizontalBreath = Math.sin(phase + spatialPhase * .55) * strength * .06 * weight;
               ctx.drawImage(sourceCanvas, x, 0, stripWidth, height, x + horizontalBreath, verticalShift, stripWidth + .8, height);
             }
           } else {
             for (let y = 0; y < height; y += strip) {
               const stripHeight = Math.min(strip + 1, height - y);
               const weight = organicWeight(y, height, anchor, fixedZone, bend);
-              const localPhase = phase + (y / Math.max(1, height)) * wave * Math.PI * 2;
+              const spatialPhase = (y / Math.max(1, height)) * wave * Math.PI * 2;
+              const localPhase = phase + spatialPhase;
               const primary = (Math.sin(phase) + directionBias) * strength * weight;
-              const detail = Math.sin(localPhase * 1.09 + Math.sin(phase * .72)) * strength * .24 * weight;
+              const detail = Math.sin(localPhase + Math.sin(phase * 2) * .32) * strength * .24 * weight;
               const horizontalShift = primary + detail;
-              const verticalBreath = Math.cos(localPhase * .63) * strength * .035 * weight;
+              const verticalBreath = Math.cos(phase + spatialPhase * .63) * strength * .035 * weight;
               ctx.drawImage(sourceCanvas, 0, y, width, stripHeight, horizontalShift, y + verticalBreath, width, stripHeight + .8);
             }
           }
@@ -3350,11 +3367,18 @@
         ctx.clearRect(0,0,size.width,size.height);
         const p=masterProgress(t/1000,loop);
         stars.forEach((s)=>{
+          const window=.16;
           const local=(p-s.start+1)%1;
-          if(local>=.16) return;
-          const q=local/.11, ease=q*q*(3-2*q), dx=Math.cos(s.ang)*s.len, dy=Math.sin(s.ang)*s.len;
-          const x=s.x+dx*ease, y=s.y+dy*ease;
-          drawShootingStarGlyph(ctx, x, y, dx*.9, dy*.9, s.thick*1.2, s.c, (layer.opacity/100)*(0.9 + 0.1*Math.sin(q*Math.PI)));
+          if(local>=window) return;
+          const q=local/window;
+          const dx=Math.cos(s.ang)*s.len, dy=Math.sin(s.ang)*s.len;
+          const x=s.x+dx*q, y=s.y+dy*q;
+          const trailProgress=Math.min(1,q/.28);
+          const trailLength=.18+.52*trailProgress;
+          const fadeIn=Math.min(1,q/.10);
+          const fadeOut=Math.min(1,(1-q)/.16);
+          const alpha=(layer.opacity/100)*Math.max(0,Math.min(fadeIn,fadeOut));
+          drawShootingStarGlyph(ctx, x, y, dx*trailLength, dy*trailLength, s.thick*1.2, s.c, alpha);
         });
         requestAnimationFrame(frame);
       }
@@ -4923,13 +4947,18 @@
       return ((seconds / loopDuration) * cycles + offset) % 1;
     }
 
+    function pingPongSmooth(phase) {
+      const p = ((phase % 1) + 1) % 1;
+      return .5 - .5 * Math.cos(p * Math.PI * 2);
+    }
+
     function animationTransform(layer, seconds, loopDuration) {
       const natural=Math.max(.25,Number(layer.duration||loopDuration));
       const cycles=Math.max(1,Math.round(loopDuration/natural));
-      let phase=((seconds/loopDuration)*cycles + (layer.motionRandomStart===false?0:stableLayerRandom(layer.id)))%1;
+      const phase=((seconds/loopDuration)*cycles + (layer.motionRandomStart===false?0:stableLayerRandom(layer.id)))%1;
       const alternate=["float","drift","sway","plant"].includes(layer.animation);
-      let p=alternate?(phase<.5?phase*2:(1-phase)*2):phase;
-      if(layer.motionMode==="pingpong" && ["travel","fall","petals"].includes(layer.animation)) p=phase<.5?phase*2:(1-phase)*2;
+      let p=alternate?pingPongSmooth(phase):phase;
+      if(layer.motionMode==="pingpong" && ["travel","fall","petals"].includes(layer.animation)) p=pingPongSmooth(phase);
       const amount=Number(layer.intensity||0), vector=motionVector(layer.motionDirection||"rightToLeft",Number(layer.motionDistance||0)), a=Math.PI*2*phase;
       const state={x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
       switch(layer.animation){
@@ -4976,7 +5005,7 @@
       const nf = neonState.factor;
       if(layer.shadow?.enabled){ctx.save();ctx.globalAlpha*=Math.max(0,Math.min(1,Number(layer.shadow.opacity||45)/100));ctx.shadowColor=layer.shadow.color||"#000";ctx.shadowBlur=Number(layer.shadow.blur||18);ctx.shadowOffsetX=Number(layer.shadow.x||0);ctx.shadowOffsetY=Number(layer.shadow.y||12);ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();}
       if (neonState.isFullImage) {
-        ctx.globalAlpha *= neonState.mode === "retro" ? (.38 + nf * .62) : (.82 + (nf - .78) * 1.4);
+        ctx.globalAlpha *= neonState.mode === "retro" ? nf : (.78 + (nf - .72) * .78);
         ctx.save();
         ctx.globalCompositeOperation = "screen";
         ctx.globalAlpha *= .46;
@@ -5012,7 +5041,7 @@
           ctx.restore();
         });
       }
-      if(layer.glowEnabled){ctx.shadowColor=layer.glowColor;ctx.shadowBlur=Number(layer.glowBlur||0)*.7*nf;ctx.globalAlpha*=nf;}
+      if(layer.glowEnabled){ctx.shadowColor=layer.glowColor;ctx.shadowBlur=Number(layer.glowBlur||0)*.7*(neonState.isFullImage?(.72+.28*nf):1);}
       if(layer.aura?.enabled){
         ctx.save();ctx.globalAlpha*=Math.max(.05,Number(layer.aura.intensity||55)/160);ctx.shadowColor=layer.aura.color;ctx.shadowBlur=Number(layer.aura.blur||28)*1.4;ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();
       }
@@ -5021,12 +5050,12 @@
         const strength=Math.max(0,Number(o.strength??10)),bend=Math.max(0,Number(o.bend??45)),wave=Math.max(0,Number(o.wave??2.5)),fixedZone=Math.max(0,Number(o.fixedZone??18)),anchor=o.anchor||"bottom";
         const bias=o.direction==="left"?-.34:o.direction==="right"?.34:0, strips=o.quality==="smooth"?64:o.quality==="performance"?28:44;
         if(anchor==="left"||anchor==="right"){
-          for(let i=0;i<strips;i++){const sx0=iw*i/strips,sw=iw/strips+1,dx=-dw/2+dw*i/strips,dw0=dw/strips+1,w=exportOrganicWeight(i,strips-1,anchor,fixedZone,bend),lp=phase+(i/Math.max(1,strips-1))*wave*Math.PI*2;
-            const primary=(Math.sin(phase)+bias)*strength*w,detail=Math.sin(lp*1.13+Math.sin(phase*.7))*strength*.24*w,dy=primary+detail,breath=Math.sin(lp*.55)*strength*.06*w;
+          for(let i=0;i<strips;i++){const sx0=iw*i/strips,sw=iw/strips+1,dx=-dw/2+dw*i/strips,dw0=dw/strips+1,w=exportOrganicWeight(i,strips-1,anchor,fixedZone,bend),sp=(i/Math.max(1,strips-1))*wave*Math.PI*2,lp=phase+sp;
+            const primary=(Math.sin(phase)+bias)*strength*w,detail=Math.sin(lp+Math.sin(phase*2)*.35)*strength*.24*w,dy=primary+detail,breath=Math.sin(phase+sp*.55)*strength*.06*w;
             ctx.drawImage(image,sx0,0,sw,ih,dx+breath,-dh/2+dy,dw0,dh);}
         }else{
-          for(let i=0;i<strips;i++){const sy0=ih*i/strips,sh=ih/strips+1,dy=-dh/2+dh*i/strips,dh0=dh/strips+1,w=exportOrganicWeight(i,strips-1,anchor,fixedZone,bend),lp=phase+(i/Math.max(1,strips-1))*wave*Math.PI*2;
-            const primary=(Math.sin(phase)+bias)*strength*w,detail=Math.sin(lp*1.09+Math.sin(phase*.72))*strength*.24*w,dx=primary+detail,breath=Math.cos(lp*.63)*strength*.035*w;
+          for(let i=0;i<strips;i++){const sy0=ih*i/strips,sh=ih/strips+1,dy=-dh/2+dh*i/strips,dh0=dh/strips+1,w=exportOrganicWeight(i,strips-1,anchor,fixedZone,bend),sp=(i/Math.max(1,strips-1))*wave*Math.PI*2,lp=phase+sp;
+            const primary=(Math.sin(phase)+bias)*strength*w,detail=Math.sin(lp+Math.sin(phase*2)*.32)*strength*.24*w,dx=primary+detail,breath=Math.cos(phase+sp*.63)*strength*.035*w;
             ctx.drawImage(image,0,sy0,iw,sh,-dw/2+dx,dy+breath,dw,dh0);}
         }
       } else ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
@@ -5070,7 +5099,7 @@
       const neonState = neonImageState(layer, seconds, loopDuration);
       if (neonState.isFullImage) {
         const nf = neonState.factor;
-        ctx.globalAlpha *= neonState.mode === "retro" ? (.38 + nf * .62) : (.82 + (nf - .78) * 1.4);
+        ctx.globalAlpha *= neonState.mode === "retro" ? nf : (.78 + (nf - .72) * .78);
         ctx.save();
         ctx.globalCompositeOperation = "screen";
         ctx.globalAlpha *= .44;
@@ -5133,11 +5162,12 @@
             const destX = -cropDw / 2 + cropDw * i / strips;
             const destW = cropDw / strips + 1;
             const weight = exportOrganicWeight(i, strips - 1, anchor, fixedZone, bend);
-            const localPhase = phase + (i / Math.max(1, strips - 1)) * wave * Math.PI * 2;
+            const spatialPhase = (i / Math.max(1, strips - 1)) * wave * Math.PI * 2;
+            const localPhase = phase + spatialPhase;
             const primary = (Math.sin(phase) + directionBias) * strength * weight;
-            const detail = Math.sin(localPhase * 1.13 + Math.sin(phase * .7)) * strength * .24 * weight;
+            const detail = Math.sin(localPhase + Math.sin(phase * 2) * .35) * strength * .24 * weight;
             const verticalShift = primary + detail;
-            const horizontalBreath = Math.sin(localPhase * .55) * strength * .06 * weight;
+            const horizontalBreath = Math.sin(phase + spatialPhase * .55) * strength * .06 * weight;
             ctx.drawImage(image, sourceX, 0, sourceW, sh, destX + horizontalBreath, -cropDh / 2 + verticalShift, destW, cropDh);
           }
         } else {
@@ -5147,11 +5177,12 @@
             const destY = -cropDh / 2 + cropDh * i / strips;
             const destH = cropDh / strips + 1;
             const weight = exportOrganicWeight(i, strips - 1, anchor, fixedZone, bend);
-            const localPhase = phase + (i / Math.max(1, strips - 1)) * wave * Math.PI * 2;
+            const spatialPhase = (i / Math.max(1, strips - 1)) * wave * Math.PI * 2;
+            const localPhase = phase + spatialPhase;
             const primary = (Math.sin(phase) + directionBias) * strength * weight;
-            const detail = Math.sin(localPhase * 1.09 + Math.sin(phase * .72)) * strength * .24 * weight;
+            const detail = Math.sin(localPhase + Math.sin(phase * 2) * .32) * strength * .24 * weight;
             const horizontalShift = primary + detail;
-            const verticalBreath = Math.cos(localPhase * .63) * strength * .035 * weight;
+            const verticalBreath = Math.cos(phase + spatialPhase * .63) * strength * .035 * weight;
             ctx.drawImage(image, 0, sourceY, sw, sourceH, -cropDw / 2 + horizontalShift, destY + verticalBreath, cropDw, destH);
           }
         }
@@ -5188,7 +5219,7 @@
 
     function withParticleExportTransform(ctx, layer, seconds, loopDuration, drawContent) {
       const logical = getLogicalSize();
-      const internalMotion = layer.particleType === "petals";
+      const internalMotion = ["petals", "stars", "shootingStars"].includes(layer.particleType);
       const anim = internalMotion
         ? { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, opacity: 1 }
         : animationTransform(layer, seconds, loopDuration);
@@ -5266,15 +5297,20 @@
             const sy0 = (.02 + seededNumber(layer.id, 1000 + i) * .42) * logical.height;
             const len = (150 + seededNumber(layer.id, 1050 + i) * 300) * canvasScale;
             const ang = (18 + seededNumber(layer.id, 1100 + i) * 28) * Math.PI / 180;
+            const window = .16;
             const local = (masterProgress(seconds, loopDuration) - start + 1) % 1;
-            if (local >= .16) continue;
-            const q = local / .11;
-            const ease = q * q * (3 - 2 * q);
+            if (local >= window) continue;
+            const q = local / window;
             const dx = Math.cos(ang) * len;
             const dy = Math.sin(ang) * len;
-            const x = localX(sx0 + dx * ease);
-            const y = localY(sy0 + dy * ease);
-            drawShootingStarGlyph(ctx, x, y, dx * .9, dy * .9, rawBase * (1.15 + seededNumber(layer.id, 1150 + i) * .9), color, (layer.opacity / 100) * (.9 + .1 * Math.sin(q * Math.PI)));
+            const x = localX(sx0 + dx * q);
+            const y = localY(sy0 + dy * q);
+            const trailProgress = Math.min(1, q / .28);
+            const trailLength = .18 + .52 * trailProgress;
+            const fadeIn = Math.min(1, q / .10);
+            const fadeOut = Math.min(1, (1 - q) / .16);
+            const alpha = (layer.opacity / 100) * Math.max(0, Math.min(fadeIn, fadeOut));
+            drawShootingStarGlyph(ctx, x, y, dx * trailLength, dy * trailLength, rawBase * (1.15 + seededNumber(layer.id, 1150 + i) * .9), color, alpha);
             continue;
           }
 

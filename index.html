@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.9.3 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.9.4 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1058,7 +1058,7 @@
     }
 
   
-    /* MK Universe 3.9.3 — editor pro */
+    /* MK Universe 3.9.4 — editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1086,40 +1086,15 @@
     .flame-layer{position:absolute;inset:-10%;z-index:4;pointer-events:none;mix-blend-mode:screen}
     .neon-breathe{animation:mkNeonBreathe var(--neon-speed,4s) ease-in-out infinite}
     .neon-retro{animation:mkNeonRetro var(--neon-speed,3.2s) steps(1,end) infinite}
-    .neon-outline-layer{position:absolute;inset:-6%;z-index:1;pointer-events:none;mix-blend-mode:screen;filter:blur(var(--neon-blur,18px)) saturate(1.18);transform:scale(var(--neon-outline-scale,1.08));opacity:.9;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;-webkit-mask-size:contain;mask-size:contain}
-    .neon-outline-breathe{animation:mkNeonOutlineBreathe var(--neon-speed,4s) ease-in-out infinite}
-    .neon-outline-retro{animation:mkNeonOutlineRetro var(--neon-speed,3.2s) steps(1,end) infinite}
-    .neon-outline-chase{animation:mkNeonOutlineGlow var(--neon-speed,3.8s) ease-in-out infinite, mkNeonOutlineSpin calc(var(--neon-speed,3.8s) * 1.35) linear infinite}
+    .visual-stack > canvas.neon-tube-canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;overflow:visible}
     @keyframes mkNeonBreathe{
-      0%,100%{filter:brightness(.88) drop-shadow(0 0 calc(var(--neon-blur,18px)*.55) var(--neon-color,#ff8fd1))}
-      50%{filter:brightness(1.12) drop-shadow(0 0 var(--neon-blur,18px) var(--neon-color,#ff8fd1))}
+      0%,100%{opacity:.78;filter:brightness(.94) drop-shadow(0 0 4px var(--neon-color,#ff8fd1))}
+      50%{opacity:1;filter:brightness(1.08) drop-shadow(0 0 7px var(--neon-color,#ff8fd1))}
     }
     @keyframes mkNeonRetro{
       0%,6%,11%,14%,65%,72%,100%{opacity:1}
-      7%,10%,66%,69%{opacity:.16}
-      12%,13%,70%,71%{opacity:.52}
-    }
-    @keyframes mkFireAura{
-      0%,100%{opacity:.72;transform:scale(var(--fire-scale,1.08)) translateY(0)}
-      35%{opacity:.98;transform:scale(calc(var(--fire-scale,1.08) + .03)) translateY(-1%)}
-      70%{opacity:.84;transform:scale(calc(var(--fire-scale,1.08) + .015)) translateY(.7%)}
-    }
-    @keyframes mkNeonOutlineBreathe{
-      0%,100%{opacity:.68;filter:blur(var(--neon-blur,18px)) brightness(.92)}
-      50%{opacity:1;filter:blur(calc(var(--neon-blur,18px) * 1.05)) brightness(1.18)}
-    }
-    @keyframes mkNeonOutlineRetro{
-      0%,6%,11%,14%,65%,72%,100%{opacity:1}
-      7%,10%,66%,69%{opacity:.14}
-      12%,13%,70%,71%{opacity:.48}
-    }
-    @keyframes mkNeonOutlineGlow{
-      0%,100%{opacity:.72;filter:blur(var(--neon-blur,18px)) brightness(.96)}
-      50%{opacity:1;filter:blur(calc(var(--neon-blur,18px) * 1.08)) brightness(1.2)}
-    }
-    @keyframes mkNeonOutlineSpin{
-      from{transform:scale(var(--neon-outline-scale,1.08)) rotate(0deg)}
-      to{transform:scale(var(--neon-outline-scale,1.08)) rotate(360deg)}
+      7%,10%,66%,69%{opacity:.08}
+      12%,13%,70%,71%{opacity:.32}
     }
 
   </style>
@@ -1127,7 +1102,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.9.3 🌸</h1>
+    <h1>🌸 MK Universe 3.9.4 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1952,7 +1927,7 @@
     }
 
     const defaultProject = {
-      version: 3.93,
+      version: 3.94,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2089,11 +2064,11 @@
       const cycles=Math.max(1,Math.round(loopDuration/speed));
       const p=((seconds/loopDuration)*cycles)%1;
       if(mode==="breathe" || mode==="outlineBreathe"){
-        return .72+.28*(.5+.5*Math.sin(p*Math.PI*2));
+        return .76+.24*(.5+.5*Math.sin(p*Math.PI*2));
       }
       if(mode==="retro" || mode==="outlineRetro"){
-        if((p>=.07&&p<.10)||(p>=.66&&p<.69)) return .16;
-        if((p>=.12&&p<.13)||(p>=.70&&p<.71)) return .52;
+        if((p>=.07&&p<.105)||(p>=.66&&p<.695)) return .06;
+        if((p>=.12&&p<.14)||(p>=.70&&p<.72)) return .30;
         return 1;
       }
       return 1;
@@ -2141,84 +2116,226 @@
     }
 
     function drawSparkleStar(ctx, x, y, radius, color, alpha = 1, sparkle = 0, style = "sparkle") {
-      const useDot = style === "dot";
-      const outer = radius * (1.75 + sparkle * 1.8 + (useDot ? .25 : 0));
+      const dotOnly = style === "dot";
+      const r = Math.max(.7, radius);
+      const pulse = 1 + sparkle * .42;
       ctx.save();
       ctx.globalAlpha *= alpha;
-      const bloomRadius = outer * (2.15 + sparkle * .35);
-      const bloom = ctx.createRadialGradient(x, y, 0, x, y, bloomRadius);
-      bloom.addColorStop(0, hexToRgba(color, .22 + sparkle * .10));
-      bloom.addColorStop(.30, hexToRgba(color, .12 + sparkle * .08));
-      bloom.addColorStop(1, hexToRgba(color, 0));
-      ctx.fillStyle = bloom;
-      ctx.beginPath(); ctx.arc(x, y, bloomRadius, 0, Math.PI * 2); ctx.fill();
-      const glow = ctx.createRadialGradient(x, y, 0, x, y, outer);
-      glow.addColorStop(0, hexToRgba("#ffffff", .98));
-      glow.addColorStop(.16, hexToRgba(color, .90));
-      glow.addColorStop(.42, hexToRgba(color, .36));
-      glow.addColorStop(1, hexToRgba(color, 0));
-      ctx.fillStyle = glow;
-      ctx.beginPath(); ctx.arc(x, y, outer, 0, Math.PI * 2); ctx.fill();
 
-      ctx.fillStyle = "rgba(255,255,255,.98)";
-      ctx.beginPath(); ctx.arc(x, y, Math.max(.8, radius * .18), 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = hexToRgba(color, .92);
-      ctx.beginPath(); ctx.arc(x, y, Math.max(1.1, radius * .30), 0, Math.PI * 2); ctx.fill();
+      // Halo astronómico suave: nunca una mancha densa.
+      const haloR = r * (2.7 + sparkle * 1.0);
+      const halo = ctx.createRadialGradient(x, y, 0, x, y, haloR);
+      halo.addColorStop(0, "rgba(255,255,255,.52)");
+      halo.addColorStop(.16, hexToRgba(color, .32 + sparkle * .10));
+      halo.addColorStop(.48, hexToRgba(color, .10 + sparkle * .05));
+      halo.addColorStop(1, hexToRgba(color, 0));
+      ctx.fillStyle = halo;
+      ctx.beginPath(); ctx.arc(x, y, haloR, 0, Math.PI * 2); ctx.fill();
 
-      if (!useDot) {
-        ctx.lineCap = "round";
-        ctx.strokeStyle = hexToRgba("#ffffff", .9);
-        ctx.lineWidth = Math.max(1, radius * .08 + sparkle * .6);
-        const arm = radius * (1.1 + sparkle * 1.2);
-        const diag = arm * .58;
-        ctx.beginPath();
-        ctx.moveTo(x - arm, y); ctx.lineTo(x + arm, y);
-        ctx.moveTo(x, y - arm); ctx.lineTo(x, y + arm);
-        ctx.moveTo(x - diag, y - diag); ctx.lineTo(x + diag, y + diag);
-        ctx.moveTo(x + diag, y - diag); ctx.lineTo(x - diag, y + diag);
-        ctx.stroke();
+      // Núcleo estelar.
+      const core = ctx.createRadialGradient(x, y, 0, x, y, r * .72);
+      core.addColorStop(0, "rgba(255,255,255,1)");
+      core.addColorStop(.30, "rgba(255,255,250,.98)");
+      core.addColorStop(.65, hexToRgba(color, .78));
+      core.addColorStop(1, hexToRgba(color, 0));
+      ctx.fillStyle = core;
+      ctx.beginPath(); ctx.arc(x, y, r * .72, 0, Math.PI * 2); ctx.fill();
+
+      if (!dotOnly) {
+        // Destello de 4 puntas, fino y luminoso. Sin diagonales tipo signo + grueso.
+        const arm = r * (1.25 + sparkle * 1.65);
+        const thin = Math.max(.34, r * .085);
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = "rgba(255,255,255,.78)";
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(thin, arm * pulse);
+        ctx.beginPath(); ctx.arc(0, 0, 1, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(arm * .72 * pulse, thin);
+        ctx.beginPath(); ctx.arc(0, 0, 1, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
       }
       ctx.restore();
     }
 
     function drawShootingStarGlyph(ctx, x, y, dx, dy, size, color, alpha = 1) {
+      const length = Math.max(1, Math.hypot(dx, dy));
+      const ux = dx / length, uy = dy / length;
+      const tailX = x - dx, tailY = y - dy;
+      const s = Math.max(1.3, size);
       ctx.save();
       ctx.globalAlpha *= alpha;
-      const tailX = x - dx;
-      const tailY = y - dy;
-      const gradient = ctx.createLinearGradient(tailX, tailY, x, y);
-      gradient.addColorStop(0, "rgba(255,255,255,0)");
-      gradient.addColorStop(.55, hexToRgba(color, .18));
-      gradient.addColorStop(.82, hexToRgba(color, .62));
-      gradient.addColorStop(1, "rgba(255,255,255,.98)");
-      ctx.strokeStyle = gradient;
-      ctx.lineWidth = Math.max(1.5, size * .45);
+      ctx.globalCompositeOperation = "screen";
+
+      // Estela exterior difusa.
+      const outer = ctx.createLinearGradient(tailX, tailY, x, y);
+      outer.addColorStop(0, "rgba(255,255,255,0)");
+      outer.addColorStop(.52, hexToRgba(color, .08));
+      outer.addColorStop(.82, hexToRgba(color, .30));
+      outer.addColorStop(1, "rgba(255,255,255,.82)");
+      ctx.strokeStyle = outer;
+      ctx.lineWidth = s * 1.25;
       ctx.lineCap = "round";
       ctx.shadowColor = color;
-      ctx.shadowBlur = size * 2.1;
+      ctx.shadowBlur = s * 2.5;
       ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(x, y); ctx.stroke();
-      drawSparkleStar(ctx, x, y, Math.max(2, size * .58), color, .95, .55, "sparkle");
+
+      // Estela interior fina, blanca cerca de la cabeza.
+      const inner = ctx.createLinearGradient(tailX, tailY, x, y);
+      inner.addColorStop(0, "rgba(255,255,255,0)");
+      inner.addColorStop(.72, "rgba(255,255,255,.15)");
+      inner.addColorStop(1, "rgba(255,255,255,.98)");
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = inner;
+      ctx.lineWidth = Math.max(.8, s * .32);
+      ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(x, y); ctx.stroke();
+
+      // Cabeza de meteoro: punto luminoso, no símbolo de estrella.
+      const headR = s * .95;
+      const head = ctx.createRadialGradient(x, y, 0, x, y, headR * 3.2);
+      head.addColorStop(0, "rgba(255,255,255,1)");
+      head.addColorStop(.18, "rgba(255,255,245,.96)");
+      head.addColorStop(.40, hexToRgba(color, .58));
+      head.addColorStop(1, hexToRgba(color, 0));
+      ctx.fillStyle = head;
+      ctx.beginPath(); ctx.arc(x, y, headR * 3.2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.98)";
+      ctx.beginPath(); ctx.arc(x, y, Math.max(.8, headR * .34), 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
 
-    function createNeonAuraLayer(layer) {
-      const mode = layer.neon?.mode || "none";
-      if (!["outlineBreathe", "outlineRetro", "outlineChase"].includes(mode) || !layer.src) return null;
-      const aura = document.createElement("div");
-      aura.className = `neon-outline-layer ${mode === "outlineBreathe" ? "neon-outline-breathe" : mode === "outlineRetro" ? "neon-outline-retro" : "neon-outline-chase"}`;
+    function buildNeonEdgeMask(sourceElement, maxDimension = 760, thickness = 2) {
+      const sw = sourceElement.naturalWidth || sourceElement.width || 1;
+      const sh = sourceElement.naturalHeight || sourceElement.height || 1;
+      const ratio = Math.min(1, maxDimension / Math.max(sw, sh));
+      const w = Math.max(2, Math.round(sw * ratio));
+      const h = Math.max(2, Math.round(sh * ratio));
+      const source = document.createElement("canvas");
+      source.width = w; source.height = h;
+      const sctx = source.getContext("2d", { willReadFrequently: true });
+      sctx.drawImage(sourceElement, 0, 0, w, h);
+      const data = sctx.getImageData(0, 0, w, h).data;
+      let transparent = false;
+      for (let i = 3; i < data.length; i += 4) { if (data[i] < 245) { transparent = true; break; } }
+      if (!transparent) return null;
+
+      const edge = document.createElement("canvas");
+      edge.width = w; edge.height = h;
+      const ectx = edge.getContext("2d");
+      const out = ectx.createImageData(w, h);
+      const od = out.data;
+      const rad = Math.max(1, Math.min(4, Math.round(thickness)));
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const a0 = data[idx + 3];
+          let maxA = a0;
+          let minA = a0;
+          for (let yy = Math.max(0, y-rad); yy <= Math.min(h-1, y+rad); yy++) {
+            for (let xx = Math.max(0, x-rad); xx <= Math.min(w-1, x+rad); xx++) {
+              const a = data[(yy*w+xx)*4+3];
+              if (a > maxA) maxA = a;
+              if (a < minA) minA = a;
+            }
+          }
+          // Gradiente morfológico fino: bordea tanto exterior como huecos internos.
+          const edgeA = Math.max(0, Math.min(255, maxA - minA));
+          od[idx] = od[idx+1] = od[idx+2] = 255;
+          od[idx+3] = edgeA;
+        }
+      }
+      ectx.putImageData(out, 0, 0);
+      return edge;
+    }
+
+    function tintMask(mask, color, target) {
+      target.width = mask.width; target.height = mask.height;
+      const ctx = target.getContext("2d");
+      ctx.clearRect(0,0,target.width,target.height);
+      ctx.drawImage(mask,0,0);
+      ctx.globalCompositeOperation = "source-in";
+      ctx.fillStyle = color;
+      ctx.fillRect(0,0,target.width,target.height);
+      ctx.globalCompositeOperation = "source-over";
+      return target;
+    }
+
+    function renderNeonTubeFrame(ctx, mask, layer, seconds, loopDuration, work, sweep) {
+      if (!mask) return;
+      const state = neonImageState(layer, seconds, loopDuration);
+      if (!state.isOutline) return;
       const palette = normalizedPalette(layer);
-      const c0 = layer.glowColor || palette[0] || "#ff8fd1";
-      const c1 = palette[1] || c0;
-      const c2 = palette[2] || "#ffffff";
-      aura.style.setProperty("--neon-speed", `${Math.max(.5, Number(layer.neon?.speed || 4))}s`);
-      aura.style.setProperty("--neon-blur", `${Math.max(6, Number(layer.glowBlur || 18))}px`);
-      aura.style.setProperty("--neon-outline-scale", `${1.04 + Math.max(0, Number(layer.edgeThickness || 2)) * .015}`);
-      aura.style.webkitMaskImage = `url("${layer.src}")`;
-      aura.style.maskImage = `url("${layer.src}")`;
-      aura.style.background = mode === "outlineChase"
-        ? `conic-gradient(from 0deg, transparent 0 8%, ${hexToRgba(c0,.0)} 10%, ${hexToRgba(c0,.95)} 18%, ${hexToRgba(c1,.65)} 26%, transparent 36%, transparent 62%, ${hexToRgba(c2,.85)} 72%, ${hexToRgba(c0,.55)} 78%, transparent 88%)`
-        : `radial-gradient(circle, ${hexToRgba(c2,.55)} 0%, ${hexToRgba(c0,.88)} 24%, ${hexToRgba(c1,.52)} 48%, transparent 76%)`;
-      return aura;
+      const color = layer.glowColor || palette[0] || "#ff8fd1";
+      const factor = state.factor;
+      const tube = tintMask(mask, color, work);
+      ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+
+      // Tubo principal: fino, definido y con halo corto.
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = state.mode === "outlineRetro" ? Math.max(.04, factor) : (.58 + .34 * factor);
+      ctx.shadowColor = color;
+      ctx.shadowBlur = Math.max(2.5, Math.min(9, Number(layer.glowBlur || 18) * .24));
+      ctx.drawImage(tube,0,0);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha *= .88;
+      ctx.drawImage(tube,0,0);
+      ctx.restore();
+
+      if (state.mode === "outlineChase") {
+        sweep.width = mask.width; sweep.height = mask.height;
+        const sctx = sweep.getContext("2d");
+        sctx.clearRect(0,0,sweep.width,sweep.height);
+        sctx.drawImage(mask,0,0);
+        sctx.globalCompositeOperation = "source-in";
+        const speed = Math.max(.55, Number(layer.neon?.speed || 4));
+        const angle = ((seconds / speed) % 1) * Math.PI * 2 - Math.PI/2;
+        const grad = sctx.createConicGradient(angle, sweep.width/2, sweep.height/2);
+        grad.addColorStop(0, "rgba(255,255,255,0)");
+        grad.addColorStop(.035, "rgba(255,255,255,0)");
+        grad.addColorStop(.075, hexToRgba(color,.55));
+        grad.addColorStop(.105, "rgba(255,255,255,1)");
+        grad.addColorStop(.145, hexToRgba(color,.65));
+        grad.addColorStop(.20, "rgba(255,255,255,0)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        sctx.fillStyle = grad;
+        sctx.fillRect(0,0,sweep.width,sweep.height);
+        sctx.globalCompositeOperation = "source-over";
+        ctx.save();
+        ctx.globalCompositeOperation = "screen";
+        ctx.globalAlpha = .98;
+        ctx.shadowColor = "#ffffff";
+        ctx.shadowBlur = Math.max(4, Math.min(12, Number(layer.glowBlur || 18) * .34));
+        ctx.drawImage(sweep,0,0);
+        ctx.restore();
+      }
+    }
+
+    function createNeonTubeCanvas(layer, sourceElement) {
+      const mode = layer.neon?.mode || "none";
+      if (!["outlineBreathe","outlineRetro","outlineChase"].includes(mode)) return null;
+      const mask = buildNeonEdgeMask(sourceElement, 760, Math.max(1, Math.min(3, Number(layer.edgeThickness || 2))));
+      if (!mask) return null;
+      const canvas = document.createElement("canvas");
+      canvas.className = "neon-tube-canvas";
+      canvas.width = mask.width; canvas.height = mask.height;
+      const ctx = canvas.getContext("2d");
+      const work = document.createElement("canvas");
+      const sweep = document.createElement("canvas");
+      let connected = false;
+      function frame(t) {
+        if (connected && !canvas.isConnected) return;
+        connected = connected || canvas.isConnected;
+        if (!document.body.classList.contains("paused")) {
+          renderNeonTubeFrame(ctx, mask, layer, t/1000, getMasterLoopSeconds(), work, sweep);
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+      return canvas;
     }
 
     const controls = {
@@ -2501,7 +2618,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.93,
+        version: 3.94,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2538,7 +2655,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 3.93;
+      project.version = 3.94;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -2906,15 +3023,15 @@
         stack.className = "visual-stack";
         const aura = createAuraLayer(layer);
         if (aura) stack.appendChild(aura);
-        const neonOutline = createNeonAuraLayer(layer);
-        if (neonOutline) stack.appendChild(neonOutline);
+        const neonTube = createNeonTubeCanvas(layer, reflected);
+        if (neonTube) stack.appendChild(neonTube);
         stack.appendChild(visual);
         const neonMode=layer.neon?.mode||"none";
         if(neonMode==="breathe"||neonMode==="retro"){
           stack.classList.add(neonMode==="breathe"?"neon-breathe":"neon-retro");
           stack.style.setProperty("--neon-speed",`${Math.max(.5,Number(layer.neon?.speed||4))}s`);
           stack.style.setProperty("--neon-color",layer.glowColor||"#ff8fd1");
-          stack.style.setProperty("--neon-blur",`${Math.max(4,Number(layer.glowBlur||18))}px`);
+          stack.style.setProperty("--neon-blur",`${Math.max(3,Math.min(9,Number(layer.glowBlur||18)*.28))}px`);
         }
         addFlameCanvas(layer, stack);
         motion.replaceChildren(stack);
@@ -3346,7 +3463,7 @@
         stars.forEach((star,i)=>{
           const tw=starPulseState(layer,i,sec);
           const alpha=(layer.opacity/100)*(star.a*.64 + tw.pulse*.30 + tw.sparkle*.22);
-          const radius=star.s*(.74 + tw.pulse*.30 + tw.sparkle*.36);
+          const radius=star.s*(.58 + tw.pulse*.22 + tw.sparkle*.28);
           drawSparkleStar(ctx, star.x, star.y, radius, star.c, alpha, tw.sparkle, style === "mixed" ? (i % 2 === 0 ? "dot" : "sparkle") : style);
         });
         requestAnimationFrame(frame);
@@ -3367,14 +3484,14 @@
         ctx.clearRect(0,0,size.width,size.height);
         const p=masterProgress(t/1000,loop);
         stars.forEach((s)=>{
-          const window=.16;
+          const window=.115;
           const local=(p-s.start+1)%1;
           if(local>=window) return;
           const q=local/window;
           const dx=Math.cos(s.ang)*s.len, dy=Math.sin(s.ang)*s.len;
           const x=s.x+dx*q, y=s.y+dy*q;
-          const trailProgress=Math.min(1,q/.28);
-          const trailLength=.18+.52*trailProgress;
+          const trailProgress=Math.min(1,q/.34);
+          const trailLength=.10+.42*trailProgress;
           const fadeIn=Math.min(1,q/.10);
           const fadeOut=Math.min(1,(1-q)/.16);
           const alpha=(layer.opacity/100)*Math.max(0,Math.min(fadeIn,fadeOut));
@@ -4925,6 +5042,16 @@
         const img = await loadImageSource(layer.src);
         const processed = processImage(layer, img);
         const asset = { image: processed, width: processed.naturalWidth || processed.width, height: processed.naturalHeight || processed.height };
+        if (["outlineBreathe","outlineRetro","outlineChase"].includes(layer.neon?.mode || "")) {
+          asset.neonEdgeMask = buildNeonEdgeMask(processed, 760, Math.max(1, Math.min(3, Number(layer.edgeThickness || 2))));
+          if (asset.neonEdgeMask) {
+            asset.neonWork = document.createElement("canvas");
+            asset.neonSweep = document.createElement("canvas");
+            asset.neonFrame = document.createElement("canvas");
+            asset.neonFrame.width = asset.neonEdgeMask.width;
+            asset.neonFrame.height = asset.neonEdgeMask.height;
+          }
+        }
         if (layer.maskSrc) {
           asset.masked = await createMaskedCanvas(processed, layer.maskSrc);
           asset.maskBounds = alphaBoundsFromCanvas(asset.masked);
@@ -4980,6 +5107,17 @@
       return filters.join(" ");
     }
 
+    function drawNeonTubeExport(ctx, layer, asset, dw, dh, seconds, loopDuration) {
+      if (!asset?.neonEdgeMask || !asset.neonFrame) return;
+      const nctx = asset.neonFrame.getContext("2d");
+      renderNeonTubeFrame(nctx, asset.neonEdgeMask, layer, seconds, loopDuration, asset.neonWork, asset.neonSweep);
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = 1;
+      ctx.drawImage(asset.neonFrame, -dw/2, -dh/2, dw, dh);
+      ctx.restore();
+    }
+
     function drawImageAsset(ctx, layer, asset, seconds, loopDuration, useAnimation=true, masked=false) {
       const logical=getLogicalSize();
       const image=masked && asset.masked ? asset.masked : asset.image;
@@ -5005,43 +5143,17 @@
       const nf = neonState.factor;
       if(layer.shadow?.enabled){ctx.save();ctx.globalAlpha*=Math.max(0,Math.min(1,Number(layer.shadow.opacity||45)/100));ctx.shadowColor=layer.shadow.color||"#000";ctx.shadowBlur=Number(layer.shadow.blur||18);ctx.shadowOffsetX=Number(layer.shadow.x||0);ctx.shadowOffsetY=Number(layer.shadow.y||12);ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();}
       if (neonState.isFullImage) {
-        ctx.globalAlpha *= neonState.mode === "retro" ? nf : (.78 + (nf - .72) * .78);
+        ctx.globalAlpha *= neonState.mode === "retro" ? nf : (.82 + .18 * nf);
         ctx.save();
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha *= .46;
+        ctx.globalAlpha *= neonState.mode === "retro" ? (.08 + .22*nf) : (.12 + .12*nf);
         ctx.shadowColor = layer.glowColor || normalizedPalette(layer)[0] || "#ff8fd1";
-        ctx.shadowBlur = Math.max(8, Number(layer.glowBlur || 18)) * (neonState.mode === "retro" ? (.8 + nf * .3) : (1 + (nf - .78) * 1.6));
+        ctx.shadowBlur = Math.max(3, Math.min(9, Number(layer.glowBlur || 18) * .28));
         ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
         ctx.restore();
       }
-      const neonMode = neonState.mode;
-      if(neonState.isOutline){
-        const palette = normalizedPalette(layer);
-        const c0 = layer.glowColor || palette[0] || "#ff8fd1";
-        const c1 = palette[1] || c0;
-        const c2 = palette[2] || "#ffffff";
-        const pulse = neonMode === "outlineChase"
-          ? (.84 + .16 * (.5 + .5 * Math.sin((seconds / Math.max(.5, Number(layer.neon?.speed || 4))) * Math.PI * 2)))
-          : neonFactor(layer, seconds, loopDuration);
-        const orbit = (seconds / Math.max(.5, Number(layer.neon?.speed || 4))) * Math.PI * 2;
-        const outlinePasses = [
-          { color: c0, blur: Math.max(6, Number(layer.glowBlur || 18)) * 1.15, alpha: .26 * pulse },
-          { color: c1, blur: Math.max(6, Number(layer.glowBlur || 18)) * 1.7, alpha: .18 * pulse },
-          { color: c2, blur: Math.max(6, Number(layer.glowBlur || 18)) * .85, alpha: .15 * pulse }
-        ];
-        outlinePasses.forEach((pass, idx) => {
-          ctx.save();
-          ctx.globalCompositeOperation = "screen";
-          ctx.globalAlpha *= pass.alpha;
-          ctx.shadowColor = pass.color;
-          ctx.shadowBlur = pass.blur;
-          ctx.shadowOffsetX = neonMode === "outlineChase" ? Math.cos(orbit + idx) * (3 + idx * 2) : 0;
-          ctx.shadowOffsetY = neonMode === "outlineChase" ? Math.sin(orbit + idx) * (3 + idx * 2) : 0;
-          ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
-          ctx.restore();
-        });
-      }
-      if(layer.glowEnabled){ctx.shadowColor=layer.glowColor;ctx.shadowBlur=Number(layer.glowBlur||0)*.7*(neonState.isFullImage?(.72+.28*nf):1);}
+      if (neonState.isOutline) drawNeonTubeExport(ctx, layer, asset, dw, dh, seconds, loopDuration);
+      if(layer.glowEnabled){ctx.shadowColor=layer.glowColor;ctx.shadowBlur=Math.max(1,Number(layer.glowBlur||0)*.42)*(neonState.isFullImage?(.78+.22*nf):1);}
       if(layer.aura?.enabled){
         ctx.save();ctx.globalAlpha*=Math.max(.05,Number(layer.aura.intensity||55)/160);ctx.shadowColor=layer.aura.color;ctx.shadowBlur=Number(layer.aura.blur||28)*1.4;ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();
       }
@@ -5099,37 +5211,18 @@
       const neonState = neonImageState(layer, seconds, loopDuration);
       if (neonState.isFullImage) {
         const nf = neonState.factor;
-        ctx.globalAlpha *= neonState.mode === "retro" ? nf : (.78 + (nf - .72) * .78);
+        ctx.globalAlpha *= neonState.mode === "retro" ? nf : (.82 + .18 * nf);
         ctx.save();
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha *= .44;
+        ctx.globalAlpha *= neonState.mode === "retro" ? (.08 + .22*nf) : (.12 + .12*nf);
         ctx.shadowColor = layer.glowColor || normalizedPalette(layer)[0] || "#ff8fd1";
-        ctx.shadowBlur = Math.max(8, Number(layer.glowBlur || 18)) * (neonState.mode === "retro" ? (.8 + nf * .3) : (1 + (nf - .78) * 1.6));
+        ctx.shadowBlur = Math.max(3, Math.min(9, Number(layer.glowBlur || 18) * .28));
         ctx.drawImage(image, -cropDw / 2, -cropDh / 2, cropDw, cropDh);
         ctx.restore();
       }
-      if (neonState.isOutline) {
-        const palette = normalizedPalette(layer);
-        const orbit = (seconds / Math.max(.5, Number(layer.neon?.speed || 4))) * Math.PI * 2;
-        [
-          { color: layer.glowColor || palette[0] || "#ff8fd1", blur: Math.max(6, Number(layer.glowBlur || 18)) * 1.15, alpha: .26 },
-          { color: palette[1] || layer.glowColor || "#ff8fd1", blur: Math.max(6, Number(layer.glowBlur || 18)) * 1.7, alpha: .18 },
-          { color: palette[2] || "#ffffff", blur: Math.max(6, Number(layer.glowBlur || 18)) * .85, alpha: .15 }
-        ].forEach((pass, idx) => {
-          ctx.save();
-          ctx.globalCompositeOperation = "screen";
-          ctx.globalAlpha *= pass.alpha * (neonState.mode === "outlineChase" ? (.84 + .16 * (.5 + .5 * Math.sin((seconds / Math.max(.5, Number(layer.neon?.speed || 4))) * Math.PI * 2))) : neonState.factor);
-          ctx.shadowColor = pass.color;
-          ctx.shadowBlur = pass.blur;
-          ctx.shadowOffsetX = neonState.mode === "outlineChase" ? Math.cos(orbit + idx) * (3 + idx * 2) : 0;
-          ctx.shadowOffsetY = neonState.mode === "outlineChase" ? Math.sin(orbit + idx) * (3 + idx * 2) : 0;
-          ctx.drawImage(image, -cropDw / 2, -cropDh / 2, cropDw, cropDh);
-          ctx.restore();
-        });
-      }
       if (layer.glowEnabled) {
         ctx.shadowColor = layer.glowColor;
-        ctx.shadowBlur = Number(layer.glowBlur || 0) * .7;
+        ctx.shadowBlur = Math.max(1, Number(layer.glowBlur || 0) * .42);
       }
 
       if (layer.animation === "organic") {
@@ -5285,7 +5378,7 @@
               const tw = starPulseState(layer, i, seconds);
               const style = layer.starStyle === "mixed" ? (i % 2 === 0 ? "dot" : "sparkle") : (layer.starStyle || "sparkle");
               const alpha = (layer.opacity / 100) * (baseAlpha * .64 + tw.pulse * .30 + tw.sparkle * .22);
-              const radius = s * (.74 + tw.pulse * .30 + tw.sparkle * .36);
+              const radius = s * (.58 + tw.pulse * .22 + tw.sparkle * .28);
               drawSparkleStar(ctx, x, y, radius, color, alpha, tw.sparkle, style);
             }
             continue;
@@ -5297,7 +5390,7 @@
             const sy0 = (.02 + seededNumber(layer.id, 1000 + i) * .42) * logical.height;
             const len = (150 + seededNumber(layer.id, 1050 + i) * 300) * canvasScale;
             const ang = (18 + seededNumber(layer.id, 1100 + i) * 28) * Math.PI / 180;
-            const window = .16;
+            const window = .115;
             const local = (masterProgress(seconds, loopDuration) - start + 1) % 1;
             if (local >= window) continue;
             const q = local / window;
@@ -5305,8 +5398,8 @@
             const dy = Math.sin(ang) * len;
             const x = localX(sx0 + dx * q);
             const y = localY(sy0 + dy * q);
-            const trailProgress = Math.min(1, q / .28);
-            const trailLength = .18 + .52 * trailProgress;
+            const trailProgress = Math.min(1, q / .34);
+            const trailLength = .10 + .42 * trailProgress;
             const fadeIn = Math.min(1, q / .10);
             const fadeOut = Math.min(1, (1 - q) / .16);
             const alpha = (layer.opacity / 100) * Math.max(0, Math.min(fadeIn, fadeOut));

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.7 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.8 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -808,7 +808,7 @@
     }
 
 
-    /* MK Universe 3.7 — corrección de animación focal y máscara */
+    /* MK Universe 3.8 — corrección de animación focal y máscara */
     .stage-viewport {
       position: relative;
       flex: 0 0 auto;
@@ -1057,12 +1057,44 @@
       .lab-sidebar { max-height:34vh; }
     }
 
+  
+    /* MK Universe 3.8 — editor pro */
+    .scene-shell { position: relative; }
+    .editor-zoom-bar{
+      position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
+      padding:8px 10px; border:1px solid var(--border); border-radius:12px;
+      background:rgba(20,13,27,.94); backdrop-filter:blur(10px); margin-top:10px;
+    }
+    .editor-zoom-bar input{ width:150px; }
+    .stage-guides{position:absolute;inset:0;pointer-events:none;z-index:9997;display:none}
+    .stage-guides.on{display:block}
+    .stage-guides:before,.stage-guides:after{content:"";position:absolute;background:rgba(255,255,255,.35)}
+    .stage-guides:before{left:50%;top:0;bottom:0;width:1px}
+    .stage-guides:after{top:50%;left:0;right:0;height:1px}
+    .group-badge{display:inline-flex;margin-left:6px;padding:2px 6px;border-radius:999px;font-size:10px;
+      border:1px solid rgba(179,140,255,.35);background:rgba(179,140,255,.12);color:#eadfff}
+    .group-select{width:17px;height:17px;accent-color:var(--accent)}
+    .dimension-card{font-size:12px;line-height:1.55}
+    .dimension-card strong{color:var(--accent-2)}
+    .flame-layer{position:absolute;inset:-10%;z-index:4;pointer-events:none;mix-blend-mode:screen}
+    .neon-breathe{animation:mkNeonBreathe var(--neon-speed,4s) ease-in-out infinite}
+    .neon-retro{animation:mkNeonRetro var(--neon-speed,3.2s) steps(1,end) infinite}
+    @keyframes mkNeonBreathe{
+      0%,100%{filter:brightness(.88) drop-shadow(0 0 calc(var(--neon-blur,18px)*.55) var(--neon-color,#ff8fd1))}
+      50%{filter:brightness(1.12) drop-shadow(0 0 var(--neon-blur,18px) var(--neon-color,#ff8fd1))}
+    }
+    @keyframes mkNeonRetro{
+      0%,6%,11%,14%,65%,72%,100%{opacity:1}
+      7%,10%,66%,69%{opacity:.42}
+      12%,13%,70%,71%{opacity:.72}
+    }
+
   </style>
 </head>
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.7 🌸</h1>
+    <h1>🌸 MK Universe 3.8 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente y exportación de video.</p>
 
     <div class="toolbar row-wrap">
@@ -1074,8 +1106,12 @@
       <button id="addFogFxBtn" class="btn" type="button">🌫️ Neblina</button>
       <button id="addCloudFxBtn" class="btn" type="button">☁️ Nube</button>
       <button id="addExplosionBtn" class="btn" type="button">💥 Explosión</button>
+      <button id="addShootingStarsBtn" class="btn" type="button">🌠 Fugaces</button>
       <button id="pauseBtn" class="btn" type="button">⏸️ Pausar</button>
       <button id="previewBtn" class="btn" type="button">👁️ Vista limpia</button>
+<button id="undoBtn" class="btn" type="button">↶ Deshacer</button>
+<button id="groupBtn" class="btn" type="button">🧩 Agrupar seleccionadas</button>
+<button id="ungroupBtn" class="btn" type="button">🧷 Desagrupar</button>
     </div>
 
     <input id="filePicker" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
@@ -1148,8 +1184,9 @@
   <main class="scene-shell" id="sceneShell">
     <div class="stage-viewport" id="stageViewport">
       <div class="stage-wrap" id="stageWrap">
-        <div id="stage" aria-label="Escena vertical 1080 por 1920"></div>
+        <div id="stage" aria-label="Escena vertical 1080 por 1920"><div id="stageGuides" class="stage-guides"></div></div>
       </div>
+      <div class="editor-zoom-bar"><button id="zoomOutBtn" class="btn btn-mini" type="button">−</button><input id="editorZoom" type="range" min="25" max="200" value="100" step="5" /><span id="editorZoomValue" class="value">100%</span><button id="zoomInBtn" class="btn btn-mini" type="button">+</button><button id="toggleGuidesBtn" class="btn btn-mini" type="button">⌖ Centro</button></div>
     </div>
   </main>
 
@@ -1247,6 +1284,11 @@
         <div class="check-row">
           <input id="propBackground" type="checkbox" />
           <label for="propBackground">Usar como fondo completo</label>
+        </div>
+        <div class="card dimension-card">
+          <h3 style="margin-bottom:8px">📐 Dimensiones y centrado</h3>
+          <div id="dimensionInfo">Sin datos.</div>
+          <button id="centerLayerBtn" class="btn" type="button" style="width:100%;margin-top:8px">⌖ Centrar capa</button>
         </div>
       </section>
 
@@ -1396,6 +1438,36 @@
           <button id="clearAnimationMaskBtn" class="btn btn-danger" type="button" style="width:100%;margin-top:8px">Borrar máscara de animación</button>
         </div>
 
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:10px">🌑 Sombra</h3>
+          <div class="check-row"><input id="propShadowEnabled" type="checkbox" /><label for="propShadowEnabled">Activar sombra</label></div>
+          <div class="control"><label for="propShadowColor">Color</label><input id="propShadowColor" type="color" /></div>
+          <div class="control"><label for="propShadowBlur">Difuminado <span id="propShadowBlurValue" class="value"></span></label><input id="propShadowBlur" type="range" min="0" max="80" step="1" /></div>
+          <div class="control"><label for="propShadowX">Desplazamiento X <span id="propShadowXValue" class="value"></span></label><input id="propShadowX" type="range" min="-80" max="80" step="1" /></div>
+          <div class="control"><label for="propShadowY">Desplazamiento Y <span id="propShadowYValue" class="value"></span></label><input id="propShadowY" type="range" min="-80" max="80" step="1" /></div>
+          <div class="control"><label for="propShadowOpacity">Opacidad <span id="propShadowOpacityValue" class="value"></span></label><input id="propShadowOpacity" type="range" min="0" max="100" step="1" /></div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:10px">🔥 Fuego alrededor</h3>
+          <div class="check-row"><input id="propFireEnabled" type="checkbox" /><label for="propFireEnabled">Activar llamas</label></div>
+          <div class="control"><label for="propFireIntensity">Intensidad <span id="propFireIntensityValue" class="value"></span></label><input id="propFireIntensity" type="range" min="1" max="100" step="1" /></div>
+          <div class="control"><label for="propFireSpeed">Velocidad <span id="propFireSpeedValue" class="value"></span></label><input id="propFireSpeed" type="range" min="1" max="12" step=".25" /></div>
+          <div class="effect-palette-grid">
+            <label class="effect-color-box"><span>Fuego 1</span><input id="propFireColor1" type="color" /></label>
+            <label class="effect-color-box"><span>Fuego 2</span><input id="propFireColor2" type="color" /></label>
+            <label class="effect-color-box"><span>Fuego 3</span><input id="propFireColor3" type="color" /></label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:10px">💡 Neón animado</h3>
+          <div class="control"><label for="propNeonMode">Animación</label>
+            <select id="propNeonMode"><option value="none">Sin animación</option><option value="breathe">Respiración suave</option><option value="retro">Cartel retro que palpita</option></select></div>
+          <div class="control"><label for="propNeonSpeed">Velocidad <span id="propNeonSpeedValue" class="value"></span></label><input id="propNeonSpeed" type="range" min="1" max="12" step=".25" /></div>
+        </div>
+
         <div class="control">
           <label for="propBlend">Modo de mezcla</label>
           <select id="propBlend">
@@ -1534,6 +1606,7 @@
               <option value="fogfx">Neblina</option>
               <option value="cloudfx">Nube</option>
               <option value="explosion">Explosión</option>
+              <option value="shootingStars">Estrellas fugaces</option>
             </select>
           </div>
           <div class="control">
@@ -1841,7 +1914,7 @@
     }
 
     const defaultProject = {
-      version: 3.7,
+      version: 3.8,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -1878,7 +1951,112 @@
     const sceneBackground = document.getElementById("sceneBackground");
     const videoProgressBar = document.getElementById("videoProgressBar");
     const videoStatus = document.getElementById("videoStatus");
+
     let editorScale = 1;
+    let editorZoom = 1;
+    let groupSelection = new Set();
+    let historyStack = [];
+    let lastHistoryKey = "";
+    let lastHistorySnapshot = "";
+
+    function projectForHistory() {
+      const copy = structuredClone(project);
+      copy.selectedId = null;
+      return copy;
+    }
+    function historyKeyOf(p) { return JSON.stringify(p); }
+    function initHistory() {
+      const snap = projectForHistory();
+      lastHistoryKey = historyKeyOf(snap);
+      lastHistorySnapshot = JSON.stringify(project);
+    }
+    function captureHistoryIfChanged() {
+      const key = historyKeyOf(projectForHistory());
+      if (!lastHistoryKey) { lastHistoryKey = key; lastHistorySnapshot = JSON.stringify(project); return; }
+      if (key !== lastHistoryKey) {
+        historyStack.push(lastHistorySnapshot);
+        if (historyStack.length > 30) historyStack.shift();
+        lastHistoryKey = key;
+        lastHistorySnapshot = JSON.stringify(project);
+      }
+    }
+    function undoProject() {
+      if (!historyStack.length) { projectStatus.textContent = "No hay cambios para deshacer."; return; }
+      const previous = historyStack.pop();
+      project = migrateProject(JSON.parse(previous));
+      project.layers = (project.layers || []).map(layer => defaultLayer(layer));
+      lastHistoryKey = historyKeyOf(projectForHistory());
+      lastHistorySnapshot = JSON.stringify(project);
+      renderAll();
+      projectStatus.textContent = "Cambio deshecho.";
+    }
+
+    function layerById(id){ return project.layers.find(l=>l.id===id) || null; }
+    function effectiveLayerState(layer){
+      const result={x:Number(layer.x||0),y:Number(layer.y||0),scale:Number(layer.scale||100),rotation:Number(layer.rotation||0)};
+      let parentId=layer.parentId, guard=0;
+      while(parentId && guard++<12){
+        const p=layerById(parentId); if(!p) break;
+        const ps=Number(p.scale||100)/100;
+        result.x=Number(p.x||0)+result.x*ps;
+        result.y=Number(p.y||0)+result.y*ps;
+        result.scale*=ps;
+        result.rotation+=Number(p.rotation||0);
+        parentId=p.parentId;
+      }
+      return result;
+    }
+    function childrenOf(id){ return project.layers.filter(l=>l.parentId===id); }
+
+    function createGroupFromSelection(){
+      const ids=[...groupSelection].filter(id=>layerById(id) && layerById(id).kind!=="group");
+      if(ids.length<2){projectStatus.textContent="Marca al menos 2 capas con las casillas para agrupar.";return;}
+      const members=ids.map(layerById);
+      const cx=members.reduce((s,l)=>s+Number(l.x||0),0)/members.length;
+      const cy=members.reduce((s,l)=>s+Number(l.y||0),0)/members.length;
+      const group=defaultLayer({id:newId("group"),name:"Grupo",kind:"group",x:Math.round(cx),y:Math.round(cy),scale:100,animation:"none"});
+      members.forEach(l=>{l.x=Number(l.x||0)-group.x;l.y=Number(l.y||0)-group.y;l.parentId=group.id;});
+      const top=Math.max(...members.map(l=>project.layers.indexOf(l)));
+      project.layers.splice(top+1,0,group);
+      groupSelection.clear(); project.selectedId=group.id; renderAll();
+    }
+    function ungroupSelected(){
+      const g=selectedLayer(); if(!g || g.kind!=="group"){projectStatus.textContent="Selecciona un grupo.";return;}
+      const gs=effectiveLayerState(g), scale=Number(g.scale||100)/100;
+      childrenOf(g.id).forEach(c=>{c.x=gs.x+Number(c.x||0)*scale;c.y=gs.y+Number(c.y||0)*scale;c.scale=Number(c.scale||100)*scale;c.rotation=Number(c.rotation||0)+Number(g.rotation||0);c.parentId=null;});
+      project.layers=project.layers.filter(l=>l.id!==g.id);project.selectedId=null;renderAll();
+    }
+
+    function addFlameCanvas(layer, stack){
+      if(!layer.fire?.enabled || layer.kind!=="image") return;
+      const c=document.createElement("canvas"); c.className="flame-layer"; c.width=520;c.height=520;stack.appendChild(c);
+      const ctx=c.getContext("2d"); const colors=layer.fire.colors||["#ff4fae","#ff8a3d","#fff1a8"];
+      const count=28; const seeds=Array.from({length:count},(_,i)=>({p:seededNumber(layer.id,700+i),s:.4+seededNumber(layer.id,800+i)*.8}));
+      let connected=false;
+      function frame(t){if(connected&&!c.isConnected)return;connected=connected||c.isConnected;ctx.clearRect(0,0,c.width,c.height);
+        const sec=t/1000, speed=Math.max(.2,Number(layer.fire.speed||4)), inten=Math.max(.1,Number(layer.fire.intensity||45)/100);
+        for(let i=0;i<count;i++){const a=(i/count)*Math.PI*2;const r=190+24*Math.sin(sec*speed+seeds[i].p*9);const x=260+Math.cos(a)*r,y=260+Math.sin(a)*r;
+          const flick=(.55+.45*Math.sin(sec*speed*1.7+i))*inten;const rad=14+22*seeds[i].s*flick;
+          const g=ctx.createRadialGradient(x,y,0,x,y,rad*2.2);g.addColorStop(0,hexToRgba(colors[2],.9*flick));g.addColorStop(.3,hexToRgba(colors[0],.75*flick));g.addColorStop(.65,hexToRgba(colors[1],.4*flick));g.addColorStop(1,"rgba(0,0,0,0)");
+          ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y-rad*.25,rad*.7,rad*1.7,Math.sin(a),0,Math.PI*2);ctx.fill();}
+        requestAnimationFrame(frame);
+      } requestAnimationFrame(frame);
+    }
+
+    function neonFactor(layer, seconds, loopDuration){
+      const mode=layer.neon?.mode||"none"; if(mode==="none") return 1;
+      const speed=Math.max(.5,Number(layer.neon?.speed||4)); const cyc=Math.max(1,Math.round(loopDuration/speed));
+      const p=((seconds/loopDuration)*cyc)%1;
+      if(mode==="breathe") return .78+.22*(.5+.5*Math.sin(p*Math.PI*2));
+      const windows=[[.07,.10],[.12,.14],[.66,.69],[.70,.72]];
+      return windows.some(([a,b])=>p>=a&&p<=b)?.45:1;
+    }
+
+    function addShootingStarsLayer(){
+      const l=defaultLayer({name:"Estrellas fugaces",kind:"particles",particleType:"shootingStars",particleCount:7,particleSize:7,background:true,animation:"none",duration:15,intensity:35,opacity:92,blend:"screen",effectPalette:EFFECT_PALETTES.mk.slice()});
+      project.layers.push(l);project.selectedId=l.id;renderAll();
+    }
+
 
     const controls = {
       name: document.getElementById("propName"),
@@ -1962,7 +2140,21 @@
       effectColor3: document.getElementById("propEffectColor3"),
       effectColor4: document.getElementById("propEffectColor4"),
       effectColor5: document.getElementById("propEffectColor5"),
-      effectColor6: document.getElementById("propEffectColor6")
+      effectColor6: document.getElementById("propEffectColor6"),
+      shadowEnabled: document.getElementById("propShadowEnabled"),
+      shadowColor: document.getElementById("propShadowColor"),
+      shadowBlur: document.getElementById("propShadowBlur"),
+      shadowX: document.getElementById("propShadowX"),
+      shadowY: document.getElementById("propShadowY"),
+      shadowOpacity: document.getElementById("propShadowOpacity"),
+      fireEnabled: document.getElementById("propFireEnabled"),
+      fireIntensity: document.getElementById("propFireIntensity"),
+      fireSpeed: document.getElementById("propFireSpeed"),
+      fireColor1: document.getElementById("propFireColor1"),
+      fireColor2: document.getElementById("propFireColor2"),
+      fireColor3: document.getElementById("propFireColor3"),
+      neonMode: document.getElementById("propNeonMode"),
+      neonSpeed: document.getElementById("propNeonSpeed")
     };
 
     function newId(prefix = "layer") {
@@ -2045,6 +2237,12 @@
           fixedZone: 18,
           quality: "balanced"
         },
+        parentId: null,
+        intrinsicWidth: 0,
+        intrinsicHeight: 0,
+        shadow: { enabled:false, color:"#000000", blur:18, x:0, y:12, opacity:45 },
+        fire: { enabled:false, intensity:45, speed:4, colors:["#ff4fae","#ff8a3d","#fff1a8"] },
+        neon: { mode:"none", speed:4 },
         reflection: {
           enabled: false,
           sourceLayerId: null,
@@ -2087,6 +2285,19 @@
           quality: "balanced",
           ...(overrides.organic || {})
         },
+        shadow: {
+          enabled:false, color:"#000000", blur:18, x:0, y:12, opacity:45,
+          ...(overrides.shadow || {})
+        },
+        fire: {
+          enabled:false, intensity:45, speed:4, colors:["#ff4fae","#ff8a3d","#fff1a8"],
+          ...(overrides.fire || {}),
+          colors:Array.isArray(overrides.fire?.colors)?overrides.fire.colors.slice(0,3):["#ff4fae","#ff8a3d","#fff1a8"]
+        },
+        neon: {
+          mode:"none", speed:4,
+          ...(overrides.neon || {})
+        },
         animationFocus: {
           enabled: false,
           ...(overrides.animationFocus || {})
@@ -2127,7 +2338,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.7,
+        version: 3.8,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2391,6 +2602,8 @@
       stage.innerHTML = "";
 
       project.layers.forEach((layer, index) => {
+        if (layer.kind === "group") return;
+        const eState = effectiveLayerState(layer);
         const container = document.createElement("div");
         container.className = `layer${layer.background ? " background" : ""}`;
         container.dataset.id = layer.id;
@@ -2400,20 +2613,20 @@
           : null;
         container.style.display = layer.visible && (!linkedSource || linkedSource.visible) ? "block" : "none";
         container.style.width = layer.background ? "100%" : "100%";
-        container.style.setProperty("--x-px", `${layer.x}px`);
-        container.style.setProperty("--y-px", `${layer.y}px`);
-        const globalScale = Number(layer.scale || 100) / 100;
+        container.style.setProperty("--x-px", `${eState.x}px`);
+        container.style.setProperty("--y-px", `${eState.y}px`);
+        const globalScale = Number(eState.scale || 100) / 100;
         const axisScaleX = Number(layer.scaleX ?? 100) / 100;
         const axisScaleY = Number(layer.scaleY ?? 100) / 100;
         container.style.setProperty("--scale-x", globalScale * axisScaleX * (layer.flipX ? -1 : 1));
         container.style.setProperty("--scale-y", globalScale * axisScaleY * (layer.flipY ? -1 : 1));
-        container.style.setProperty("--rotation", `${layer.rotation}deg`);
+        container.style.setProperty("--rotation", `${eState.rotation}deg`);
         container.style.setProperty("--skew-x", `${layer.skewX || 0}deg`);
         container.style.setProperty("--skew-y", `${layer.skewY || 0}deg`);
         container.style.mixBlendMode = layer.blend;
 
         const motion = document.createElement("div");
-        const individualPetals = layer.kind === "particles" && layer.particleType === "petals";
+        const individualPetals = layer.kind === "particles" && ["petals","stars","shootingStars"].includes(layer.particleType);
         const directOrganic = layer.kind === "image" && layer.animation === "organic";
         const focusedAnimation = layer.kind === "image" && layer.animationFocus?.enabled && Boolean(layer.maskSrc);
         motion.className = `motion anim-${individualPetals || directOrganic || focusedAnimation ? "none" : layer.animation}`;
@@ -2439,6 +2652,7 @@
       const img = new Image();
       img.alt = layer.name;
       img.onload = async () => {
+        if (!layer.intrinsicWidth || !layer.intrinsicHeight) { layer.intrinsicWidth=img.naturalWidth; layer.intrinsicHeight=img.naturalHeight; }
         const processed = processImage(layer, img);
         const reflected = layer.reflection?.enabled
           ? createWaterReflectionCanvas(layer, processed)
@@ -2492,6 +2706,14 @@
         const aura = createAuraLayer(layer);
         if (aura) stack.appendChild(aura);
         stack.appendChild(visual);
+        const neonMode=layer.neon?.mode||"none";
+        if(neonMode==="breathe"||neonMode==="retro"){
+          stack.classList.add(neonMode==="breathe"?"neon-breathe":"neon-retro");
+          stack.style.setProperty("--neon-speed",`${Math.max(.5,Number(layer.neon?.speed||4))}s`);
+          stack.style.setProperty("--neon-color",layer.glowColor||"#ff8fd1");
+          stack.style.setProperty("--neon-blur",`${Math.max(4,Number(layer.glowBlur||18))}px`);
+        }
+        addFlameCanvas(layer, stack);
         motion.replaceChildren(stack);
         addMetalShine(layer, stack);
       };
@@ -2729,6 +2951,11 @@
         }
       }
 
+      if (layer.shadow?.enabled) {
+        const sa=Math.max(0,Math.min(1,Number(layer.shadow.opacity||45)/100));
+        filters.push(`drop-shadow(${Number(layer.shadow.x||0)}px ${Number(layer.shadow.y||0)}px ${Math.max(0,Number(layer.shadow.blur||18))}px ${hexToRgba(layer.shadow.color||"#000000",sa)})`);
+      }
+
       if (layer.glowEnabled) {
         const intensity = Math.max(0, Number(layer.glowIntensity || 0)) / 100;
         const blur = Math.max(0, Number(layer.glowBlur || 0));
@@ -2811,6 +3038,14 @@
         drawAnimatedPetals(layer, motion);
         return;
       }
+      if ((layer.particleType || "") === "stars") {
+        drawAnimatedStars(layer, motion);
+        return;
+      }
+      if ((layer.particleType || "") === "shootingStars") {
+        drawShootingStars(layer, motion);
+        return;
+      }
       if (["smoke", "fogfx", "cloudfx", "explosion"].includes(layer.particleType || "")) {
         drawVfxLayer(layer, motion);
         return;
@@ -2890,6 +3125,27 @@
       motion.appendChild(canvas);
     }
 
+
+
+    function drawAnimatedStars(layer,motion){
+      const canvas=document.createElement("canvas"), size=getRenderSize();canvas.width=size.width;canvas.height=size.height;canvas.style.width="100%";canvas.style.height="100%";const ctx=canvas.getContext("2d");
+      const count=Math.max(8,Math.min(220,Number(layer.particleCount||70))),palette=normalizedPalette(layer),base=Number(layer.particleSize||8);
+      const stars=Array.from({length:count},(_,i)=>({x:seededNumber(layer.id,i*7)*size.width,y:seededNumber(layer.id,i*7+1)*size.height,s:base*(.45+seededNumber(layer.id,i*7+2)*1.2),p:seededNumber(layer.id,i*7+3),a:.55+seededNumber(layer.id,i*7+4)*.45,c:palette[i%palette.length]}));
+      let connected=false;function frame(t){if(connected&&!canvas.isConnected)return;connected=connected||canvas.isConnected;ctx.clearRect(0,0,size.width,size.height);const sec=t/1000,d=Math.max(1,Number(layer.duration||5));
+        stars.forEach((s,i)=>{const pulse=.72+.28*(.5+.5*Math.sin((sec/d)*Math.PI*2*(1+i%3)+s.p*6.28));const r=s.s*(.9+.18*pulse);ctx.save();ctx.globalAlpha=(layer.opacity/100)*s.a;ctx.shadowColor=s.c;ctx.shadowBlur=r*2.6*pulse;
+          ctx.fillStyle=s.c;ctx.beginPath();ctx.arc(s.x,s.y,Math.max(1,r*.22),0,Math.PI*2);ctx.fill();ctx.strokeStyle=hexToRgba(s.c,.9);ctx.lineWidth=Math.max(1,r*.07);ctx.beginPath();ctx.moveTo(s.x-r,s.y);ctx.lineTo(s.x+r,s.y);ctx.moveTo(s.x,s.y-r);ctx.lineTo(s.x,s.y+r);ctx.stroke();ctx.restore();});
+        requestAnimationFrame(frame);}motion.appendChild(canvas);requestAnimationFrame(frame);
+    }
+    function drawShootingStars(layer,motion){
+      const canvas=document.createElement("canvas"),size=getRenderSize();canvas.width=size.width;canvas.height=size.height;canvas.style.width="100%";canvas.style.height="100%";const ctx=canvas.getContext("2d");
+      const count=Math.max(2,Math.min(18,Number(layer.particleCount||7))),palette=normalizedPalette(layer);
+      const stars=Array.from({length:count},(_,i)=>({start:seededNumber(layer.id,900+i),x:seededNumber(layer.id,950+i)*size.width*.9,y:seededNumber(layer.id,1000+i)*size.height*.45,len:120+seededNumber(layer.id,1050+i)*260,ang:(18+seededNumber(layer.id,1100+i)*22)*Math.PI/180,c:palette[i%palette.length]}));
+      let connected=false;function frame(t){if(connected&&!canvas.isConnected)return;connected=connected||canvas.isConnected;ctx.clearRect(0,0,size.width,size.height);const p=masterProgress(t/1000,15);
+        stars.forEach((s,i)=>{const local=(p-s.start+1)%1;const active=local<.085;if(!active)return;const q=local/.085,ease=q*q*(3-2*q),dx=Math.cos(s.ang)*s.len,dy=Math.sin(s.ang)*s.len,x=s.x+dx*ease,y=s.y+dy*ease;
+          const grad=ctx.createLinearGradient(x-dx*.8,y-dy*.8,x,y);grad.addColorStop(0,"rgba(255,255,255,0)");grad.addColorStop(.65,hexToRgba(s.c,.3));grad.addColorStop(1,hexToRgba("#ffffff",.98));
+          ctx.save();ctx.globalAlpha=layer.opacity/100;ctx.strokeStyle=grad;ctx.lineWidth=Math.max(2,Number(layer.particleSize||7));ctx.lineCap="round";ctx.shadowColor=s.c;ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(x-dx*.8,y-dy*.8);ctx.lineTo(x,y);ctx.stroke();ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(x,y,Math.max(2,Number(layer.particleSize||7)*.6),0,Math.PI*2);ctx.fill();ctx.restore();});
+        requestAnimationFrame(frame);}motion.appendChild(canvas);requestAnimationFrame(frame);
+    }
 
     function drawAnimatedPetals(layer, motion) {
       const canvas = document.createElement("canvas");
@@ -3149,7 +3405,7 @@
 
         card.innerHTML = `
           <div class="layer-title">
-            <span class="layer-name" title="${escapeHtml(layer.name)}">${escapeHtml(layer.name)}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
+            <span class="layer-name" title="${escapeHtml(layer.name)}"><input class="group-select" type="checkbox" ${groupSelection.has(layer.id)?"checked":""} /> ${escapeHtml(layer.name)}${layer.kind==="group"?'<span class="group-badge">grupo</span>':layer.parentId?'<span class="group-badge">hijo</span>':""}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion","shootingStars"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
             <div class="row">
               <button class="btn btn-mini move-up" type="button" title="Adelante">▲</button>
               <button class="btn btn-mini move-down" type="button" title="Atrás">▼</button>
@@ -3162,7 +3418,8 @@
           </div>
         `;
 
-        card.querySelector(".layer-name").addEventListener("click", () => selectLayer(layer.id));
+        card.querySelector(".layer-name").addEventListener("click", (e) => { if(!e.target.classList.contains("group-select")) selectLayer(layer.id); });
+        card.querySelector(".group-select").addEventListener("change",e=>{e.stopPropagation(); if(e.target.checked)groupSelection.add(layer.id);else groupSelection.delete(layer.id);});
         card.addEventListener("click", event => {
           if (!event.target.closest("button")) selectLayer(layer.id);
         });
@@ -3318,6 +3575,23 @@
       controls.effectColor4.value = effectPalette[3];
       controls.effectColor5.value = effectPalette[4];
       controls.effectColor6.value = effectPalette[5];
+      controls.shadowEnabled.checked=Boolean(layer.shadow?.enabled);
+      controls.shadowColor.value=layer.shadow?.color||"#000000";
+      controls.shadowBlur.value=layer.shadow?.blur??18;
+      controls.shadowX.value=layer.shadow?.x??0;
+      controls.shadowY.value=layer.shadow?.y??12;
+      controls.shadowOpacity.value=layer.shadow?.opacity??45;
+      controls.fireEnabled.checked=Boolean(layer.fire?.enabled);
+      controls.fireIntensity.value=layer.fire?.intensity??45;
+      controls.fireSpeed.value=layer.fire?.speed??4;
+      controls.fireColor1.value=layer.fire?.colors?.[0]||"#ff4fae";
+      controls.fireColor2.value=layer.fire?.colors?.[1]||"#ff8a3d";
+      controls.fireColor3.value=layer.fire?.colors?.[2]||"#fff1a8";
+      controls.neonMode.value=layer.neon?.mode||"none";
+      controls.neonSpeed.value=layer.neon?.speed??4;
+      const eff=effectiveLayerState(layer);
+      const di=document.getElementById("dimensionInfo");
+      if(di) di.innerHTML=`<strong>Archivo:</strong> ${layer.intrinsicWidth||"—"} × ${layer.intrinsicHeight||"—"} px<br><strong>Posición:</strong> X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}<br><strong>Centro:</strong> ${Math.abs(eff.x)<1&&Math.abs(eff.y)<1?"Sí":"No"}${layer.parentId?`<br><strong>Grupo padre:</strong> ${escapeHtml(layerById(layer.parentId)?.name||"—")}`:""}`;
 
       updateAnimationInspectorLayout(layer);
       updateValueLabels(layer);
@@ -3373,7 +3647,14 @@
         propVfxSpreadValue: `${layer.vfx?.spread ?? 58}%`,
         propVfxSoftnessValue: `${layer.vfx?.softness ?? 72}%`,
         propVfxCenterXValue: `${layer.vfx?.centerX ?? 50}%`,
-        propVfxCenterYValue: `${layer.vfx?.centerY ?? 55}%`
+        propVfxCenterYValue: `${layer.vfx?.centerY ?? 55}%`,
+        propShadowBlurValue: `${layer.shadow?.blur ?? 18}px`,
+        propShadowXValue: `${layer.shadow?.x ?? 0}px`,
+        propShadowYValue: `${layer.shadow?.y ?? 12}px`,
+        propShadowOpacityValue: `${layer.shadow?.opacity ?? 45}%`,
+        propFireIntensityValue: `${layer.fire?.intensity ?? 45}%`,
+        propFireSpeedValue: `${layer.fire?.speed ?? 4}s`,
+        propNeonSpeedValue: `${layer.neon?.speed ?? 4}s`
       };
 
       Object.entries(values).forEach(([id, text]) => {
@@ -3475,11 +3756,22 @@
         vfxSpread: "vfx.spread",
         vfxSoftness: "vfx.softness",
         vfxCenterX: "vfx.centerX",
-        vfxCenterY: "vfx.centerY"
+        vfxCenterY: "vfx.centerY",
+        shadowEnabled: "shadow.enabled",
+        shadowColor: "shadow.color",
+        shadowBlur: "shadow.blur",
+        shadowX: "shadow.x",
+        shadowY: "shadow.y",
+        shadowOpacity: "shadow.opacity",
+        fireEnabled: "fire.enabled",
+        fireIntensity: "fire.intensity",
+        fireSpeed: "fire.speed",
+        neonMode: "neon.mode",
+        neonSpeed: "neon.speed"
       };
 
       Object.entries(controls).forEach(([key, control]) => {
-        if (key.startsWith("effectColor")) return;
+        if (key.startsWith("effectColor") || key.startsWith("fireColor")) return;
         const handler = () => {
           const layer = selectedLayer();
           if (!layer) return;
@@ -3491,7 +3783,13 @@
               ? Number(control.value)
               : control.value;
 
-          if (prop.startsWith("aura.")) {
+          if (prop.startsWith("shadow.")) {
+            layer.shadow[prop.split(".")[1]] = value;
+          } else if (prop.startsWith("fire.")) {
+            layer.fire[prop.split(".")[1]] = value;
+          } else if (prop.startsWith("neon.")) {
+            layer.neon[prop.split(".")[1]] = value;
+          } else if (prop.startsWith("aura.")) {
             const auraProp = prop.split(".")[1];
             layer.aura[auraProp] = value;
           } else if (prop.startsWith("reflection.")) {
@@ -3611,6 +3909,7 @@
       } catch {}
       stageDrag = null;
       stage.classList.remove("dragging");
+      renderStage();
       renderInspector();
       saveProject("Posición guardada.");
     }
@@ -3644,7 +3943,8 @@
       updateReflectionLinkOffsets(layer, "x");
       updateReflectionLinkOffsets(layer, "y");
 
-      renderStage();
+      const el=stage.querySelector(`.layer[data-id="${CSS.escape(layer.id)}"]`);
+      if(el){ const eff=effectiveLayerState(layer); el.style.setProperty("--x-px",`${eff.x}px`);el.style.setProperty("--y-px",`${eff.y}px`); }
       controls.x.value = layer.x;
       controls.y.value = layer.y;
       updateValueLabels(layer);
@@ -3907,7 +4207,7 @@
       requestAnimationFrame(() => {
         const availableW = Math.max(100, sceneShell.clientWidth - 28);
         const availableH = Math.max(100, sceneShell.clientHeight - 28);
-        editorScale = Math.min(1, availableW / logical.width, availableH / logical.height);
+        editorScale = Math.min(1, availableW / logical.width, availableH / logical.height) * editorZoom;
         stageWrap.style.setProperty("--editor-scale", editorScale);
         stageViewport.style.width = `${logical.width * editorScale}px`;
         stageViewport.style.height = `${logical.height * editorScale}px`;
@@ -4408,21 +4708,23 @@
     }
 
     function animationTransform(layer, seconds, loopDuration) {
-      let p = loopPhase(layer, seconds, loopDuration);
-      if (layer.motionMode === "pingpong") p = p < .5 ? p*2 : (1-p)*2;
-      const amount = Number(layer.intensity || 0);
-      const vector = motionVector(layer.motionDirection || "rightToLeft", Number(layer.motionDistance || 0));
-      const a = Math.PI*2*p;
+      const natural=Math.max(.25,Number(layer.duration||loopDuration));
+      const cycles=Math.max(1,Math.round(loopDuration/natural));
+      let phase=((seconds/loopDuration)*cycles + (layer.motionRandomStart===false?0:stableLayerRandom(layer.id)))%1;
+      const alternate=["float","drift","sway","plant"].includes(layer.animation);
+      let p=alternate?(phase<.5?phase*2:(1-phase)*2):phase;
+      if(layer.motionMode==="pingpong" && ["travel","fall","petals"].includes(layer.animation)) p=phase<.5?phase*2:(1-phase)*2;
+      const amount=Number(layer.intensity||0), vector=motionVector(layer.motionDirection||"rightToLeft",Number(layer.motionDistance||0)), a=Math.PI*2*phase;
       const state={x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
       switch(layer.animation){
-        case "float": state.y=Math.sin(a)*amount; break;
-        case "drift": state.x=Math.sin(a)*amount*1.6; state.y=Math.cos(a)*amount*.55; break;
-        case "travel": case "fall": state.x=(p-.5)*vector.x; state.y=(p-.5)*vector.y; state.rotation=p*Number(layer.motionRotation||0); break;
-        case "pulse": state.scaleX=state.scaleY=1+(.5+.5*Math.sin(a))*amount/220; break;
-        case "breathe": state.scaleX=state.scaleY=1+Math.sin(a)*amount/450; break;
-        case "sway": case "plant": state.rotation=Math.sin(a)*Math.max(1,amount/6); break;
-        case "water": case "ripple": state.scaleX=1+Math.sin(a)*amount/500; state.scaleY=1-Math.sin(a)*amount/700; break;
-        case "twinkle": state.opacity=.35+.65*(.5+.5*Math.sin(a)); break;
+        case "float": state.y=(-amount)+(amount*2*p); break;
+        case "drift": state.x=(-amount)+(amount*2*p); state.scaleX=state.scaleY=1.01+.02*p; break;
+        case "travel": case "fall": state.x=(p-.5)*vector.x;state.y=(p-.5)*vector.y;state.rotation=p*Number(layer.motionRotation||0);break;
+        case "pulse": state.scaleX=state.scaleY=1+(0.5+0.5*Math.sin(a))*amount/100; state.opacity=.72+.28*(.5+.5*Math.sin(a)); break;
+        case "breathe": state.scaleX=state.scaleY=1+(0.5+0.5*Math.sin(a))*amount/100; break;
+        case "sway": case "plant": state.rotation=(-Math.max(1,amount/6))+(Math.max(1,amount/6)*2*p);break;
+        case "water": case "ripple": state.scaleX=1+Math.sin(a)*amount/500;state.scaleY=1-Math.sin(a)*amount/700;break;
+        case "twinkle": state.opacity=1; break;
       }
       return state;
     }
@@ -4442,29 +4744,36 @@
         const scale=Math.max(logical.width/iw,logical.height/ih); dw=iw*scale;dh=ih*scale;
       }
       const anim=useAnimation ? animationTransform(layer,seconds,loopDuration) : {x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
-      const gs=Number(layer.scale||100)/100;
+      const eff=effectiveLayerState(layer); const gs=Number(eff.scale||100)/100;
       const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
       const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
       ctx.save();
       ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
       ctx.globalAlpha=(Number(layer.opacity||100)/100)*anim.opacity;
-      ctx.translate(logical.width/2+Number(layer.x||0)+anim.x,logical.height/2+Number(layer.y||0)+anim.y);
-      ctx.rotate((Number(layer.rotation||0)+anim.rotation)*Math.PI/180);
+      ctx.translate(logical.width/2+Number(eff.x||0)+anim.x,logical.height/2+Number(eff.y||0)+anim.y);
+      ctx.rotate((Number(eff.rotation||0)+anim.rotation)*Math.PI/180);
       const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
       ctx.transform(1,ky,kx,1,0,0);
       ctx.scale(sx,sy);
       ctx.filter=canvasFilter(layer);
-      if(layer.glowEnabled){ctx.shadowColor=layer.glowColor;ctx.shadowBlur=Number(layer.glowBlur||0)*.7;}
+      const nf=neonFactor(layer,seconds,loopDuration);
+      if(layer.shadow?.enabled){ctx.save();ctx.globalAlpha*=Math.max(0,Math.min(1,Number(layer.shadow.opacity||45)/100));ctx.shadowColor=layer.shadow.color||"#000";ctx.shadowBlur=Number(layer.shadow.blur||18);ctx.shadowOffsetX=Number(layer.shadow.x||0);ctx.shadowOffsetY=Number(layer.shadow.y||12);ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();}
+      if(layer.glowEnabled){ctx.shadowColor=layer.glowColor;ctx.shadowBlur=Number(layer.glowBlur||0)*.7*nf;ctx.globalAlpha*=nf;}
       if(layer.aura?.enabled){
         ctx.save();ctx.globalAlpha*=Math.max(.05,Number(layer.aura.intensity||55)/160);ctx.shadowColor=layer.aura.color;ctx.shadowBlur=Number(layer.aura.blur||28)*1.4;ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();
       }
       if(layer.animation==="organic" && useAnimation){
-        const strips=42, phase=loopPhase(layer,seconds,loopDuration)*Math.PI*2, strength=Number(layer.organic?.strength||10);
-        for(let i=0;i<strips;i++){
-          const syi=ih*i/strips, shi=ih/strips+1, dyi=-dh/2+dh*i/strips, dhi=dh/strips+1;
-          const weight=Math.pow(i/(strips-1),1.4);
-          const shift=Math.sin(phase+i*.28)*strength*weight;
-          ctx.drawImage(image,0,syi,iw,shi,-dw/2+shift,dyi,dw,dhi);
+        const o=layer.organic||{}, phase=loopPhase(layer,seconds,loopDuration)*Math.PI*2+stableLayerRandom(layer.id)*Math.PI*2;
+        const strength=Math.max(0,Number(o.strength??10)),bend=Math.max(0,Number(o.bend??45)),wave=Math.max(0,Number(o.wave??2.5)),fixedZone=Math.max(0,Number(o.fixedZone??18)),anchor=o.anchor||"bottom";
+        const bias=o.direction==="left"?-.34:o.direction==="right"?.34:0, strips=o.quality==="smooth"?64:o.quality==="performance"?28:44;
+        if(anchor==="left"||anchor==="right"){
+          for(let i=0;i<strips;i++){const sx0=iw*i/strips,sw=iw/strips+1,dx=-dw/2+dw*i/strips,dw0=dw/strips+1,w=exportOrganicWeight(i,strips-1,anchor,fixedZone,bend),lp=phase+(i/Math.max(1,strips-1))*wave*Math.PI*2;
+            const primary=(Math.sin(phase)+bias)*strength*w,detail=Math.sin(lp*1.13+Math.sin(phase*.7))*strength*.24*w,dy=primary+detail,breath=Math.sin(lp*.55)*strength*.06*w;
+            ctx.drawImage(image,sx0,0,sw,ih,dx+breath,-dh/2+dy,dw0,dh);}
+        }else{
+          for(let i=0;i<strips;i++){const sy0=ih*i/strips,sh=ih/strips+1,dy=-dh/2+dh*i/strips,dh0=dh/strips+1,w=exportOrganicWeight(i,strips-1,anchor,fixedZone,bend),lp=phase+(i/Math.max(1,strips-1))*wave*Math.PI*2;
+            const primary=(Math.sin(phase)+bias)*strength*w,detail=Math.sin(lp*1.09+Math.sin(phase*.72))*strength*.24*w,dx=primary+detail,breath=Math.cos(lp*.63)*strength*.035*w;
+            ctx.drawImage(image,0,sy0,iw,sh,-dw/2+dx,dy+breath,dw,dh0);}
         }
       } else ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
       ctx.restore();
@@ -4643,9 +4952,7 @@
             const phase = seededNumber(layer.id, seedBase + 3);
             const baseAlpha = .25 + seededNumber(layer.id, seedBase + 4) * .75;
             const s = base * rs;
-            const twinkle = layer.animation === "twinkle"
-              ? 1
-              : .72 + .28 * (.5 + .5 * Math.sin(Math.PI * 2 * (groupPhase + phase)));
+            const twinkle = .72 + .28 * (.5 + .5 * Math.sin(Math.PI * 2 * (groupPhase + phase)));
             const x = localX(rx * logical.width);
             const y = localY(ry * logical.height);
             const useDot = layer.starStyle === "dot" || (layer.starStyle === "mixed" && i % 2 === 0);
@@ -4873,11 +5180,21 @@
       });
     }
 
+
+    function drawFireExport(ctx,layer,seconds,loopDuration){
+      const logical=getLogicalSize(),eff=effectiveLayerState(layer),colors=layer.fire?.colors||["#ff4fae","#ff8a3d","#fff1a8"],count=28,inten=Math.max(.1,Number(layer.fire?.intensity||45)/100),speed=Math.max(.2,Number(layer.fire?.speed||4));
+      ctx.save();ctx.globalCompositeOperation="screen";ctx.translate(logical.width/2+eff.x,logical.height/2+eff.y);ctx.scale(Number(eff.scale||100)/100,Number(eff.scale||100)/100);
+      const r=Math.min(logical.width,logical.height)*.33;
+      for(let i=0;i<count;i++){const a=i/count*Math.PI*2,rr=r+12*Math.sin(seconds*speed+seededNumber(layer.id,700+i)*9),x=Math.cos(a)*rr,y=Math.sin(a)*rr,f=.55+.45*Math.sin(seconds*speed*1.7+i),rad=(8+14*(.4+seededNumber(layer.id,800+i)*.8))*f*inten;
+        const g=ctx.createRadialGradient(x,y,0,x,y,rad*2.3);g.addColorStop(0,hexToRgba(colors[2],.9));g.addColorStop(.3,hexToRgba(colors[0],.72));g.addColorStop(.68,hexToRgba(colors[1],.35));g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(x,y-rad*.2,rad*.7,rad*1.7,a,0,Math.PI*2);ctx.fill();}
+      ctx.restore();
+    }
+
     function renderExportFrame(canvas, seconds, loopDuration) {
       const ctx=canvas.getContext("2d");const logical=getLogicalSize();const sx=canvas.width/logical.width,sy=canvas.height/logical.height;
       ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle=project.canvas.background||"#000";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(sx,sy);
       project.layers.forEach(layer=>{
-        if(!layer.visible)return;
+        if(!layer.visible || layer.kind==="group")return;
         if(layer.kind==="particles") drawParticleExport(ctx,layer,seconds,loopDuration);
         else {
           const asset=exportAssetCache.get(layer.id);if(!asset)return;
@@ -4890,6 +5207,7 @@
           } else {
             drawImageAsset(ctx, layer, asset, seconds, loopDuration, true, false);
           }
+          if(layer.fire?.enabled) drawFireExport(ctx,layer,seconds,loopDuration);
         }
       });
     }
@@ -4948,6 +5266,7 @@
           originalSrc: reader.result,
           kind: "image"
         });
+        const probe=new Image(); probe.onload=()=>{layer.intrinsicWidth=probe.naturalWidth;layer.intrinsicHeight=probe.naturalHeight;renderAll();}; probe.src=reader.result;
         project.layers.push(layer);
         project.selectedId = layer.id;
         renderAll();
@@ -5105,6 +5424,18 @@
     document.getElementById("addFogFxBtn").addEventListener("click", () => addEffectLayer("fogfx"));
     document.getElementById("addCloudFxBtn").addEventListener("click", () => addEffectLayer("cloudfx"));
     document.getElementById("addExplosionBtn").addEventListener("click", () => addEffectLayer("explosion"));
+    document.getElementById("addShootingStarsBtn").addEventListener("click", addShootingStarsLayer);
+    document.getElementById("undoBtn").addEventListener("click", undoProject);
+    document.getElementById("groupBtn").addEventListener("click", createGroupFromSelection);
+    document.getElementById("ungroupBtn").addEventListener("click", ungroupSelected);
+    document.getElementById("centerLayerBtn").addEventListener("click",()=>{const l=selectedLayer();if(!l)return;l.x=0;l.y=0;renderAll();});
+    [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach((c,i)=>{c.addEventListener("input",()=>{const l=selectedLayer();if(!l)return;l.fire.colors[i]=c.value;renderStage();saveProject();});});
+    const zoom=document.getElementById("editorZoom"),zoomVal=document.getElementById("editorZoomValue");
+    function applyEditorZoom(){editorZoom=Number(zoom.value)/100;zoomVal.textContent=`${zoom.value}%`;updateSceneGeometry();}
+    zoom.addEventListener("input",applyEditorZoom);
+    document.getElementById("zoomOutBtn").addEventListener("click",()=>{zoom.value=Math.max(25,Number(zoom.value)-10);applyEditorZoom();});
+    document.getElementById("zoomInBtn").addEventListener("click",()=>{zoom.value=Math.min(200,Number(zoom.value)+10);applyEditorZoom();});
+    document.getElementById("toggleGuidesBtn").addEventListener("click",()=>document.getElementById("stageGuides").classList.toggle("on"));
 
     document.getElementById("pauseBtn").addEventListener("click", event => {
       document.body.classList.toggle("paused");
@@ -5239,6 +5570,7 @@
     });
 
     document.addEventListener("keydown", event => {
+      if((event.ctrlKey||event.metaKey) && event.key.toLowerCase()==="z"){event.preventDefault();undoProject();return;}
       const tag = document.activeElement?.tagName;
       if (["INPUT", "SELECT", "TEXTAREA"].includes(tag)) return;
       const step = event.shiftKey ? 10 : 2;
@@ -5255,6 +5587,7 @@
 
     setupAnimationInspectorLayout();
     bindInspector();
+    initHistory();
     updateSceneGeometry();
     renderAll();
   </script>

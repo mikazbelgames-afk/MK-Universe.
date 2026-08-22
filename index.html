@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.9.4 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 3.9.6 — Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1058,7 +1058,7 @@
     }
 
   
-    /* MK Universe 3.9.4 — editor pro */
+    /* MK Universe 3.9.6 — editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1102,7 +1102,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.9.4 🌸</h1>
+    <h1>🌸 MK Universe 3.9.6 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1927,7 +1927,7 @@
     }
 
     const defaultProject = {
-      version: 3.94,
+      version: 3.96,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2064,7 +2064,7 @@
       const cycles=Math.max(1,Math.round(loopDuration/speed));
       const p=((seconds/loopDuration)*cycles)%1;
       if(mode==="breathe" || mode==="outlineBreathe"){
-        return .76+.24*(.5+.5*Math.sin(p*Math.PI*2));
+        return .22+.78*(.5+.5*Math.sin(p*Math.PI*2));
       }
       if(mode==="retro" || mode==="outlineRetro"){
         if((p>=.07&&p<.105)||(p>=.66&&p<.695)) return .06;
@@ -2122,15 +2122,20 @@
       ctx.save();
       ctx.globalAlpha *= alpha;
 
-      // Halo astronómico suave: nunca una mancha densa.
-      const haloR = r * (2.7 + sparkle * 1.0);
+      // Halo astronómico visible también en exportación.
+      const haloR = r * (3.25 + sparkle * 1.25);
       const halo = ctx.createRadialGradient(x, y, 0, x, y, haloR);
-      halo.addColorStop(0, "rgba(255,255,255,.52)");
-      halo.addColorStop(.16, hexToRgba(color, .32 + sparkle * .10));
-      halo.addColorStop(.48, hexToRgba(color, .10 + sparkle * .05));
+      halo.addColorStop(0, "rgba(255,255,255,.62)");
+      halo.addColorStop(.14, hexToRgba(color, .40 + sparkle * .14));
+      halo.addColorStop(.42, hexToRgba(color, .16 + sparkle * .08));
       halo.addColorStop(1, hexToRgba(color, 0));
+      ctx.globalCompositeOperation = "screen";
       ctx.fillStyle = halo;
       ctx.beginPath(); ctx.arc(x, y, haloR, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = Math.max(1.5, r * (.85 + sparkle * .45));
+      ctx.beginPath(); ctx.arc(x, y, r * .5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
 
       // Núcleo estelar.
       const core = ctx.createRadialGradient(x, y, 0, x, y, r * .72);
@@ -2197,8 +2202,9 @@
       const headR = s * .95;
       const head = ctx.createRadialGradient(x, y, 0, x, y, headR * 3.2);
       head.addColorStop(0, "rgba(255,255,255,1)");
-      head.addColorStop(.18, "rgba(255,255,245,.96)");
-      head.addColorStop(.40, hexToRgba(color, .58));
+      head.addColorStop(.16, "rgba(255,255,245,.98)");
+      head.addColorStop(.40, hexToRgba(color, .92));
+      head.addColorStop(.74, hexToRgba(color, .24));
       head.addColorStop(1, hexToRgba(color, 0));
       ctx.fillStyle = head;
       ctx.beginPath(); ctx.arc(x, y, headR * 3.2, 0, Math.PI * 2); ctx.fill();
@@ -2274,15 +2280,22 @@
       ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
 
       // Tubo principal: fino, definido y con halo corto.
+      const blurBase = Math.max(2, Math.min(8, Number(layer.glowBlur || 18) * .18));
       ctx.save();
       ctx.globalCompositeOperation = "screen";
-      ctx.globalAlpha = state.mode === "outlineRetro" ? Math.max(.04, factor) : (.58 + .34 * factor);
+      const tubeAlpha = state.mode === "outlineRetro" ? Math.max(.02, factor) : (.24 + .58 * factor);
+      // halo exterior, muy controlado
+      ctx.globalAlpha = tubeAlpha * .55;
       ctx.shadowColor = color;
-      ctx.shadowBlur = Math.max(2.5, Math.min(9, Number(layer.glowBlur || 18) * .24));
+      ctx.shadowBlur = blurBase * (1.2 + factor * 1.2);
       ctx.drawImage(tube,0,0);
+      // tubo central nítido
       ctx.shadowBlur = 0;
-      ctx.globalAlpha *= .88;
+      ctx.globalAlpha = Math.min(1, .44 + .50 * factor);
       ctx.drawImage(tube,0,0);
+      // filo blanco interno leve
+      ctx.globalAlpha = Math.min(1, .10 + .20 * factor);
+      ctx.drawImage(tintMask(mask, "#ffffff", work),0,0);
       ctx.restore();
 
       if (state.mode === "outlineChase") {
@@ -2618,7 +2631,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.94,
+        version: 3.96,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2655,7 +2668,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 3.94;
+      project.version = 3.96;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -3463,7 +3476,7 @@
         stars.forEach((star,i)=>{
           const tw=starPulseState(layer,i,sec);
           const alpha=(layer.opacity/100)*(star.a*.64 + tw.pulse*.30 + tw.sparkle*.22);
-          const radius=star.s*(.58 + tw.pulse*.22 + tw.sparkle*.28);
+          const radius=star.s*(.78 + tw.pulse*.26 + tw.sparkle*.34);
           drawSparkleStar(ctx, star.x, star.y, radius, star.c, alpha, tw.sparkle, style === "mixed" ? (i % 2 === 0 ? "dot" : "sparkle") : style);
         });
         requestAnimationFrame(frame);
@@ -3477,21 +3490,36 @@
       canvas.width=size.width;canvas.height=size.height;canvas.style.width="100%";canvas.style.height="100%";
       const ctx=canvas.getContext("2d");
       const count=Math.max(2,Math.min(18,Number(layer.particleCount||7))),palette=normalizedPalette(layer),loop=getMasterLoopSeconds();
-      const stars=Array.from({length:count},(_,i)=>({start:seededNumber(layer.id,900+i),x:(.04+seededNumber(layer.id,950+i)*.82)*size.width,y:(.02+seededNumber(layer.id,1000+i)*.42)*size.height,len:150+seededNumber(layer.id,1050+i)*300,ang:(18+seededNumber(layer.id,1100+i)*28)*Math.PI/180,c:palette[i%palette.length],thick:Number(layer.particleSize||7)*(0.9+seededNumber(layer.id,1150+i)*0.6)}));
+      const stars=Array.from({length:count},(_,i)=>{
+        const kind=seededNumber(layer.id,890+i);
+        const longShot=kind>.58;
+        return {
+          start:seededNumber(layer.id,900+i),
+          x:(longShot ? (-.08 + seededNumber(layer.id,950+i)*.22) : (.06 + seededNumber(layer.id,950+i)*.84)) * size.width,
+          y:(.08 + seededNumber(layer.id,1000+i)*.16) * size.height,
+          len: longShot
+            ? (size.width * (.72 + seededNumber(layer.id,1050+i)*.26))
+            : (160 + seededNumber(layer.id,1050+i)*190),
+          ang:(longShot ? (-4 + seededNumber(layer.id,1100+i)*8) : (-10 + seededNumber(layer.id,1100+i)*20)) * Math.PI/180,
+          c:palette[i%palette.length],
+          thick:Number(layer.particleSize||7) * (longShot ? (1.0 + seededNumber(layer.id,1150+i)*.7) : (0.85 + seededNumber(layer.id,1150+i)*.55)),
+          longShot
+        };
+      });
       let connected=false;
       function frame(t){
         if(connected&&!canvas.isConnected)return;connected=connected||canvas.isConnected;
         ctx.clearRect(0,0,size.width,size.height);
         const p=masterProgress(t/1000,loop);
         stars.forEach((s)=>{
-          const window=.115;
+          const window=s.longShot?.145:.115;
           const local=(p-s.start+1)%1;
           if(local>=window) return;
           const q=local/window;
           const dx=Math.cos(s.ang)*s.len, dy=Math.sin(s.ang)*s.len;
           const x=s.x+dx*q, y=s.y+dy*q;
           const trailProgress=Math.min(1,q/.34);
-          const trailLength=.10+.42*trailProgress;
+          const trailLength=s.longShot ? (.22+.72*trailProgress) : (.10+.42*trailProgress);
           const fadeIn=Math.min(1,q/.10);
           const fadeOut=Math.min(1,(1-q)/.16);
           const alpha=(layer.opacity/100)*Math.max(0,Math.min(fadeIn,fadeOut));
@@ -5143,12 +5171,12 @@
       const nf = neonState.factor;
       if(layer.shadow?.enabled){ctx.save();ctx.globalAlpha*=Math.max(0,Math.min(1,Number(layer.shadow.opacity||45)/100));ctx.shadowColor=layer.shadow.color||"#000";ctx.shadowBlur=Number(layer.shadow.blur||18);ctx.shadowOffsetX=Number(layer.shadow.x||0);ctx.shadowOffsetY=Number(layer.shadow.y||12);ctx.drawImage(image,-dw/2,-dh/2,dw,dh);ctx.restore();}
       if (neonState.isFullImage) {
-        ctx.globalAlpha *= neonState.mode === "retro" ? nf : (.82 + .18 * nf);
+        ctx.globalAlpha *= neonState.mode === "retro" ? (.12 + .88 * nf) : (.88 + .22 * nf);
         ctx.save();
         ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha *= neonState.mode === "retro" ? (.08 + .22*nf) : (.12 + .12*nf);
+        ctx.globalAlpha *= neonState.mode === "retro" ? (.12 + .34*nf) : (.18 + .24*nf);
         ctx.shadowColor = layer.glowColor || normalizedPalette(layer)[0] || "#ff8fd1";
-        ctx.shadowBlur = Math.max(3, Math.min(9, Number(layer.glowBlur || 18) * .28));
+        ctx.shadowBlur = Math.max(4, Math.min(12, Number(layer.glowBlur || 18) * .34));
         ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
         ctx.restore();
       }
@@ -5378,19 +5406,23 @@
               const tw = starPulseState(layer, i, seconds);
               const style = layer.starStyle === "mixed" ? (i % 2 === 0 ? "dot" : "sparkle") : (layer.starStyle || "sparkle");
               const alpha = (layer.opacity / 100) * (baseAlpha * .64 + tw.pulse * .30 + tw.sparkle * .22);
-              const radius = s * (.58 + tw.pulse * .22 + tw.sparkle * .28);
+              const radius = s * (.72 + tw.pulse * .26 + tw.sparkle * .34);
               drawSparkleStar(ctx, x, y, radius, color, alpha, tw.sparkle, style);
             }
             continue;
           }
 
           if (type === "shootingStars") {
+            const kind = seededNumber(layer.id, 890 + i);
+            const longShot = kind > .58;
             const start = seededNumber(layer.id, 900 + i);
-            const sx0 = (.04 + seededNumber(layer.id, 950 + i) * .82) * logical.width;
-            const sy0 = (.02 + seededNumber(layer.id, 1000 + i) * .42) * logical.height;
-            const len = (150 + seededNumber(layer.id, 1050 + i) * 300) * canvasScale;
-            const ang = (18 + seededNumber(layer.id, 1100 + i) * 28) * Math.PI / 180;
-            const window = .115;
+            const sx0 = (longShot ? (-.08 + seededNumber(layer.id, 950 + i) * .22) : (.06 + seededNumber(layer.id, 950 + i) * .84)) * logical.width;
+            const sy0 = (.08 + seededNumber(layer.id, 1000 + i) * .16) * logical.height;
+            const len = (longShot
+              ? logical.width * (.72 + seededNumber(layer.id, 1050 + i) * .26)
+              : (160 + seededNumber(layer.id, 1050 + i) * 190)) * canvasScale;
+            const ang = (longShot ? (-4 + seededNumber(layer.id, 1100 + i) * 8) : (-10 + seededNumber(layer.id, 1100 + i) * 20)) * Math.PI / 180;
+            const window = longShot ? .145 : .115;
             const local = (masterProgress(seconds, loopDuration) - start + 1) % 1;
             if (local >= window) continue;
             const q = local / window;
@@ -5399,11 +5431,12 @@
             const x = localX(sx0 + dx * q);
             const y = localY(sy0 + dy * q);
             const trailProgress = Math.min(1, q / .34);
-            const trailLength = .10 + .42 * trailProgress;
+            const trailLength = longShot ? (.22 + .72 * trailProgress) : (.10 + .42 * trailProgress);
             const fadeIn = Math.min(1, q / .10);
             const fadeOut = Math.min(1, (1 - q) / .16);
             const alpha = (layer.opacity / 100) * Math.max(0, Math.min(fadeIn, fadeOut));
-            drawShootingStarGlyph(ctx, x, y, dx * trailLength, dy * trailLength, rawBase * (1.15 + seededNumber(layer.id, 1150 + i) * .9), color, alpha);
+            const thickness = rawBase * (longShot ? (1.3 + seededNumber(layer.id, 1150 + i) * 1.0) : (1.0 + seededNumber(layer.id, 1150 + i) * .7));
+            drawShootingStarGlyph(ctx, x, y, dx * trailLength, dy * trailLength, thickness, color, alpha);
             continue;
           }
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.0 — Group Core · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.0.1 — Group + FX Core · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1058,7 +1058,7 @@
     }
 
   
-    /* MK Universe 4.0 — Group Core · editor pro */
+    /* MK Universe 4.0.1 — Group + FX Core · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1102,7 +1102,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.0 · Group Core 🌸</h1>
+    <h1>🌸 MK Universe 4.0.1 · Group + FX Core 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1927,7 +1927,7 @@
     }
 
     const defaultProject = {
-      version: 4.0,
+      version: 4.01,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2070,6 +2070,23 @@
       return selected.filter(layer => !groupAncestors(layer).some(parent => selectedIds.has(parent.id)));
     }
 
+    function updateGroupSelectionUI() {
+      const btn = document.getElementById("groupBtn");
+      if (!btn) return;
+      const count = groupSelection.size;
+      btn.textContent = count ? `🧩 Agrupar seleccionadas (${count})` : "🧩 Agrupar seleccionadas";
+      btn.classList.toggle("btn-primary", count >= 2);
+    }
+
+    function setGroupSelection(layerId, checked) {
+      if (checked) groupSelection.add(layerId);
+      else groupSelection.delete(layerId);
+      updateGroupSelectionUI();
+      projectStatus.textContent = groupSelection.size
+        ? `${groupSelection.size} capa${groupSelection.size === 1 ? "" : "s"} marcada${groupSelection.size === 1 ? "" : "s"} para agrupar.`
+        : "Selección de agrupación vacía.";
+    }
+
     function worldToLocalUnderParent(world, parent) {
       if (!parent) return {
         x: world.x,
@@ -2127,6 +2144,7 @@
       const top=Math.max(...members.map(layer=>project.layers.indexOf(layer)));
       project.layers.splice(top+1,0,group);
       groupSelection.clear();
+      updateGroupSelectionUI();
       project.selectedId=group.id;
       renderAll();
       projectStatus.textContent=`Grupo creado con ${members.length} elementos. Sus animaciones individuales se conservan y ahora puedes animar/mover el grupo completo.`;
@@ -2175,8 +2193,11 @@
       const speed=Math.max(.5,Number(layer.neon?.speed||4));
       const cycles=Math.max(1,Math.round(loopDuration/speed));
       const p=((seconds/loopDuration)*cycles)%1;
-      if(mode==="breathe" || mode==="outlineBreathe"){
+      if(mode==="breathe"){
         return .22+.78*(.5+.5*Math.sin(p*Math.PI*2));
+      }
+      if(mode==="outlineBreathe"){
+        return .06+.94*(.5+.5*Math.sin(p*Math.PI*2));
       }
       if(mode==="retro" || mode==="outlineRetro"){
         if((p>=.07&&p<.105)||(p>=.66&&p<.695)) return .06;
@@ -2402,58 +2423,95 @@
       if (!mask) return;
       const state = neonImageState(layer, seconds, loopDuration);
       if (!state.isOutline) return;
+
       const palette = normalizedPalette(layer);
       const color = layer.glowColor || palette[0] || "#ff8fd1";
-      const factor = state.factor;
+      const factor = Math.max(0, Math.min(1, state.factor));
       const tube = tintMask(mask, color, work);
-      ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+      const w = ctx.canvas.width, h = ctx.canvas.height;
+      ctx.clearRect(0,0,w,h);
 
-      // Tubo principal: fino, definido y con halo corto.
-      const blurBase = Math.max(2, Math.min(8, Number(layer.glowBlur || 18) * .18));
+      // Tubo base: borde fino y limpio. El halo nunca debe tapar la imagen.
+      const blurBase = Math.max(1.5, Math.min(7, Number(layer.glowBlur || 18) * .16));
+      const baseAlpha = state.mode === "outlineRetro"
+        ? (.02 + .90 * factor)
+        : state.mode === "outlineBreathe"
+          ? (.08 + .88 * factor)
+          : .72;
+
       ctx.save();
       ctx.globalCompositeOperation = "screen";
-      const tubeAlpha = state.mode === "outlineRetro" ? Math.max(.02, factor) : (.24 + .58 * factor);
-      // halo exterior, muy controlado
-      ctx.globalAlpha = tubeAlpha * .55;
+      ctx.globalAlpha = baseAlpha * .42;
       ctx.shadowColor = color;
-      ctx.shadowBlur = blurBase * (1.2 + factor * 1.2);
+      ctx.shadowBlur = blurBase * (1.0 + factor * 1.6);
       ctx.drawImage(tube,0,0);
-      // tubo central nítido
+
+      // Núcleo coloreado del tubo.
       ctx.shadowBlur = 0;
-      ctx.globalAlpha = Math.min(1, .44 + .50 * factor);
+      ctx.globalAlpha = Math.min(1, baseAlpha * .92);
       ctx.drawImage(tube,0,0);
-      // filo blanco interno leve
-      ctx.globalAlpha = Math.min(1, .10 + .20 * factor);
-      ctx.drawImage(tintMask(mask, "#ffffff", work),0,0);
+
+      // Centro blanco que hace que parezca un tubo luminoso real.
+      ctx.globalAlpha = Math.min(.72, .10 + baseAlpha * .42);
+      const whiteTube = tintMask(mask, "#fffafc", work);
+      ctx.drawImage(whiteTube,0,0);
       ctx.restore();
 
-      if (state.mode === "outlineChase") {
-        sweep.width = mask.width; sweep.height = mask.height;
-        const sctx = sweep.getContext("2d");
-        sctx.clearRect(0,0,sweep.width,sweep.height);
-        sctx.drawImage(mask,0,0);
-        sctx.globalCompositeOperation = "source-in";
-        const speed = Math.max(.55, Number(layer.neon?.speed || 4));
-        const angle = ((seconds / speed) % 1) * Math.PI * 2 - Math.PI/2;
-        const grad = sctx.createConicGradient(angle, sweep.width/2, sweep.height/2);
+      if (state.mode !== "outlineChase") return;
+
+      // Viaje luminoso real: una sección brillante rota alrededor de la silueta.
+      // Se compone SOBRE la máscara de borde, por lo que nunca invade el interior.
+      sweep.width = mask.width;
+      sweep.height = mask.height;
+      const sctx = sweep.getContext("2d");
+      sctx.clearRect(0,0,sweep.width,sweep.height);
+      sctx.drawImage(mask,0,0);
+      sctx.globalCompositeOperation = "source-in";
+
+      const speed = Math.max(.55, Number(layer.neon?.speed || 4));
+      const progress = ((seconds / speed) % 1 + 1) % 1;
+      const rotation = progress * Math.PI * 2 - Math.PI / 2;
+      let grad;
+      if (typeof sctx.createConicGradient === "function") {
+        grad = sctx.createConicGradient(rotation, sweep.width/2, sweep.height/2);
+        // Cabeza estrecha + cola luminosa. Al rotar, la luz recorre el contorno.
         grad.addColorStop(0, "rgba(255,255,255,0)");
         grad.addColorStop(.035, "rgba(255,255,255,0)");
-        grad.addColorStop(.075, hexToRgba(color,.55));
-        grad.addColorStop(.105, "rgba(255,255,255,1)");
-        grad.addColorStop(.145, hexToRgba(color,.65));
-        grad.addColorStop(.20, "rgba(255,255,255,0)");
+        grad.addColorStop(.075, hexToRgba(color,.20));
+        grad.addColorStop(.115, hexToRgba(color,.76));
+        grad.addColorStop(.145, "rgba(255,255,255,1)");
+        grad.addColorStop(.175, hexToRgba(color,.72));
+        grad.addColorStop(.245, hexToRgba(color,.16));
+        grad.addColorStop(.30, "rgba(255,255,255,0)");
         grad.addColorStop(1, "rgba(255,255,255,0)");
-        sctx.fillStyle = grad;
-        sctx.fillRect(0,0,sweep.width,sweep.height);
-        sctx.globalCompositeOperation = "source-over";
-        ctx.save();
-        ctx.globalCompositeOperation = "screen";
-        ctx.globalAlpha = .98;
-        ctx.shadowColor = "#ffffff";
-        ctx.shadowBlur = Math.max(4, Math.min(12, Number(layer.glowBlur || 18) * .34));
-        ctx.drawImage(sweep,0,0);
-        ctx.restore();
+      } else {
+        // Fallback visible para WebViews antiguas: banda diagonal móvil.
+        const shift = progress * (sweep.width + sweep.height);
+        grad = sctx.createLinearGradient(-sweep.height + shift, 0, shift, sweep.height);
+        grad.addColorStop(0, "rgba(255,255,255,0)");
+        grad.addColorStop(.42, "rgba(255,255,255,0)");
+        grad.addColorStop(.50, hexToRgba(color,.72));
+        grad.addColorStop(.54, "rgba(255,255,255,1)");
+        grad.addColorStop(.60, hexToRgba(color,.34));
+        grad.addColorStop(.70, "rgba(255,255,255,0)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
       }
+      sctx.fillStyle = grad;
+      sctx.fillRect(0,0,sweep.width,sweep.height);
+      sctx.globalCompositeOperation = "source-over";
+
+      // Doble pasada para que el segmento viajero sea claramente visible.
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = .62;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = Math.max(4, blurBase * 2.2);
+      ctx.drawImage(sweep,0,0);
+      ctx.shadowColor = "#ffffff";
+      ctx.shadowBlur = Math.max(2, blurBase * 1.25);
+      ctx.globalAlpha = 1;
+      ctx.drawImage(sweep,0,0);
+      ctx.restore();
     }
 
     function createNeonTubeCanvas(layer, sourceElement) {
@@ -2760,7 +2818,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.0,
+        version: 4.01,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2797,7 +2855,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 4.0;
+      project.version = 4.01;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -3973,10 +4031,21 @@
           </div>
         `;
 
-        card.querySelector(".layer-name").addEventListener("click", (e) => { if(!e.target.classList.contains("group-select")) selectLayer(layer.id); });
-        card.querySelector(".group-select").addEventListener("change",e=>{e.stopPropagation(); if(e.target.checked)groupSelection.add(layer.id);else groupSelection.delete(layer.id);});
+        const groupCheck = card.querySelector(".group-select");
+        // IMPORTANTE: el checkbox de agrupación no debe disparar selectLayer(),
+        // porque selectLayer vuelve a dibujar la lista antes de que termine el click.
+        ["pointerdown","mousedown","click"].forEach(type => {
+          groupCheck.addEventListener(type, e => e.stopPropagation());
+        });
+        groupCheck.addEventListener("change", e => {
+          e.stopPropagation();
+          setGroupSelection(layer.id, e.target.checked);
+        });
+        card.querySelector(".layer-name").addEventListener("click", (e) => {
+          if (!e.target.closest(".group-select")) selectLayer(layer.id);
+        });
         card.addEventListener("click", event => {
-          if (!event.target.closest("button")) selectLayer(layer.id);
+          if (!event.target.closest("button, .group-select")) selectLayer(layer.id);
         });
 
         card.querySelector(".move-up").addEventListener("click", () => {
@@ -4033,6 +4102,7 @@
 
         layersList.appendChild(card);
       });
+      updateGroupSelectionUI();
     }
 
     function renderInspector() {
@@ -4142,6 +4212,8 @@
       controls.fireColor1.value=layer.fire?.colors?.[0]||"#ff4fae";
       controls.fireColor2.value=layer.fire?.colors?.[1]||"#ff8a3d";
       controls.fireColor3.value=layer.fire?.colors?.[2]||"#fff1a8";
+      const fireColorDisabled = layer.kind !== "image";
+      [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach(c => c.disabled = fireColorDisabled);
       controls.neonMode.value=layer.neon?.mode||"none";
       controls.neonSpeed.value=layer.neon?.speed??4;
       const eff=effectiveLayerState(layer);
@@ -6154,7 +6226,25 @@
     document.getElementById("groupBtn").addEventListener("click", createGroupFromSelection);
     document.getElementById("ungroupBtn").addEventListener("click", ungroupSelected);
     document.getElementById("centerLayerBtn").addEventListener("click",()=>{const l=selectedLayer();if(!l)return;l.x=0;l.y=0;renderAll();});
-    [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach((c,i)=>{c.addEventListener("input",()=>{const l=selectedLayer();if(!l)return;l.fire.colors[i]=c.value;renderStage();saveProject();});});
+    // Colores de fuego: no reconstruimos el escenario en cada micro-movimiento
+    // del selector del sistema, porque algunos navegadores cerraban/atascaban el picker.
+    [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach((control,index)=>{
+      const applyValue = () => {
+        const layer = selectedLayer();
+        if(!layer || layer.kind !== "image") return;
+        layer.fire = layer.fire || {enabled:false,intensity:45,speed:4,colors:["#ff4fae","#ff8a3d","#fff1a8"]};
+        if(!Array.isArray(layer.fire.colors)) layer.fire.colors=["#ff4fae","#ff8a3d","#fff1a8"];
+        while(layer.fire.colors.length < 3) layer.fire.colors.push("#fff1a8");
+        layer.fire.colors[index] = control.value;
+      };
+      control.addEventListener("input", applyValue);
+      control.addEventListener("change", () => {
+        applyValue();
+        renderStage();
+        saveProject("Color de fuego actualizado.");
+      });
+      control.addEventListener("click", e => e.stopPropagation());
+    });
     const zoom=document.getElementById("editorZoom"),zoomVal=document.getElementById("editorZoomValue");
     function applyEditorZoom(){editorZoom=Number(zoom.value)/100;zoomVal.textContent=`${zoom.value}%`;updateSceneGeometry();}
     zoom.addEventListener("input",applyEditorZoom);

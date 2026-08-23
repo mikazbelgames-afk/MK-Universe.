@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 3.9.7 — Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.0 — Group Core · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1058,7 +1058,7 @@
     }
 
   
-    /* MK Universe 3.9.7 — editor pro */
+    /* MK Universe 4.0 — Group Core · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1102,7 +1102,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 3.9.7 🌸</h1>
+    <h1>🌸 MK Universe 4.0 · Group Core 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1927,7 +1927,7 @@
     }
 
     const defaultProject = {
-      version: 3.97,
+      version: 4.0,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2005,39 +2005,151 @@
     }
 
     function layerById(id){ return project.layers.find(l=>l.id===id) || null; }
+
+    function groupAncestors(layer) {
+      const chain = [];
+      let parentId = layer?.parentId;
+      let guard = 0;
+      while (parentId && guard++ < 24) {
+        const parent = layerById(parentId);
+        if (!parent || parent.kind !== "group") break;
+        chain.unshift(parent);
+        parentId = parent.parentId;
+      }
+      return chain;
+    }
+
+    function isLayerEffectivelyVisible(layer) {
+      if (!layer || layer.visible === false) return false;
+      return groupAncestors(layer).every(group => group.visible !== false);
+    }
+
+    function layerDepth(layer) {
+      return groupAncestors(layer).length;
+    }
+
+    // Estado estático mundial. Ahora la posición de los hijos sí respeta
+    // rotación y escala de todos sus grupos padre.
     function effectiveLayerState(layer){
-      const result={x:Number(layer.x||0),y:Number(layer.y||0),scale:Number(layer.scale||100),rotation:Number(layer.rotation||0)};
+      const result={
+        x:Number(layer.x||0),
+        y:Number(layer.y||0),
+        scale:Number(layer.scale||100),
+        rotation:Number(layer.rotation||0),
+        opacity:Number(layer.opacity??100)/100,
+        scaleXMul:1,
+        scaleYMul:1
+      };
       let parentId=layer.parentId, guard=0;
-      while(parentId && guard++<12){
-        const p=layerById(parentId); if(!p) break;
-        const ps=Number(p.scale||100)/100;
-        result.x=Number(p.x||0)+result.x*ps;
-        result.y=Number(p.y||0)+result.y*ps;
-        result.scale*=ps;
+      while(parentId && guard++<24){
+        const p=layerById(parentId); if(!p || p.kind!=="group") break;
+        const uniform=Number(p.scale||100)/100;
+        const psx=uniform*(Number(p.scaleX??100)/100)*(p.flipX?-1:1);
+        const psy=uniform*(Number(p.scaleY??100)/100)*(p.flipY?-1:1);
+        const rad=Number(p.rotation||0)*Math.PI/180;
+        const lx=result.x*psx, ly=result.y*psy;
+        result.x=Number(p.x||0)+lx*Math.cos(rad)-ly*Math.sin(rad);
+        result.y=Number(p.y||0)+lx*Math.sin(rad)+ly*Math.cos(rad);
+        result.scale*=uniform;
+        result.scaleXMul*=psx;
+        result.scaleYMul*=psy;
         result.rotation+=Number(p.rotation||0);
+        result.opacity*=Number(p.opacity??100)/100;
         parentId=p.parentId;
       }
       return result;
     }
+
     function childrenOf(id){ return project.layers.filter(l=>l.parentId===id); }
 
-    function createGroupFromSelection(){
-      const ids=[...groupSelection].filter(id=>layerById(id) && layerById(id).kind!=="group");
-      if(ids.length<2){projectStatus.textContent="Marca al menos 2 capas con las casillas para agrupar.";return;}
-      const members=ids.map(layerById);
-      const cx=members.reduce((s,l)=>s+Number(l.x||0),0)/members.length;
-      const cy=members.reduce((s,l)=>s+Number(l.y||0),0)/members.length;
-      const group=defaultLayer({id:newId("group"),name:"Grupo",kind:"group",x:Math.round(cx),y:Math.round(cy),scale:100,animation:"none"});
-      members.forEach(l=>{l.x=Number(l.x||0)-group.x;l.y=Number(l.y||0)-group.y;l.parentId=group.id;});
-      const top=Math.max(...members.map(l=>project.layers.indexOf(l)));
-      project.layers.splice(top+1,0,group);
-      groupSelection.clear(); project.selectedId=group.id; renderAll();
+    function selectedRootsForGrouping() {
+      const selected = [...groupSelection]
+        .map(layerById)
+        .filter(Boolean);
+      const selectedIds = new Set(selected.map(layer => layer.id));
+      return selected.filter(layer => !groupAncestors(layer).some(parent => selectedIds.has(parent.id)));
     }
+
+    function worldToLocalUnderParent(world, parent) {
+      if (!parent) return {
+        x: world.x,
+        y: world.y,
+        scale: world.scale,
+        rotation: world.rotation
+      };
+      const ps = effectiveLayerState(parent);
+      const dx = world.x - ps.x;
+      const dy = world.y - ps.y;
+      const rad = -ps.rotation * Math.PI / 180;
+      const rx = dx * Math.cos(rad) - dy * Math.sin(rad);
+      const ry = dx * Math.sin(rad) + dy * Math.cos(rad);
+      const uniform = Math.max(.0001, Number(ps.scale || 100) / 100);
+      return {
+        x: rx / uniform,
+        y: ry / uniform,
+        scale: world.scale / uniform,
+        rotation: world.rotation - ps.rotation
+      };
+    }
+
+    function createGroupFromSelection(){
+      const members=selectedRootsForGrouping();
+      if(members.length<2){projectStatus.textContent="Marca al menos 2 capas o grupos con las casillas para agrupar.";return;}
+
+      // Guardamos el estado mundial ANTES de cambiar parentId para que nada salte.
+      const worldStates=new Map(members.map(layer=>[layer.id,effectiveLayerState(layer)]));
+      const cx=members.reduce((sum,layer)=>sum+worldStates.get(layer.id).x,0)/members.length;
+      const cy=members.reduce((sum,layer)=>sum+worldStates.get(layer.id).y,0)/members.length;
+      const group=defaultLayer({
+        id:newId("group"),
+        name:`Grupo ${project.layers.filter(l=>l.kind==="group").length+1}`,
+        kind:"group",
+        x:Math.round(cx),
+        y:Math.round(cy),
+        scale:100,
+        scaleX:100,
+        scaleY:100,
+        rotation:0,
+        opacity:100,
+        animation:"none",
+        parentId:null
+      });
+
+      members.forEach(layer=>{
+        const world=worldStates.get(layer.id);
+        layer.x=world.x-group.x;
+        layer.y=world.y-group.y;
+        layer.scale=world.scale;
+        layer.rotation=world.rotation;
+        layer.parentId=group.id;
+      });
+
+      const top=Math.max(...members.map(layer=>project.layers.indexOf(layer)));
+      project.layers.splice(top+1,0,group);
+      groupSelection.clear();
+      project.selectedId=group.id;
+      renderAll();
+      projectStatus.textContent=`Grupo creado con ${members.length} elementos. Sus animaciones individuales se conservan y ahora puedes animar/mover el grupo completo.`;
+    }
+
     function ungroupSelected(){
-      const g=selectedLayer(); if(!g || g.kind!=="group"){projectStatus.textContent="Selecciona un grupo.";return;}
-      const gs=effectiveLayerState(g), scale=Number(g.scale||100)/100;
-      childrenOf(g.id).forEach(c=>{c.x=gs.x+Number(c.x||0)*scale;c.y=gs.y+Number(c.y||0)*scale;c.scale=Number(c.scale||100)*scale;c.rotation=Number(c.rotation||0)+Number(g.rotation||0);c.parentId=null;});
-      project.layers=project.layers.filter(l=>l.id!==g.id);project.selectedId=null;renderAll();
+      const g=selectedLayer();
+      if(!g || g.kind!=="group"){projectStatus.textContent="Selecciona un grupo.";return;}
+      const children=childrenOf(g.id);
+      const worlds=new Map(children.map(child=>[child.id,effectiveLayerState(child)]));
+      const newParent=layerById(g.parentId);
+      children.forEach(child=>{
+        const local=worldToLocalUnderParent(worlds.get(child.id),newParent);
+        child.x=local.x;
+        child.y=local.y;
+        child.scale=local.scale;
+        child.rotation=local.rotation;
+        child.parentId=newParent?.id||null;
+      });
+      project.layers=project.layers.filter(layer=>layer.id!==g.id);
+      project.selectedId=children[0]?.id||null;
+      renderAll();
+      projectStatus.textContent=`Grupo desarmado. ${children.length} elementos conservaron su posición y sus animaciones.`;
     }
 
     function addFlameCanvas(layer, stack){
@@ -2648,7 +2760,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 3.97,
+        version: 4.0,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2685,7 +2797,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 3.97;
+      project.version = 4.0;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -2921,54 +3033,85 @@
       baseGuides.className = `stage-guides${showGuides ? " on" : ""}`;
       stage.appendChild(baseGuides);
 
-      project.layers.forEach((layer, index) => {
-        if (layer.kind === "group") return;
-        const eState = effectiveLayerState(layer);
-        const container = document.createElement("div");
-        container.className = `layer${layer.background ? " background" : ""}`;
+      const orderedChildren = parentId => project.layers
+        .filter(layer => layer.parentId === parentId)
+        .sort((a,b) => project.layers.indexOf(a) - project.layers.indexOf(b));
+
+      function configureContainerTransform(container, layer, index, forceStageSized=false) {
+        container.className = `layer${layer.background && !forceStageSized ? " background" : ""}${layer.kind === "group" ? " group-layer" : ""}`;
         container.dataset.id = layer.id;
         container.style.zIndex = index;
-        const linkedSource = layer.reflection?.linked
-          ? project.layers.find(item => item.id === layer.reflection.sourceLayerId)
-          : null;
-        container.style.display = layer.visible && (!linkedSource || linkedSource.visible) ? "block" : "none";
-        container.style.width = layer.background ? "100%" : "100%";
-        container.style.setProperty("--x-px", `${eState.x}px`);
-        container.style.setProperty("--y-px", `${eState.y}px`);
-        const globalScale = Number(eState.scale || 100) / 100;
+        container.style.display = layer.visible === false ? "none" : "block";
+        container.style.opacity = Math.max(0, Math.min(1, Number(layer.opacity ?? 100) / 100));
+        if (forceStageSized) {
+          container.style.width = "100%";
+          container.style.height = "100%";
+        } else {
+          container.style.width = layer.background ? "100%" : "100%";
+        }
+        container.style.setProperty("--x-px", `${Number(layer.x||0)}px`);
+        container.style.setProperty("--y-px", `${Number(layer.y||0)}px`);
+        const globalScale = Number(layer.scale || 100) / 100;
         const axisScaleX = Number(layer.scaleX ?? 100) / 100;
         const axisScaleY = Number(layer.scaleY ?? 100) / 100;
         container.style.setProperty("--scale-x", globalScale * axisScaleX * (layer.flipX ? -1 : 1));
         container.style.setProperty("--scale-y", globalScale * axisScaleY * (layer.flipY ? -1 : 1));
-        container.style.setProperty("--rotation", `${eState.rotation}deg`);
+        container.style.setProperty("--rotation", `${Number(layer.rotation||0)}deg`);
         container.style.setProperty("--skew-x", `${layer.skewX || 0}deg`);
         container.style.setProperty("--skew-y", `${layer.skewY || 0}deg`);
-        container.style.mixBlendMode = layer.blend;
+        container.style.mixBlendMode = layer.blend || "normal";
+      }
 
-        const motion = document.createElement("div");
-        const individualPetals = layer.kind === "particles" && ["petals","stars","shootingStars"].includes(layer.particleType);
+      function configureMotion(motion, layer, allowOwnAnimation=true) {
+        const individualParticles = layer.kind === "particles" && ["petals","stars","shootingStars"].includes(layer.particleType);
         const directOrganic = layer.kind === "image" && layer.animation === "organic";
         const focusedAnimation = layer.kind === "image" && layer.animationFocus?.enabled && Boolean(layer.maskSrc);
-        motion.className = `motion anim-${individualPetals || directOrganic || focusedAnimation ? "none" : layer.animation}`;
+        const animationName = allowOwnAnimation && !individualParticles && !directOrganic && !focusedAnimation
+          ? layer.animation
+          : "none";
+        motion.className = `motion anim-${animationName || "none"}`;
         motion.style.setProperty("--duration", `${synchronizedCssDuration(layer)}s`);
         motion.style.setProperty("--intensity", `${layer.intensity}px`);
         motion.style.setProperty("--intensity-scale", layer.intensity / 100);
         motion.style.setProperty("--intensity-deg", `${Math.max(1, layer.intensity / 6)}deg`);
         motion.style.setProperty("--easing", easingFromPlasticity(layer.plasticity));
         setMotionVariables(layer, motion);
+      }
 
-        if (layer.kind === "particles") {
-          drawParticleLayer(layer, motion);
-        } else {
-          loadImageLayer(layer, motion);
+      function renderNode(layer) {
+        const index = project.layers.indexOf(layer);
+        const container = document.createElement("div");
+
+        if (layer.kind === "group") {
+          configureContainerTransform(container, layer, index, true);
+          const motion = document.createElement("div");
+          configureMotion(motion, layer, true);
+          orderedChildren(layer.id).forEach(child => motion.appendChild(renderNode(child)));
+          container.appendChild(motion);
+          return container;
         }
 
+        configureContainerTransform(container, layer, index, false);
+        const linkedSource = layer.reflection?.linked
+          ? project.layers.find(item => item.id === layer.reflection.sourceLayerId)
+          : null;
+        if (linkedSource && !isLayerEffectivelyVisible(linkedSource)) container.style.display = "none";
+
+        const motion = document.createElement("div");
+        configureMotion(motion, layer, true);
+        if (layer.kind === "particles") drawParticleLayer(layer, motion);
+        else loadImageLayer(layer, motion);
         container.appendChild(motion);
-        stage.appendChild(container);
-      });
+        return container;
+      }
+
+      // Los elementos con padre válido se renderizan dentro del grupo.
+      // Los huérfanos importados siguen mostrándose como capas raíz en vez de desaparecer.
+      const roots = project.layers.filter(layer => !layer.parentId || !layerById(layer.parentId));
+      roots.forEach(layer => stage.appendChild(renderNode(layer)));
 
       const selected = selectedLayer();
-      if (selected && selected.kind !== "group") {
+      if (selected) {
         const eff = effectiveLayerState(selected);
         const guides = document.createElement("div");
         guides.className = "stage-selection-guides";
@@ -2988,7 +3131,7 @@
         dot.style.top = `${clampedTop}%`;
         const label = document.createElement("div");
         label.className = "sel-label";
-        label.textContent = `${selected.name} · X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}`;
+        label.textContent = `${selected.kind === "group" ? "🧩 " : ""}${selected.name} · X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}`;
         label.style.left = `${clampedLeft}%`;
         label.style.top = `${Math.max(8, Math.min(92, clampedTop + 2.2))}%`;
         guides.append(v, h, dot, label);
@@ -3739,6 +3882,7 @@
       if (!layer) return;
       setupAnimationInspectorLayout();
       const isParticle = layer.kind === "particles";
+      const isGroup = layer.kind === "group";
       const particleType = layer.particleType || "stars";
       const particleOnlyIds = [
         "particlePaletteNote", "particlePaletteGrid", "particlePaletteButtons",
@@ -3751,7 +3895,7 @@
       const imageOnlyIds = ["imageFocusAnimationCard", "organicSettingsCard"];
       imageOnlyIds.forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.style.display = isParticle ? "none" : "";
+        if (el) el.style.display = (isParticle || isGroup) ? "none" : "";
       });
 
       const context = document.getElementById("animationContextNote");
@@ -3767,6 +3911,10 @@
             : ["smoke", "fogfx", "cloudfx", "explosion"].includes(particleType)
               ? "Este VFX tiene movimiento propio. Ajusta duración e intensidad; su apariencia está en el bloque superior."
               : "Las estrellas y luces usan su animación propia. Ajusta duración e intensidad sin mover toda la capa como una imagen.";
+      } else if (isGroup) {
+        context.innerHTML = `<strong>🧩 Grupo:</strong> ${escapeHtml(layer.name)}. Mover, escalar, rotar o animar aquí afecta al conjunto; cada hijo conserva su propia animación.`;
+        title.textContent = "🧩 Movimiento del grupo";
+        help.textContent = "La animación del grupo se suma a las animaciones individuales de sus capas. Ejemplo: una mascota puede parpadear mientras todo el grupo flota.";
       } else {
         context.innerHTML = `<strong>🖼️ Capa de imagen:</strong> ${escapeHtml(layer.name)}. Puedes mover toda la imagen o pintar una zona específica.`;
         title.textContent = "🎬 Movimiento de imagen";
@@ -3775,7 +3923,7 @@
           : "Sin zona pintada, el movimiento se aplica a toda la imagen.";
       }
 
-      // El selector de tipo de movimiento solo pertenece a imágenes.
+      // Grupos e imágenes pueden tener movimiento global; partículas usan su motor propio.
       setControlVisible(controls.animation, !isParticle);
       setControlVisible(controls.plasticity, !isParticle);
 
@@ -3802,6 +3950,11 @@
         const realIndex = project.layers.findIndex(item => item.id === layer.id);
         const card = document.createElement("div");
         card.className = `layer-card${project.selectedId === layer.id ? " active" : ""}`;
+        const depth = layerDepth(layer);
+        if (depth) {
+          card.style.marginLeft = `${Math.min(4, depth) * 12}px`;
+          card.style.borderLeft = "2px solid rgba(255,143,209,.42)";
+        }
         card.draggable = true;
         card.dataset.id = layer.id;
 
@@ -4076,6 +4229,21 @@
       if (!layer) return;
       if (!confirm(`¿Eliminar la capa "${layer.name}"?`)) return;
 
+      if (layer.kind === "group") {
+        const children = childrenOf(layer.id);
+        const worlds = new Map(children.map(child => [child.id, effectiveLayerState(child)]));
+        const newParent = layerById(layer.parentId);
+        children.forEach(child => {
+          const local = worldToLocalUnderParent(worlds.get(child.id), newParent);
+          child.x = local.x;
+          child.y = local.y;
+          child.scale = local.scale;
+          child.rotation = local.rotation;
+          child.parentId = newParent?.id || null;
+        });
+      }
+
+      groupSelection.delete(id);
       project.layers = project.layers.filter(item => item.id !== id);
       if (project.selectedId === id) project.selectedId = null;
       renderAll();
@@ -4346,7 +4514,7 @@
       updateReflectionLinkOffsets(layer, "y");
 
       const el=stage.querySelector(`.layer[data-id="${CSS.escape(layer.id)}"]`);
-      if(el){ const eff=effectiveLayerState(layer); el.style.setProperty("--x-px",`${eff.x}px`);el.style.setProperty("--y-px",`${eff.y}px`); }
+      if(el){ el.style.setProperty("--x-px",`${layer.x}px`);el.style.setProperty("--y-px",`${layer.y}px`); }
       controls.x.value = layer.x;
       controls.y.value = layer.y;
       updateValueLabels(layer);
@@ -5146,6 +5314,27 @@
       return state;
     }
 
+    function applyAncestorGroupExportTransform(ctx, layer, seconds, loopDuration) {
+      const ancestors = groupAncestors(layer);
+      ancestors.forEach(group => {
+        const anim = animationTransform(group, seconds, loopDuration);
+        ctx.globalAlpha *= Math.max(0, Math.min(1, Number(group.opacity ?? 100) / 100)) * anim.opacity;
+        ctx.translate(Number(group.x || 0), Number(group.y || 0));
+        ctx.rotate(Number(group.rotation || 0) * Math.PI / 180);
+        const gkx = Math.tan(Number(group.skewX || 0) * Math.PI / 180);
+        const gky = Math.tan(Number(group.skewY || 0) * Math.PI / 180);
+        ctx.transform(1, gky, gkx, 1, 0, 0);
+        const gs = Number(group.scale || 100) / 100;
+        ctx.scale(
+          gs * (Number(group.scaleX ?? 100) / 100) * (group.flipX ? -1 : 1),
+          gs * (Number(group.scaleY ?? 100) / 100) * (group.flipY ? -1 : 1)
+        );
+        ctx.translate(anim.x, anim.y);
+        ctx.rotate(anim.rotation * Math.PI / 180);
+        ctx.scale(anim.scaleX, anim.scaleY);
+      });
+    }
+
     function canvasFilter(layer) {
       const filters=[`brightness(${layer.brightness + (layer.emission||0)*.45}%)`,`contrast(${layer.contrast}%)`,`saturate(${layer.saturation+(layer.emission||0)*.25}%)`];
       if(layer.reflection?.enabled && layer.reflection.blur>0) filters.push(`blur(${layer.reflection.blur}px)`);
@@ -5172,14 +5361,17 @@
         const scale=Math.max(logical.width/iw,logical.height/ih); dw=iw*scale;dh=ih*scale;
       }
       const anim=useAnimation ? animationTransform(layer,seconds,loopDuration) : {x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
-      const eff=effectiveLayerState(layer); const gs=Number(eff.scale||100)/100;
+      const gs=Number(layer.scale||100)/100;
       const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
       const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
       ctx.save();
       ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
-      ctx.globalAlpha=(Number(layer.opacity||100)/100)*anim.opacity;
-      ctx.translate(logical.width/2+Number(eff.x||0)+anim.x,logical.height/2+Number(eff.y||0)+anim.y);
-      ctx.rotate((Number(eff.rotation||0)+anim.rotation)*Math.PI/180);
+      ctx.globalAlpha=1;
+      ctx.translate(logical.width/2,logical.height/2);
+      applyAncestorGroupExportTransform(ctx,layer,seconds,loopDuration);
+      ctx.globalAlpha*=(Number(layer.opacity||100)/100)*anim.opacity;
+      ctx.translate(Number(layer.x||0)+anim.x,Number(layer.y||0)+anim.y);
+      ctx.rotate((Number(layer.rotation||0)+anim.rotation)*Math.PI/180);
       const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
       ctx.transform(1,ky,kx,1,0,0);
       ctx.scale(sx,sy);
@@ -5257,8 +5449,11 @@
 
       ctx.save();
       ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
-      ctx.globalAlpha = Number(layer.opacity || 100) / 100;
-      ctx.translate(logical.width / 2 + Number(layer.x || 0), logical.height / 2 + Number(layer.y || 0));
+      ctx.globalAlpha = 1;
+      ctx.translate(logical.width / 2, logical.height / 2);
+      applyAncestorGroupExportTransform(ctx, layer, seconds, loopDuration);
+      ctx.globalAlpha *= Number(layer.opacity || 100) / 100;
+      ctx.translate(Number(layer.x || 0), Number(layer.y || 0));
       ctx.rotate(Number(layer.rotation || 0) * Math.PI / 180);
       ctx.transform(1, ky, kx, 1, 0, 0);
       ctx.scale(baseScaleX, baseScaleY);
@@ -5388,11 +5583,11 @@
 
       ctx.save();
       ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
-      ctx.globalAlpha = (Number(layer.opacity || 100) / 100) * anim.opacity;
-      ctx.translate(
-        logical.width / 2 + Number(layer.x || 0) + anim.x,
-        logical.height / 2 + Number(layer.y || 0) + anim.y
-      );
+      ctx.globalAlpha = 1;
+      ctx.translate(logical.width / 2, logical.height / 2);
+      applyAncestorGroupExportTransform(ctx, layer, seconds, loopDuration);
+      ctx.globalAlpha *= (Number(layer.opacity || 100) / 100) * anim.opacity;
+      ctx.translate(Number(layer.x || 0) + anim.x, Number(layer.y || 0) + anim.y);
       ctx.rotate((Number(layer.rotation || 0) + anim.rotation) * Math.PI / 180);
       ctx.transform(1, ky, kx, 1, 0, 0);
       ctx.scale(scaleX, scaleY);
@@ -5680,16 +5875,19 @@
       const logical=getLogicalSize(), image=asset.baseWithoutMask||asset.image, iw=asset.width, ih=asset.height;
       let dw=logical.width, dh=logical.width*ih/iw;
       if(layer.background){ const scale=Math.max(logical.width/iw,logical.height/ih); dw=iw*scale; dh=ih*scale; }
-      const eff=effectiveLayerState(layer), gs=Number(eff.scale||100)/100;
-      const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1);
-      const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1);
+      const anim=animationTransform(layer,seconds,loopDuration), gs=Number(layer.scale||100)/100;
+      const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
+      const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
       const colors=layer.fire?.colors||["#ff4fae","#ff8a3d","#fff1a8"];
       const inten=Math.max(.1,Number(layer.fire?.intensity||45)/100), speed=Math.max(.2,Number(layer.fire?.speed||4));
       const pulse=.76+.24*(.5+.5*Math.sin(seconds*speed*1.7 + stableLayerRandom(layer.id)*6.28));
       const orbit=seconds*speed*2.6;
       ctx.save();
-      ctx.translate(logical.width/2+Number(eff.x||0),logical.height/2+Number(eff.y||0));
-      ctx.rotate((Number(eff.rotation||0))*Math.PI/180);
+      ctx.translate(logical.width/2,logical.height/2);
+      applyAncestorGroupExportTransform(ctx,layer,seconds,loopDuration);
+      ctx.globalAlpha*=Number(layer.opacity||100)/100*anim.opacity;
+      ctx.translate(Number(layer.x||0)+anim.x,Number(layer.y||0)+anim.y);
+      ctx.rotate((Number(layer.rotation||0)+anim.rotation)*Math.PI/180);
       const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
       ctx.transform(1,ky,kx,1,0,0);
       ctx.scale(sx,sy);
@@ -5715,7 +5913,7 @@
       const ctx=canvas.getContext("2d");const logical=getLogicalSize();const sx=canvas.width/logical.width,sy=canvas.height/logical.height;
       ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle=project.canvas.background||"#000";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(sx,sy);
       project.layers.forEach(layer=>{
-        if(!layer.visible || layer.kind==="group")return;
+        if(!isLayerEffectivelyVisible(layer) || layer.kind==="group")return;
         if(layer.kind==="particles") drawParticleExport(ctx,layer,seconds,loopDuration);
         else {
           const asset=exportAssetCache.get(layer.id);if(!asset)return;

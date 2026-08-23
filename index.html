@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.4 — Alpha Backlight · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.5 — True Rear Glow · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -496,7 +496,7 @@
 
 
 
-    /* MK 4.2.4 — Alpha Backlight: la luz nace desde el alfa REAL del PNG. */
+    /* MK 4.2.5 — True Rear Glow: la luz nace desde el alfa REAL del PNG. */
     .visual-stack {
       position: relative;
       width: 100%;
@@ -582,18 +582,46 @@
       }
     }
 
-    /* El backlight respira por luminosidad/opacidad, no alejándose del objeto. */
+    /*
+      4.2.5 — True Rear Glow.
+      La respiración cambia energía/luminosidad, nunca posición ni tamaño.
+      Así el halo permanece literalmente pegado detrás del alfa del PNG.
+    */
     @keyframes backlightBreath {
       0%, 100% {
-        opacity: var(--aura-min-opacity, .18);
+        opacity: var(--aura-min-opacity, .55);
         transform: none;
-        filter: saturate(1.02) brightness(.92);
+        filter:
+          saturate(var(--backlight-min-saturation, 1.02))
+          brightness(var(--backlight-min-brightness, .78));
       }
       50% {
-        opacity: var(--aura-max-opacity, .65);
+        opacity: var(--aura-max-opacity, 1);
         transform: none;
-        filter: saturate(1.08) brightness(1.10);
+        filter:
+          saturate(var(--backlight-max-saturation, 1.18))
+          brightness(var(--backlight-max-brightness, 1.20));
       }
+    }
+
+    .aura-layer.backlight {
+      z-index: 0;
+      mix-blend-mode: screen;
+      overflow: visible;
+      background: transparent !important;
+      box-shadow: none !important;
+      border: 0 !important;
+    }
+
+    .aura-layer.backlight .backlight-halo-canvas {
+      position: absolute;
+      display: block;
+      max-width: none;
+      pointer-events: none;
+      z-index: 0;
+      transform: none;
+      transform-origin: center;
+      will-change: opacity, filter;
     }
 
     @keyframes auraFocusBreath {
@@ -1145,7 +1173,7 @@
     }
 
   
-    /* MK Universe 4.2.4 — Alpha Backlight · editor pro */
+    /* MK Universe 4.2.5 — True Rear Glow · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1239,7 +1267,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.4 · Alpha Backlight 🌸</h1>
+    <h1>🌸 MK Universe 4.2.5 · True Rear Glow 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -2155,7 +2183,7 @@
     }
 
     const defaultProject = {
-      version: 4.24,
+      version: 4.25,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -3438,7 +3466,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.24,
+        version: 4.25,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -3468,10 +3496,10 @@
       next.scenes = Array.isArray(next.scenes) ? next.scenes : [];
       next.activeSceneId = next.activeSceneId || null;
 
-      // 4.2.4: el backlight usa el alfa REAL del PNG. "blur" sigue siendo suavidad
+      // 4.2.5: el backlight usa el alfa REAL del PNG. "blur" sigue siendo suavidad
       // 0–100, pero ya no se dibuja ninguna caja geométrica detrás del recurso.
       const sourceVersion = Number((raw || {}).version || 0);
-      if (sourceVersion > 0 && sourceVersion < 4.24) {
+      if (sourceVersion > 0 && sourceVersion < 4.25) {
         const migrateAura = layer => {
           if (!layer?.aura) return;
           const oldBlur = Math.max(0, Number(layer.aura.blur ?? 28));
@@ -3482,7 +3510,7 @@
             layer.aura.blur = Math.max(0, Math.min(100, oldBlur));
           }
           if (layer.aura.mode === "backlight") {
-            // Las versiones 4.2.1–4.2.3 usaban una caja expandida. En 4.2.4
+            // Las versiones 4.2.1–4.2.3 usaban una caja expandida. En 4.2.5
             // dejamos la expansión en cero para que el alfa quede pegado de verdad.
             layer.aura.spread = 0;
             layer.aura.depth = Math.max(0, Math.min(100, Number(layer.aura.depth ?? 58)));
@@ -3506,7 +3534,7 @@
     function saveProject(message = "Proyecto guardado.") {
       syncActiveSceneFromProject();
       captureHistoryIfChanged();
-      project.version = 4.24;
+      project.version = 4.25;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -4286,15 +4314,31 @@
       const speed = Math.max(.5, Number(auraConfig.speed ?? 5));
       const phase = (((Number(seconds || 0) % speed) + speed) % speed) / speed;
       const wave = .5 - .5 * Math.cos(phase * Math.PI * 2);
-      const minOpacity = Math.max(.005, intensity * (1 - pulse * .82));
+      const isBacklight = (auraConfig.mode || "backlight") === "backlight";
+
+      // El backlight necesita una respiración perceptible incluso en valores bajos.
+      // 15% ya produce una oscilación visible, pero 0% sigue siendo completamente estático.
+      const backlightFloor = pulse <= .0001 ? 1 : Math.max(.14, 1 - pulse * 1.65);
+      const minOpacity = Math.max(.002, intensity * (isBacklight ? backlightFloor : (1 - pulse * .82)));
       const maxOpacity = Math.max(minOpacity, Math.min(1, intensity));
+      const minBrightness = isBacklight
+        ? (pulse <= .0001 ? 1 : Math.max(.58, 1 - pulse * 1.30))
+        : 1;
+      const maxBrightness = isBacklight
+        ? (pulse <= .0001 ? 1 : Math.min(1.48, 1 + pulse * 1.10))
+        : 1;
+      const brightness = minBrightness + (maxBrightness - minBrightness) * wave;
+
       return {
         wave,
         opacity: minOpacity + (maxOpacity - minOpacity) * wave,
         minOpacity,
         maxOpacity,
+        minBrightness,
+        maxBrightness,
+        brightness,
         scale: 1 + Math.max(0, Number(auraConfig.scale ?? 2.5)) / 100 * wave,
-        // Desde 4.2.3 "blur" representa SUAVIDAD 0–100; 4.2.4 la aplica sobre el alfa real.
+        // "blur" es suavidad 0–100; la geometría nunca se separa del alfa.
         blur: Math.max(0, Math.min(100, Number(auraConfig.blur ?? 60))),
         spread: Math.max(0, Math.min(10, Number(auraConfig.spread ?? 0))),
         depth: Math.max(0, Math.min(100, Number(auraConfig.depth ?? 58))) / 100,
@@ -4322,6 +4366,89 @@
       return canvas;
     }
 
+    function backlightPassPlan(state, pixelScale = 1) {
+      const softness = Math.max(0, Math.min(1, Number(state.blur || 0) / 100));
+      const depth = Math.max(0, Math.min(1, Number(state.depth || 0)));
+      const spread = Math.max(0, Math.min(10, Number(state.spread || 0)));
+      const scale = Math.max(.01, Number(pixelScale || 1));
+
+      // Tres capas SIN hueco: una pegada al borde, una media y una nube posterior.
+      // La capa ancha puede ser profunda, pero siempre nace en el alfa original.
+      return [
+        { blur: (1.1 + softness * 3.9 + spread * .18) * scale, alpha: .92 },
+        { blur: (4.0 + softness * 6.6 + depth * 3.8 + spread * .38) * scale, alpha: .48 + depth * .18 },
+        { blur: (9.0 + softness * 11.0 + depth * 10.5 + spread * .72) * scale, alpha: .16 + depth * .24 }
+      ];
+    }
+
+    function buildAnchoredBacklightCanvas(sourceElement, color, state, targetWidth = null, targetHeight = null, pixelScale = 1) {
+      if (!sourceElement) return null;
+      const sourceWidth = Math.max(1, Math.round(targetWidth || sourceElement.naturalWidth || sourceElement.videoWidth || sourceElement.width || 1));
+      const sourceHeight = Math.max(1, Math.round(targetHeight || sourceElement.naturalHeight || sourceElement.videoHeight || sourceElement.height || 1));
+      const passes = backlightPassPlan(state, pixelScale);
+      const maxBlur = Math.max(...passes.map(pass => pass.blur));
+      const pad = Math.max(4, Math.ceil(maxBlur * 2.75 + 3 * pixelScale));
+
+      const mask = document.createElement("canvas");
+      mask.width = sourceWidth;
+      mask.height = sourceHeight;
+      const maskCtx = mask.getContext("2d");
+      maskCtx.clearRect(0, 0, sourceWidth, sourceHeight);
+      maskCtx.drawImage(sourceElement, 0, 0, sourceWidth, sourceHeight);
+      maskCtx.globalCompositeOperation = "source-in";
+      maskCtx.fillStyle = color;
+      maskCtx.fillRect(0, 0, sourceWidth, sourceHeight);
+      maskCtx.globalCompositeOperation = "source-over";
+
+      const halo = document.createElement("canvas");
+      halo.width = sourceWidth + pad * 2;
+      halo.height = sourceHeight + pad * 2;
+      const haloCtx = halo.getContext("2d");
+      haloCtx.clearRect(0, 0, halo.width, halo.height);
+
+      // Las pasadas se hornean una sola vez. La respiración posterior solo anima
+      // opacity/brightness del contenedor, mucho más liviano que re-blurear cada frame.
+      for (const pass of passes) {
+        haloCtx.save();
+        haloCtx.globalCompositeOperation = "source-over";
+        haloCtx.globalAlpha = Math.max(0, Math.min(1, pass.alpha));
+        haloCtx.filter = `blur(${Math.max(.1, pass.blur)}px)`;
+        haloCtx.drawImage(mask, pad, pad);
+        haloCtx.restore();
+      }
+
+      // Clave 4.2.5: perforamos el alfa ORIGINAL después del blur.
+      // Así no queda una copia morada encima/dentro del PNG: solo existe luz detrás.
+      haloCtx.save();
+      haloCtx.filter = "none";
+      haloCtx.globalAlpha = 1;
+      haloCtx.globalCompositeOperation = "destination-out";
+      haloCtx.drawImage(sourceElement, pad, pad, sourceWidth, sourceHeight);
+      haloCtx.restore();
+
+      halo.className = "backlight-halo-canvas";
+      halo.setAttribute("aria-hidden", "true");
+      return { canvas: halo, pad, width: sourceWidth, height: sourceHeight };
+    }
+
+    const backlightExportCache = new Map();
+
+    function getExportBacklightCanvas(layer, image, width, height, state) {
+      const w = Math.max(1, Math.round(Math.abs(width)));
+      const h = Math.max(1, Math.round(Math.abs(height)));
+      const key = [
+        layer.id, w, h, state.color, Math.round(state.blur),
+        Math.round(state.depth * 100), Math.round(state.spread * 10),
+        layer.removeBlack ? 1 : 0, Number(layer.threshold || 0), Number(layer.feather || 0),
+        layer.maskSrc ? String(layer.maskSrc).length : 0
+      ].join("|");
+      if (!backlightExportCache.has(key)) {
+        const built = buildAnchoredBacklightCanvas(image, state.color, state, w, h, 1);
+        if (built) backlightExportCache.set(key, built);
+      }
+      return backlightExportCache.get(key) || null;
+    }
+
     function createAuraLayer(layer, sourceElement = null) {
       const auraConfig = layer.aura || {};
       if (!auraConfig.enabled || layer.kind !== "image" || !layer.src) return null;
@@ -4341,6 +4468,10 @@
       aura.style.setProperty("--aura-color", color);
       aura.style.setProperty("--aura-min-opacity", state.minOpacity);
       aura.style.setProperty("--aura-max-opacity", state.maxOpacity);
+      aura.style.setProperty("--backlight-min-brightness", state.minBrightness);
+      aura.style.setProperty("--backlight-max-brightness", state.maxBrightness);
+      aura.style.setProperty("--backlight-min-saturation", 1.02);
+      aura.style.setProperty("--backlight-max-saturation", 1.20);
       const classicBlurPx = 3 + (blur / 100) * 45;
       aura.style.setProperty("--aura-blur", `${classicBlurPx}px`);
       aura.style.setProperty("--aura-speed", `${Math.max(.5, Number(auraConfig.speed ?? 5))}s`);
@@ -4350,37 +4481,24 @@
       aura.style.setProperty("--aura-focus-size", `${Math.max(5, Math.min(160, Number(auraConfig.focusSize ?? 36)))}%`);
 
       if (mode === "backlight") {
-        // 4.2.4: nada de cajas geométricas. Las tres pasadas usan exactamente
-        // el alfa del recurso mostrado, por lo que 0px significa pegado de verdad.
         const alphaSource = sourceElement;
         if (!alphaSource) return null;
-        const softness = blur / 100;
-        const expansion = Math.max(0, Math.min(10, spread));
-        const passes = [
-          {
-            blur: .8 + softness * 1.8 + expansion * .10,
-            opacity: .92
-          },
-          {
-            blur: 2.2 + softness * 3.6 + expansion * .18,
-            opacity: .52 + depth * .13
-          },
-          {
-            blur: 4.5 + softness * (4.8 + depth * 2.5) + expansion * .28,
-            opacity: .12 + depth * .20
-          }
-        ];
+        const sourceWidth = Math.max(1, alphaSource.naturalWidth || alphaSource.videoWidth || alphaSource.width || 1);
+        const sourceHeight = Math.max(1, alphaSource.naturalHeight || alphaSource.videoHeight || alphaSource.height || 1);
+        const logicalWidth = Math.max(1, Number(project.canvas?.logicalWidth || 960));
+        const pixelScale = sourceWidth / logicalWidth;
+        const built = buildAnchoredBacklightCanvas(alphaSource, color, state, sourceWidth, sourceHeight, pixelScale);
+        if (!built) return null;
 
-        for (const pass of passes) {
-          const alphaCanvas = paintAlphaTintCanvas(alphaSource, color);
-          if (!alphaCanvas) continue;
-          alphaCanvas.style.filter = `blur(${pass.blur}px)`;
-          alphaCanvas.style.opacity = String(Math.max(0, Math.min(1, pass.opacity)));
-          aura.appendChild(alphaCanvas);
-        }
+        // El canvas tiene padding real para que el blur no se recorte. Se alinea por
+        // porcentajes al PNG, por lo que sigue pegado aunque cambie escala/posición.
+        const haloCanvas = built.canvas;
+        haloCanvas.style.left = `${-(built.pad / built.width) * 100}%`;
+        haloCanvas.style.top = `${-(built.pad / built.height) * 100}%`;
+        haloCanvas.style.width = `${((built.width + built.pad * 2) / built.width) * 100}%`;
+        haloCanvas.style.height = `${((built.height + built.pad * 2) / built.height) * 100}%`;
+        aura.appendChild(haloCanvas);
 
-        // La intensidad global la controla la respiración del contenedor.
-        // No se usa inset negativo, border, box-shadow ni escala geométrica.
         aura.style.inset = "0";
         aura.style.border = "0";
         aura.style.borderRadius = "0";
@@ -4428,28 +4546,21 @@
       ctx.shadowOffsetY = 0;
 
       if (mode === "backlight") {
-        // 4.2.4: exportación basada en el alfa real de la imagen.
-        // Todas las pasadas se dibujan en EXACTAMENTE la misma posición/tamaño;
-        // el shadowBlur sale desde esos píxeles, sin roundedRect ni separación.
-        const softness = state.blur / 100;
-        const expansion = Math.max(0, Math.min(10, state.spread));
-        const passes = [
-          { blur: .8 + softness * 1.8 + expansion * .10, alpha: .78 },
-          { blur: 2.2 + softness * 3.6 + expansion * .18, alpha: .38 + state.depth * .10 },
-          { blur: 4.5 + softness * (4.8 + state.depth * 2.5) + expansion * .28, alpha: .08 + state.depth * .14 }
-        ];
-
-        for (const pass of passes) {
+        // 4.2.5: se dibuja exclusivamente un halo ya perforado por el alfa original.
+        // Nunca se vuelve a dibujar la imagen dentro del efecto, por lo que la luz
+        // queda realmente DETRÁS y la imagen final conserva sus colores intactos.
+        const built = getExportBacklightCanvas(layer, image, width, height, state);
+        if (built) {
           ctx.save();
           ctx.globalCompositeOperation = "screen";
-          ctx.globalAlpha *= Math.max(0, Math.min(1, pass.alpha));
-          ctx.shadowColor = hexToRgba(state.color, 1);
-          ctx.shadowBlur = pass.blur;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 0;
-          // drawImage usa la transparencia del PNG como máscara del shadow.
-          // La copia queda debajo de la imagen final que se dibuja justo después.
-          ctx.drawImage(image, -width / 2, -height / 2, width, height);
+          ctx.filter = `brightness(${state.brightness}) saturate(${1.02 + state.wave * .18})`;
+          ctx.drawImage(
+            built.canvas,
+            -width / 2 - built.pad,
+            -height / 2 - built.pad,
+            width + built.pad * 2,
+            height + built.pad * 2
+          );
           ctx.restore();
         }
       } else if (mode === "focus") {

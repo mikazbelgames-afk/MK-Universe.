@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.0.2 — Fire Mist + Layer Rename · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.0.3 — Fire Edge + Inline Rename · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -312,12 +312,47 @@
     }
 
     .layer-name {
+      flex: 1 1 auto;
+      min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       font-weight: 800;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+
+    .layer-name-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    .layer-rename-input {
+      display: none;
+      flex: 1 1 auto;
+      min-width: 110px;
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,143,209,.75);
+      background: rgba(13,9,20,.98);
+      color: #fff7fb;
+      font: inherit;
+      font-weight: 750;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(255,143,209,.14), 0 0 14px rgba(255,111,207,.14);
+    }
+
+    .layer-card.renaming .layer-name-text,
+    .layer-card.renaming .group-badge,
+    .layer-card.renaming .reflection-badge,
+    .layer-card.renaming .vfx-badge { display:none; }
+
+    .layer-card.renaming .layer-rename-input { display:block; }
 
     .control {
       margin-bottom: 13px;
@@ -1058,7 +1093,7 @@
     }
 
   
-    /* MK Universe 4.0.2 — Fire Mist + Layer Rename · editor pro */
+    /* MK Universe 4.0.3 — Fire Edge + Inline Rename · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1083,7 +1118,6 @@
     .dimension-card{font-size:12px;line-height:1.55}
     .dimension-card strong{color:var(--accent-2)}
     .fire-mist-canvas{position:absolute!important;z-index:1!important;pointer-events:none;mix-blend-mode:screen;overflow:visible;max-width:none!important;filter:saturate(1.08)}
-    .layer-rename-input{min-width:120px;max-width:230px;width:100%;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,143,209,.62);background:rgba(13,9,20,.94);color:#fff7fb;font:inherit;font-weight:750;outline:none;box-shadow:0 0 0 2px rgba(255,143,209,.10)}
     .flame-layer{position:absolute;inset:-10%;z-index:4;pointer-events:none;mix-blend-mode:screen}
     .neon-breathe{animation:mkNeonBreathe var(--neon-speed,4s) ease-in-out infinite}
     .neon-retro{animation:mkNeonRetro var(--neon-speed,3.2s) steps(1,end) infinite}
@@ -1103,7 +1137,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.0.2 · Fire Mist + Layer Rename 🌸</h1>
+    <h1>🌸 MK Universe 4.0.3 · Fire Edge + Inline Rename 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1464,9 +1498,9 @@
         </div>
 
         <div class="card" style="margin-top:14px">
-          <h3 style="margin-bottom:10px">🔥 Aura de llama / neblina</h3>
+          <h3 style="margin-bottom:10px">🔥 Fuego de contorno / neblina</h3>
           <div class="check-row"><input id="propFireEnabled" type="checkbox" /><label for="propFireEnabled">Activar aura animada</label></div>
-          <div class="hint">Emite neblina luminosa desde el contorno real de la imagen. Los tres colores se mezclan durante el movimiento.</div>
+          <div class="hint">Crea un borde incandescente y lenguas de fuego que nacen desde el contorno real. La neblina queda como capa secundaria. Los tres colores se mezclan durante el movimiento.</div>
           <div class="control"><label for="propFireIntensity">Intensidad <span id="propFireIntensityValue" class="value"></span></label><input id="propFireIntensity" type="range" min="1" max="100" step="1" /></div>
           <div class="control"><label for="propFireSpread">Expansión <span id="propFireSpreadValue" class="value"></span></label><input id="propFireSpread" type="range" min="10" max="100" step="1" /></div>
           <div class="control"><label for="propFireSoftness">Neblina <span id="propFireSoftnessValue" class="value"></span></label><input id="propFireSoftness" type="range" min="10" max="100" step="1" /></div>
@@ -1931,7 +1965,7 @@
     }
 
     const defaultProject = {
-      version: 4.02,
+      version: 4.03,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2183,85 +2217,152 @@
       const mctx=mask.getContext("2d",{willReadFrequently:true});
       mctx.drawImage(sourceElement,0,0,w,h);
       const img=mctx.getImageData(0,0,w,h),d=img.data;
-      // Convertimos a máscara alfa limpia para que el efecto nazca del contorno, no del rectángulo.
-      for(let i=0;i<d.length;i+=4){ const a=d[i+3]; d[i]=d[i+1]=d[i+2]=255; d[i+3]=a>18?255:0; }
+      for(let i=0;i<d.length;i+=4){const a=d[i+3];d[i]=d[i+1]=d[i+2]=255;d[i+3]=a>18?255:0;}
       mctx.putImageData(img,0,0);
       const data=mctx.getImageData(0,0,w,h).data;
-      const alpha=(x,y)=>{ if(x<0||x>=w||y<0||y>=h)return 0; return data[(y*w+x)*4+3]; };
-      const emitters=[]; let sumX=0,sumY=0,count=0;
-      for(let y=1;y<h-1;y+=2) for(let x=1;x<w-1;x+=2){ if(alpha(x,y)>40){sumX+=x;sumY+=y;count++;} }
+      const alpha=(x,y)=>{if(x<0||x>=w||y<0||y>=h)return 0;return data[(y*w+x)*4+3];};
+
+      // Máscara exclusiva del borde: permite un filo blanco-caliente sin rellenar la imagen.
+      const edgeMask=document.createElement("canvas"); edgeMask.width=w; edgeMask.height=h;
+      const ectx=edgeMask.getContext("2d");
+      const edgeImage=ectx.createImageData(w,h),ed=edgeImage.data;
+      let sumX=0,sumY=0,count=0;
+      for(let y=1;y<h-1;y++){
+        for(let x=1;x<w-1;x++){
+          if(alpha(x,y)<80) continue;
+          sumX+=x;sumY+=y;count++;
+          const edge=alpha(x-1,y)<40||alpha(x+1,y)<40||alpha(x,y-1)<40||alpha(x,y+1)<40;
+          if(edge){const k=(y*w+x)*4;ed[k]=ed[k+1]=ed[k+2]=255;ed[k+3]=255;}
+        }
+      }
+      ectx.putImageData(edgeImage,0,0);
       const cx=count?sumX/count:w/2,cy=count?sumY/count:h/2;
-      const step=Math.max(1,Math.round(Math.max(w,h)/260));
+      const emitters=[];
+      const step=Math.max(1,Math.round(Math.max(w,h)/300));
       for(let y=2;y<h-2;y+=step){
         for(let x=2;x<w-2;x+=step){
           if(alpha(x,y)<80) continue;
-          if(alpha(x-2,y)>20&&alpha(x+2,y)>20&&alpha(x,y-2)>20&&alpha(x,y+2)>20) continue;
-          // Gradiente alfa = normal aproximada del contorno. Si es casi cero usamos dirección radial.
-          let nx=(alpha(x-2,y)-alpha(x+2,y))/255, ny=(alpha(x,y-2)-alpha(x,y+2))/255;
+          const isEdge=alpha(x-2,y)<30||alpha(x+2,y)<30||alpha(x,y-2)<30||alpha(x,y+2)<30;
+          if(!isEdge) continue;
+          let nx=(alpha(x-2,y)-alpha(x+2,y))/255,ny=(alpha(x,y-2)-alpha(x,y+2))/255;
           let len=Math.hypot(nx,ny);
           if(len<.12){nx=(x-cx)/Math.max(1,w);ny=(y-cy)/Math.max(1,h);len=Math.hypot(nx,ny)||1;}
-          nx/=len; ny/=len;
-          // Un poco de tendencia hacia arriba para que se comporte como llama/neblina caliente.
-          ny=ny*.58-.42;
-          len=Math.hypot(nx,ny)||1; nx/=len; ny/=len;
+          nx/=len;ny/=len;
+          // El calor hace que las puntas busquen arriba, sin perder la normal del borde.
+          ny=ny*.68-.32;
+          len=Math.hypot(nx,ny)||1;nx/=len;ny/=len;
           emitters.push({x:x/w,y:y/h,nx,ny});
         }
       }
-      if(!emitters.length) emitters.push({x:.5,y:.5,nx:0,ny:-1});
-      return {mask,emitters,width:w,height:h};
+      if(!emitters.length)emitters.push({x:.5,y:.5,nx:0,ny:-1});
+      return {mask,edgeMask,emitters,width:w,height:h};
+    }
+
+    function drawFlameTongue(ctx,bx,by,dx,dy,width,colorA,colorB,alpha,seed){
+      const L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,tx=-uy,ty=ux;
+      const tipX=bx+dx,tipY=by+dy;
+      const wobble=Math.sin(seed*12.9898)*width*.42;
+      const midX=bx+dx*.52+tx*wobble,midY=by+dy*.52+ty*wobble;
+      const leftX=bx+tx*width,leftY=by+ty*width;
+      const rightX=bx-tx*width,rightY=by-ty*width;
+      const grad=ctx.createLinearGradient(bx,by,tipX,tipY);
+      grad.addColorStop(0,"rgba(255,250,225,"+Math.min(1,alpha*1.5)+")");
+      grad.addColorStop(.18,hexToRgba(colorA,Math.min(1,alpha*1.18)));
+      grad.addColorStop(.58,hexToRgba(colorB,alpha*.72));
+      grad.addColorStop(1,hexToRgba(colorB,0));
+      ctx.fillStyle=grad;
+      ctx.beginPath();
+      ctx.moveTo(leftX,leftY);
+      ctx.bezierCurveTo(bx+dx*.22+tx*width*.92,by+dy*.22+ty*width*.92,midX+tx*width*.34,midY+ty*width*.34,tipX,tipY);
+      ctx.bezierCurveTo(midX-tx*width*.36,midY-ty*width*.36,bx+dx*.18-tx*width*.82,by+dy*.18-ty*width*.82,rightX,rightY);
+      ctx.quadraticCurveTo(bx,by,leftX,leftY);
+      ctx.closePath();
+      ctx.fill();
     }
 
     function renderFireMistFrame(ctx,field,layer,seconds){
-      if(!field) return;
+      if(!field)return;
       const W=ctx.canvas.width,H=ctx.canvas.height,padX=(W-field.width)/2,padY=(H-field.height)/2;
       ctx.clearRect(0,0,W,H);
-      const colors=layer.fire?.colors||["#ff4fae","#8a63ff","#8feaff"];
-      const intensity=Math.max(.01,Math.min(1,Number(layer.fire?.intensity??45)/100));
+      const colors=layer.fire?.colors||["#ff6a1a","#ff2d55","#8a3cff"];
+      const intensity=Math.max(.01,Math.min(1,Number(layer.fire?.intensity??55)/100));
       const spread=Math.max(.10,Math.min(1,Number(layer.fire?.spread??58)/100));
-      const softness=Math.max(.10,Math.min(1,Number(layer.fire?.softness??72)/100));
+      const softness=Math.max(.10,Math.min(1,Number(layer.fire?.softness??58)/100));
       const speed=Math.max(.25,Number(layer.fire?.speed||4));
       const minDim=Math.min(field.width,field.height);
-      const particleCount=Math.round(34+intensity*86);
-      const baseTravel=minDim*(.055+.26*spread);
-      const cycleRate=.10+speed*.035;
+      const edge=field.edgeMask||field.mask;
 
-      // Halo de borde muy fino. Da continuidad entre la imagen y la neblina sin crear una mancha densa.
+      // 1) Borde encendido: blanco/caliente al centro + color corto alrededor.
       ctx.save();
       ctx.globalCompositeOperation="screen";
-      ctx.globalAlpha=.10+.14*intensity;
+      ctx.globalAlpha=.20+.28*intensity;
       ctx.shadowColor=colors[0];
-      ctx.shadowBlur=4+softness*10;
-      ctx.drawImage(field.mask,padX,padY);
+      ctx.shadowBlur=4+softness*9;
+      ctx.drawImage(edge,padX,padY);
+      ctx.shadowBlur=1.5+softness*2;
+      ctx.globalAlpha=.30+.42*intensity;
+      ctx.drawImage(edge,padX,padY);
       ctx.restore();
 
-      ctx.save(); ctx.globalCompositeOperation="screen";
-      for(let i=0;i<particleCount;i++){
-        const r0=seededNumber(layer.id,15000+i*13),r1=seededNumber(layer.id,15001+i*13),r2=seededNumber(layer.id,15002+i*13),r3=seededNumber(layer.id,15003+i*13),r4=seededNumber(layer.id,15004+i*13);
+      // 2) Lenguas de fuego. Nacen exactamente desde el contorno y se afinan al subir.
+      const tongueCount=Math.round(42+intensity*118);
+      const cycleRate=.16+speed*.055;
+      ctx.save();
+      ctx.globalCompositeOperation="screen";
+      for(let i=0;i<tongueCount;i++){
+        const b=17000+i*17;
+        const r0=seededNumber(layer.id,b),r1=seededNumber(layer.id,b+1),r2=seededNumber(layer.id,b+2),r3=seededNumber(layer.id,b+3),r4=seededNumber(layer.id,b+4),r5=seededNumber(layer.id,b+5);
         const e=field.emitters[Math.min(field.emitters.length-1,Math.floor(r0*field.emitters.length))];
-        const p=((seconds*cycleRate+r1)%1+1)%1;
-        const life=Math.pow(Math.sin(Math.PI*p),1.18);
-        if(life<=.002) continue;
+        const p=((seconds*cycleRate*(.78+r4*.62)+r1)%1+1)%1;
+        const envelope=Math.pow(Math.sin(Math.PI*p),.74);
+        if(envelope<.015)continue;
         const tangentX=-e.ny,tangentY=e.nx;
-        const travel=baseTravel*(.48+r2*.92)*p;
-        const wav=Math.sin(p*Math.PI*2*(1.0+r3*1.5)+r4*Math.PI*2)*minDim*(.008+.032*spread);
-        const lift=minDim*(.018+.105*spread)*p*(.35+r3*.85);
-        const x=padX+e.x*field.width+e.nx*travel+tangentX*wav;
-        const y=padY+e.y*field.height+e.ny*travel+tangentY*wav-lift;
-        const radius=minDim*(.012+.046*softness)*(.52+r4*.9)*(1-.34*p);
-        const color=colors[(i+Math.floor(r3*3))%colors.length]||colors[0];
-        const alpha=life*(.065+.31*intensity)*(.55+r2*.55);
+        const flameLen=minDim*(.035+.19*spread)*(.40+r2*1.05)*envelope;
+        const sideWave=Math.sin(p*Math.PI*2*(1.1+r3*1.9)+r5*Math.PI*2)*minDim*(.006+.025*spread);
+        const upwardBoost=minDim*(.018+.12*spread)*p*(.35+r4*.85);
+        const bx=padX+e.x*field.width+tangentX*sideWave*.15;
+        const by=padY+e.y*field.height+tangentY*sideWave*.15;
+        const dx=e.nx*flameLen+tangentX*sideWave;
+        const dy=e.ny*flameLen+tangentY*sideWave-upwardBoost;
+        const width=minDim*(.006+.020*intensity)*(.55+r3*.95)*(1-.30*p);
+        const colorA=colors[i%colors.length]||colors[0];
+        const colorB=colors[(i+1)%colors.length]||colorA;
+        const a=(.14+.48*intensity)*envelope*(.60+r2*.55);
+
+        // halo exterior de la lengua
         ctx.save();
-        ctx.translate(x,y);
-        ctx.rotate((r0-.5)*.55 + Math.sin(p*Math.PI*2+r2*6.28)*.12);
-        ctx.scale(.65+r1*.42,1.20+softness*.95+r3*.35);
-        const g=ctx.createRadialGradient(0,0,0,0,0,Math.max(2,radius));
-        g.addColorStop(0,hexToRgba(color,alpha*.82));
-        g.addColorStop(.28,hexToRgba(color,alpha*.52));
-        g.addColorStop(.66,hexToRgba(color,alpha*.18));
-        g.addColorStop(1,hexToRgba(color,0));
-        ctx.fillStyle=g;
-        ctx.beginPath();ctx.arc(0,0,Math.max(2,radius),0,Math.PI*2);ctx.fill();
+        ctx.shadowColor=colorA;
+        ctx.shadowBlur=3+softness*10;
+        ctx.globalAlpha=.46+.28*softness;
+        drawFlameTongue(ctx,bx,by,dx,dy,width*1.35,colorA,colorB,a*.55,r5);
         ctx.restore();
+        // cuerpo de llama más definido
+        ctx.save();
+        ctx.shadowColor=colorA;
+        ctx.shadowBlur=1.5+softness*3;
+        drawFlameTongue(ctx,bx,by,dx*.92,dy*.92,width*.78,"#fff0c9",colorA,a,r0+r3);
+        ctx.restore();
+      }
+      ctx.restore();
+
+      // 3) Neblina caliente secundaria, mucho más sutil que antes.
+      const mistCount=Math.round(10+softness*26);
+      ctx.save();ctx.globalCompositeOperation="screen";
+      for(let i=0;i<mistCount;i++){
+        const b=23000+i*11;
+        const r0=seededNumber(layer.id,b),r1=seededNumber(layer.id,b+1),r2=seededNumber(layer.id,b+2),r3=seededNumber(layer.id,b+3);
+        const e=field.emitters[Math.min(field.emitters.length-1,Math.floor(r0*field.emitters.length))];
+        const p=((seconds*(.08+speed*.018)+r1)%1+1)%1;
+        const life=Math.sin(Math.PI*p);if(life<=0)continue;
+        const drift=minDim*(.04+.12*spread)*p;
+        const x=padX+e.x*field.width+e.nx*drift+Math.sin(p*7+r2*6.28)*minDim*.018;
+        const y=padY+e.y*field.height+e.ny*drift-minDim*.08*p;
+        const rad=minDim*(.018+.050*softness)*(.55+r3*.75);
+        const col=colors[(i+2)%colors.length]||colors[0];
+        const a=life*(.025+.10*softness)*intensity;
+        const g=ctx.createRadialGradient(x,y,0,x,y,rad);
+        g.addColorStop(0,hexToRgba(col,a));g.addColorStop(.55,hexToRgba(col,a*.35));g.addColorStop(1,hexToRgba(col,0));
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();
       }
       ctx.restore();
     }
@@ -2926,7 +3027,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.02,
+        version: 4.03,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2963,7 +3064,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 4.02;
+      project.version = 4.03;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -4126,7 +4227,7 @@
 
         card.innerHTML = `
           <div class="layer-title">
-            <span class="layer-name" title="${escapeHtml(layer.name)}"><input class="group-select" type="checkbox" ${groupSelection.has(layer.id)?"checked":""} /> <span class="layer-name-text">${escapeHtml(layer.name)}</span>${layer.kind==="group"?'<span class="group-badge">grupo</span>':layer.parentId?'<span class="group-badge">hijo</span>':""}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion","shootingStars"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
+            <span class="layer-name" title="${escapeHtml(layer.name)}"><input class="group-select" type="checkbox" ${groupSelection.has(layer.id)?"checked":""} /> <span class="layer-name-text">${escapeHtml(layer.name)}</span><input class="layer-rename-input" type="text" value="${escapeHtml(layer.name)}" aria-label="Nuevo nombre de capa" />${layer.kind==="group"?'<span class="group-badge">grupo</span>':layer.parentId?'<span class="group-badge">hijo</span>':""}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion","shootingStars"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
             <div class="row">
               <button class="btn btn-mini rename-layer" type="button" title="Renombrar capa">✏️</button>
               <button class="btn btn-mini move-up" type="button" title="Adelante">▲</button>
@@ -4157,28 +4258,28 @@
           if (!event.target.closest("button, .group-select, .layer-rename-input")) selectLayer(layer.id);
         });
 
+        const renameInput = card.querySelector(".layer-rename-input");
+        ["pointerdown","mousedown","click"].forEach(type=>renameInput.addEventListener(type,e=>e.stopPropagation()));
+        let renameFinished=false;
         const beginRename = () => {
-          const textNode = card.querySelector(".layer-name-text");
-          if (!textNode) return;
-          const input = document.createElement("input");
-          input.className = "layer-rename-input";
-          input.value = layer.name || "Capa";
-          textNode.replaceWith(input);
-          input.focus(); input.select();
-          let finished=false;
-          const finish=(commit=true)=>{
-            if(finished)return; finished=true;
-            if(commit){ const next=input.value.trim(); if(next) layer.name=next; }
-            renderLayersList(); renderInspector(); saveProject();
-          };
-          ["pointerdown","mousedown","click"].forEach(type=>input.addEventListener(type,e=>e.stopPropagation()));
-          input.addEventListener("keydown",e=>{
-            e.stopPropagation();
-            if(e.key==="Enter"){e.preventDefault();finish(true);}
-            else if(e.key==="Escape"){e.preventDefault();finish(false);}
-          });
-          input.addEventListener("blur",()=>finish(true),{once:true});
+          renameFinished=false;
+          card.classList.add("renaming");
+          renameInput.value=layer.name||"Capa";
+          requestAnimationFrame(()=>{renameInput.focus();renameInput.select();});
         };
+        const finishRename=(commit=true)=>{
+          if(renameFinished||!card.classList.contains("renaming"))return;
+          renameFinished=true;
+          if(commit){const next=renameInput.value.trim();if(next)layer.name=next;}
+          card.classList.remove("renaming");
+          renderLayersList();renderInspector();saveProject();
+        };
+        renameInput.addEventListener("keydown",e=>{
+          e.stopPropagation();
+          if(e.key==="Enter"){e.preventDefault();finishRename(true);}
+          else if(e.key==="Escape"){e.preventDefault();finishRename(false);}
+        });
+        renameInput.addEventListener("blur",()=>finishRename(true));
         card.querySelector(".rename-layer").addEventListener("click", e => { e.stopPropagation(); beginRename(); });
         card.querySelector(".layer-name-text")?.addEventListener("dblclick", e => { e.stopPropagation(); beginRename(); });
 

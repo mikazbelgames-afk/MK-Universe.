@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.0.3 — Fire Edge + Inline Rename · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.0.4 — Flame Flow + UI Polish · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1093,7 +1093,7 @@
     }
 
   
-    /* MK Universe 4.0.3 — Fire Edge + Inline Rename · editor pro */
+    /* MK Universe 4.0.4 — Flame Flow + UI Polish · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1132,12 +1132,29 @@
       12%,13%,70%,71%{opacity:.32}
     }
 
+
+    /* 4.0.4 · limpieza de interfaz */
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.025));border:1px solid rgba(255,211,232,.16);border-radius:14px;padding:13px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+    .card + .card{margin-top:12px}
+    .tabs{position:sticky;top:-16px;z-index:90;padding:8px 0 10px;background:linear-gradient(180deg,rgba(27,19,35,.99) 72%,rgba(27,19,35,0));backdrop-filter:blur(8px)}
+    .tabs .tab{flex:1;font-size:12px;padding:8px 7px}
+    .tabs .tab.active{background:linear-gradient(135deg,rgba(255,155,207,.22),rgba(182,141,255,.16));border-color:rgba(255,180,220,.35);box-shadow:0 0 18px rgba(255,120,200,.08)}
+    .layer-visibility-bar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
+    .layer-visibility-bar .btn{width:100%;justify-content:center;background:rgba(255,255,255,.055)}
+    .layer-visibility-bar .btn:hover{border-color:rgba(255,190,225,.35)}
+    .fx-card{position:relative;overflow:hidden}
+    .fx-card:before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:linear-gradient(90deg,transparent,rgba(255,155,207,.75),rgba(182,141,255,.55),transparent);opacity:.8}
+    .fx-subtitle{margin:4px 0 10px;color:var(--muted);font-size:12px;line-height:1.45}
+    .effect-palette-grid{margin-top:8px}
+    .control select,.control input[type="text"]{background:rgba(255,255,255,.055)}
+    .fire-mode-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
   </style>
 </head>
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.0.3 · Fire Edge + Inline Rename 🌸</h1>
+    <h1>🌸 MK Universe 4.0.4 · Flame Flow + UI Polish 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1220,10 +1237,9 @@
     <section class="card">
       <h3>Capas</h3>
       <p class="notice">Arrastra una capa para reordenarla o usa las flechas.</p>
-      <div class="row-wrap" style="margin:10px 0 12px">
-        <button id="toggleAllVisibilityBtn" class="btn" type="button">👁️ Ojo maestro</button>
-        <button id="showAllBtn" class="btn btn-mini" type="button">✨ Mostrar</button>
-        <button id="hideAllBtn" class="btn btn-mini" type="button">🙈 Ocultar</button>
+      <div class="layer-visibility-bar">
+        <button id="showAllBtn" class="btn" type="button">👁 Mostrar</button>
+        <button id="hideAllBtn" class="btn" type="button">🙈 Ocultar</button>
       </div>
       <div id="layersList"></div>
     </section>
@@ -1497,23 +1513,32 @@
           <div class="control"><label for="propShadowOpacity">Opacidad <span id="propShadowOpacityValue" class="value"></span></label><input id="propShadowOpacity" type="range" min="0" max="100" step="1" /></div>
         </div>
 
-        <div class="card" style="margin-top:14px">
-          <h3 style="margin-bottom:10px">🔥 Fuego de contorno / neblina</h3>
-          <div class="check-row"><input id="propFireEnabled" type="checkbox" /><label for="propFireEnabled">Activar aura animada</label></div>
-          <div class="hint">Crea un borde incandescente y lenguas de fuego que nacen desde el contorno real. La neblina queda como capa secundaria. Los tres colores se mezclan durante el movimiento.</div>
+        <div class="card fx-card" style="margin-top:14px">
+          <h3 style="margin-bottom:4px">🔥 Fuego / aura viva</h3>
+          <div class="fx-subtitle">Llamas fluidas pegadas al contorno, con opción de neblina luminosa. El mismo motor se usa al exportar.</div>
+          <div class="check-row"><input id="propFireEnabled" type="checkbox" /><label for="propFireEnabled">Activar efecto</label></div>
+          <div class="control"><label for="propFireMode">Estilo</label>
+            <select id="propFireMode">
+              <option value="flame">Llamas definidas</option>
+              <option value="hybrid">Llamas + neblina</option>
+              <option value="mist">Aura con neblina</option>
+            </select>
+          </div>
           <div class="control"><label for="propFireIntensity">Intensidad <span id="propFireIntensityValue" class="value"></span></label><input id="propFireIntensity" type="range" min="1" max="100" step="1" /></div>
-          <div class="control"><label for="propFireSpread">Expansión <span id="propFireSpreadValue" class="value"></span></label><input id="propFireSpread" type="range" min="10" max="100" step="1" /></div>
-          <div class="control"><label for="propFireSoftness">Neblina <span id="propFireSoftnessValue" class="value"></span></label><input id="propFireSoftness" type="range" min="10" max="100" step="1" /></div>
+          <div class="control"><label for="propFireSpread">Altura / expansión <span id="propFireSpreadValue" class="value"></span></label><input id="propFireSpread" type="range" min="10" max="100" step="1" /></div>
+          <div class="control"><label for="propFireTurbulence">Movimiento de llama <span id="propFireTurbulenceValue" class="value"></span></label><input id="propFireTurbulence" type="range" min="0" max="100" step="1" /></div>
+          <div class="control"><label for="propFireSoftness">Neblina / suavidad <span id="propFireSoftnessValue" class="value"></span></label><input id="propFireSoftness" type="range" min="0" max="100" step="1" /></div>
           <div class="control"><label for="propFireSpeed">Velocidad <span id="propFireSpeedValue" class="value"></span></label><input id="propFireSpeed" type="range" min="1" max="12" step=".25" /></div>
           <div class="effect-palette-grid">
-            <label class="effect-color-box"><span>Color 1</span><input id="propFireColor1" type="color" /></label>
-            <label class="effect-color-box"><span>Color 2</span><input id="propFireColor2" type="color" /></label>
-            <label class="effect-color-box"><span>Color 3</span><input id="propFireColor3" type="color" /></label>
+            <label class="effect-color-box"><span>Núcleo</span><input id="propFireColor1" type="color" /></label>
+            <label class="effect-color-box"><span>Llama</span><input id="propFireColor2" type="color" /></label>
+            <label class="effect-color-box"><span>Halo</span><input id="propFireColor3" type="color" /></label>
           </div>
         </div>
 
-        <div class="card" style="margin-top:14px">
-          <h3 style="margin-bottom:10px">💡 Neón animado</h3>
+        <div class="card fx-card" style="margin-top:14px">
+          <h3 style="margin-bottom:4px">💡 Neón animado</h3>
+          <div class="fx-subtitle">Contorno luminoso, respiración y recorrido de luz.</div>
           <div class="control"><label for="propNeonMode">Animación</label>
             <select id="propNeonMode"><option value="none">Sin animación</option><option value="breathe">Respiración suave (imagen completa)</option><option value="retro">Cartel retro que palpita (imagen completa)</option><option value="outlineBreathe">Neón alrededor · respiración suave</option><option value="outlineRetro">Neón alrededor · retro</option><option value="outlineChase">Neón alrededor · viaje luminoso</option></select></div>
           <div class="control"><label for="propNeonSpeed">Velocidad <span id="propNeonSpeedValue" class="value"></span></label><input id="propNeonSpeed" type="range" min="1" max="12" step=".25" /></div>
@@ -1965,7 +1990,7 @@
     }
 
     const defaultProject = {
-      version: 4.03,
+      version: 4.04,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2258,110 +2283,141 @@
       return {mask,edgeMask,emitters,width:w,height:h};
     }
 
-    function drawFlameTongue(ctx,bx,by,dx,dy,width,colorA,colorB,alpha,seed){
-      const L=Math.hypot(dx,dy)||1,ux=dx/L,uy=dy/L,tx=-uy,ty=ux;
-      const tipX=bx+dx,tipY=by+dy;
-      const wobble=Math.sin(seed*12.9898)*width*.42;
-      const midX=bx+dx*.52+tx*wobble,midY=by+dy*.52+ty*wobble;
-      const leftX=bx+tx*width,leftY=by+ty*width;
-      const rightX=bx-tx*width,rightY=by-ty*width;
-      const grad=ctx.createLinearGradient(bx,by,tipX,tipY);
-      grad.addColorStop(0,"rgba(255,250,225,"+Math.min(1,alpha*1.5)+")");
-      grad.addColorStop(.18,hexToRgba(colorA,Math.min(1,alpha*1.18)));
-      grad.addColorStop(.58,hexToRgba(colorB,alpha*.72));
+    function drawFlameRibbon(ctx,bx,by,nx,ny,length,width,colorA,colorB,alpha,phase,turbulence){
+      const tx=-ny,ty=nx;
+      const segments=8;
+      const left=[],right=[],center=[];
+      for(let j=0;j<=segments;j++){
+        const u=j/segments;
+        const taper=Math.pow(1-u,.72);
+        const bend1=Math.sin(phase+u*5.8)*width*(.48+turbulence*.72)*u;
+        const bend2=Math.sin(phase*1.73+u*10.4)*width*(.15+turbulence*.32)*u*u;
+        const lift=length*u;
+        const cx=bx+nx*lift+tx*(bend1+bend2);
+        const cy=by+ny*lift+ty*(bend1+bend2)-length*.10*u*u;
+        const localW=Math.max(.25,width*taper*(1-.08*Math.sin(phase+u*9)));
+        left.push([cx+tx*localW,cy+ty*localW]);
+        right.push([cx-tx*localW,cy-ty*localW]);
+        center.push([cx,cy]);
+      }
+      const tip=center[center.length-1];
+      const grad=ctx.createLinearGradient(bx,by,tip[0],tip[1]);
+      grad.addColorStop(0,hexToRgba(colorA,Math.min(1,alpha*1.15)));
+      grad.addColorStop(.34,hexToRgba(colorB,alpha*.96));
+      grad.addColorStop(.78,hexToRgba(colorB,alpha*.42));
       grad.addColorStop(1,hexToRgba(colorB,0));
       ctx.fillStyle=grad;
       ctx.beginPath();
-      ctx.moveTo(leftX,leftY);
-      ctx.bezierCurveTo(bx+dx*.22+tx*width*.92,by+dy*.22+ty*width*.92,midX+tx*width*.34,midY+ty*width*.34,tipX,tipY);
-      ctx.bezierCurveTo(midX-tx*width*.36,midY-ty*width*.36,bx+dx*.18-tx*width*.82,by+dy*.18-ty*width*.82,rightX,rightY);
-      ctx.quadraticCurveTo(bx,by,leftX,leftY);
-      ctx.closePath();
-      ctx.fill();
+      ctx.moveTo(left[0][0],left[0][1]);
+      for(let j=1;j<left.length;j++)ctx.lineTo(left[j][0],left[j][1]);
+      for(let j=right.length-1;j>=0;j--)ctx.lineTo(right[j][0],right[j][1]);
+      ctx.closePath();ctx.fill();
+      return center;
     }
 
     function renderFireMistFrame(ctx,field,layer,seconds){
       if(!field)return;
       const W=ctx.canvas.width,H=ctx.canvas.height,padX=(W-field.width)/2,padY=(H-field.height)/2;
       ctx.clearRect(0,0,W,H);
-      const colors=layer.fire?.colors||["#ff6a1a","#ff2d55","#8a3cff"];
-      const intensity=Math.max(.01,Math.min(1,Number(layer.fire?.intensity??55)/100));
-      const spread=Math.max(.10,Math.min(1,Number(layer.fire?.spread??58)/100));
-      const softness=Math.max(.10,Math.min(1,Number(layer.fire?.softness??58)/100));
-      const speed=Math.max(.25,Number(layer.fire?.speed||4));
+      const fire=layer.fire||{};
+      const mode=fire.mode||"hybrid";
+      const colors=fire.colors||["#fff1c7","#ff4fae","#8a63ff"];
+      const coreColor=colors[0]||"#fff1c7",flameColor=colors[1]||"#ff4fae",haloColor=colors[2]||"#8a63ff";
+      const intensity=Math.max(.01,Math.min(1,Number(fire.intensity??52)/100));
+      const spread=Math.max(.10,Math.min(1,Number(fire.spread??62)/100));
+      const turbulence=Math.max(0,Math.min(1,Number(fire.turbulence??68)/100));
+      const softness=Math.max(0,Math.min(1,Number(fire.softness??48)/100));
+      const speed=Math.max(.25,Number(fire.speed||4));
       const minDim=Math.min(field.width,field.height);
       const edge=field.edgeMask||field.mask;
+      const flameWeight=mode==="mist"?.18:1;
+      const mistWeight=mode==="flame"?.16:mode==="mist"?1:.48;
 
-      // 1) Borde encendido: blanco/caliente al centro + color corto alrededor.
+      // Filo vivo: da continuidad visual para que las llamas realmente nazcan de la silueta.
       ctx.save();
       ctx.globalCompositeOperation="screen";
-      ctx.globalAlpha=.20+.28*intensity;
-      ctx.shadowColor=colors[0];
-      ctx.shadowBlur=4+softness*9;
-      ctx.drawImage(edge,padX,padY);
-      ctx.shadowBlur=1.5+softness*2;
-      ctx.globalAlpha=.30+.42*intensity;
-      ctx.drawImage(edge,padX,padY);
+      ctx.globalAlpha=(.16+.24*intensity)*flameWeight;
+      ctx.shadowColor=haloColor;ctx.shadowBlur=5+softness*10;ctx.drawImage(edge,padX,padY);
+      ctx.globalAlpha=(.30+.40*intensity)*flameWeight;
+      ctx.shadowColor=flameColor;ctx.shadowBlur=1.5+softness*3.5;ctx.drawImage(edge,padX,padY);
       ctx.restore();
 
-      // 2) Lenguas de fuego. Nacen exactamente desde el contorno y se afinan al subir.
-      const tongueCount=Math.round(42+intensity*118);
-      const cycleRate=.16+speed*.055;
-      ctx.save();
-      ctx.globalCompositeOperation="screen";
-      for(let i=0;i<tongueCount;i++){
-        const b=17000+i*17;
-        const r0=seededNumber(layer.id,b),r1=seededNumber(layer.id,b+1),r2=seededNumber(layer.id,b+2),r3=seededNumber(layer.id,b+3),r4=seededNumber(layer.id,b+4),r5=seededNumber(layer.id,b+5);
-        const e=field.emitters[Math.min(field.emitters.length-1,Math.floor(r0*field.emitters.length))];
-        const p=((seconds*cycleRate*(.78+r4*.62)+r1)%1+1)%1;
-        const envelope=Math.pow(Math.sin(Math.PI*p),.74);
-        if(envelope<.015)continue;
-        const tangentX=-e.ny,tangentY=e.nx;
-        const flameLen=minDim*(.035+.19*spread)*(.40+r2*1.05)*envelope;
-        const sideWave=Math.sin(p*Math.PI*2*(1.1+r3*1.9)+r5*Math.PI*2)*minDim*(.006+.025*spread);
-        const upwardBoost=minDim*(.018+.12*spread)*p*(.35+r4*.85);
-        const bx=padX+e.x*field.width+tangentX*sideWave*.15;
-        const by=padY+e.y*field.height+tangentY*sideWave*.15;
-        const dx=e.nx*flameLen+tangentX*sideWave;
-        const dy=e.ny*flameLen+tangentY*sideWave-upwardBoost;
-        const width=minDim*(.006+.020*intensity)*(.55+r3*.95)*(1-.30*p);
-        const colorA=colors[i%colors.length]||colors[0];
-        const colorB=colors[(i+1)%colors.length]||colorA;
-        const a=(.14+.48*intensity)*envelope*(.60+r2*.55);
-
-        // halo exterior de la lengua
-        ctx.save();
-        ctx.shadowColor=colorA;
-        ctx.shadowBlur=3+softness*10;
-        ctx.globalAlpha=.46+.28*softness;
-        drawFlameTongue(ctx,bx,by,dx,dy,width*1.35,colorA,colorB,a*.55,r5);
-        ctx.restore();
-        // cuerpo de llama más definido
-        ctx.save();
-        ctx.shadowColor=colorA;
-        ctx.shadowBlur=1.5+softness*3;
-        drawFlameTongue(ctx,bx,by,dx*.92,dy*.92,width*.78,"#fff0c9",colorA,a,r0+r3);
+      if(flameWeight>.2){
+        // Llamas fluidas: cintas afiladas con dos frecuencias de turbulencia y núcleo interno.
+        const tongueCount=Math.round((34+intensity*104)*flameWeight);
+        const rate=.20+speed*.070;
+        ctx.save();ctx.globalCompositeOperation="screen";
+        for(let i=0;i<tongueCount;i++){
+          const b=31000+i*23;
+          const r0=seededNumber(layer.id,b),r1=seededNumber(layer.id,b+1),r2=seededNumber(layer.id,b+2),r3=seededNumber(layer.id,b+3),r4=seededNumber(layer.id,b+4),r5=seededNumber(layer.id,b+5),r6=seededNumber(layer.id,b+6);
+          const e=field.emitters[Math.min(field.emitters.length-1,Math.floor(r0*field.emitters.length))];
+          const life=((seconds*rate*(.70+r4*.85)+r1)%1+1)%1;
+          const envelope=Math.pow(Math.sin(Math.PI*life),.58);
+          if(envelope<.025)continue;
+          const tx=-e.ny,ty=e.nx;
+          const baseSlip=(r5-.5)*minDim*.018;
+          const bx=padX+e.x*field.width+tx*baseSlip;
+          const by=padY+e.y*field.height+ty*baseSlip;
+          const upward=.20+.80*spread;
+          let nx=e.nx*(.76-.18*life);
+          let ny=e.ny*(.76-.18*life)-upward*(.28+.28*life);
+          let nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
+          const length=minDim*(.030+.215*spread)*(.44+r2*1.22)*envelope;
+          const width=minDim*(.0045+.0145*intensity)*(.55+r3*1.08)*(1-.26*life);
+          const phase=seconds*(1.5+speed*.28)+r6*Math.PI*2+i*.47;
+          ctx.save();
+          ctx.shadowColor=haloColor;ctx.shadowBlur=4+softness*11;
+          ctx.globalAlpha=.58+.24*softness;
+          drawFlameRibbon(ctx,bx,by,nx,ny,length,width*1.38,flameColor,haloColor,(.16+.48*intensity)*envelope,phase,turbulence);
+          ctx.restore();
+          // núcleo caliente, más corto y delgado: crea aspecto de llama en vez de simple aura.
+          ctx.save();
+          ctx.shadowColor=flameColor;ctx.shadowBlur=1.5+softness*3;
+          ctx.globalAlpha=.92;
+          drawFlameRibbon(ctx,bx,by,nx,ny,length*(.56+.16*r5),width*.47,coreColor,flameColor,(.26+.58*intensity)*envelope,phase+.55,turbulence*.72);
+          ctx.restore();
+        }
         ctx.restore();
       }
-      ctx.restore();
 
-      // 3) Neblina caliente secundaria, mucho más sutil que antes.
-      const mistCount=Math.round(10+softness*26);
+      // Filamentos finos y rápidos: rompen la regularidad de las lenguas grandes.
+      if(mode!=="mist"){
+        const filamentCount=Math.round(12+intensity*34);
+        ctx.save();ctx.globalCompositeOperation="screen";
+        for(let i=0;i<filamentCount;i++){
+          const b=39000+i*13;
+          const r0=seededNumber(layer.id,b),r1=seededNumber(layer.id,b+1),r2=seededNumber(layer.id,b+2),r3=seededNumber(layer.id,b+3);
+          const e=field.emitters[Math.min(field.emitters.length-1,Math.floor(r0*field.emitters.length))];
+          const p=((seconds*(.31+speed*.085)+r1)%1+1)%1;
+          const a=Math.pow(Math.sin(Math.PI*p),1.2);if(a<.04)continue;
+          let nx=e.nx*.62,ny=e.ny*.62-.48;let nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
+          const len=minDim*(.05+.22*spread)*(.55+r2*.9)*a;
+          const bx=padX+e.x*field.width,by=padY+e.y*field.height;
+          ctx.globalAlpha=.42+.38*intensity;
+          drawFlameRibbon(ctx,bx,by,nx,ny,len,minDim*(.0025+.004*intensity),coreColor,flameColor,.72*a,seconds*3+r3*8,turbulence*.9);
+        }
+        ctx.restore();
+      }
+
+      // Neblina coloreada: útil sola o como colchón detrás de la llama.
+      const mistCount=Math.round((12+softness*40)*mistWeight);
       ctx.save();ctx.globalCompositeOperation="screen";
       for(let i=0;i<mistCount;i++){
-        const b=23000+i*11;
-        const r0=seededNumber(layer.id,b),r1=seededNumber(layer.id,b+1),r2=seededNumber(layer.id,b+2),r3=seededNumber(layer.id,b+3);
+        const b=45000+i*17;
+        const r0=seededNumber(layer.id,b),r1=seededNumber(layer.id,b+1),r2=seededNumber(layer.id,b+2),r3=seededNumber(layer.id,b+3),r4=seededNumber(layer.id,b+4);
         const e=field.emitters[Math.min(field.emitters.length-1,Math.floor(r0*field.emitters.length))];
-        const p=((seconds*(.08+speed*.018)+r1)%1+1)%1;
-        const life=Math.sin(Math.PI*p);if(life<=0)continue;
-        const drift=minDim*(.04+.12*spread)*p;
-        const x=padX+e.x*field.width+e.nx*drift+Math.sin(p*7+r2*6.28)*minDim*.018;
-        const y=padY+e.y*field.height+e.ny*drift-minDim*.08*p;
-        const rad=minDim*(.018+.050*softness)*(.55+r3*.75);
-        const col=colors[(i+2)%colors.length]||colors[0];
-        const a=life*(.025+.10*softness)*intensity;
+        const p=((seconds*(.055+speed*.016)+r1)%1+1)%1;
+        const life=Math.pow(Math.sin(Math.PI*p),.72);if(life<=.01)continue;
+        const tangentX=-e.ny,tangentY=e.nx;
+        const drift=minDim*(.035+.16*spread)*p;
+        const curl=Math.sin(p*8+r4*6.28)*minDim*(.008+.025*turbulence);
+        const x=padX+e.x*field.width+e.nx*drift+tangentX*curl;
+        const y=padY+e.y*field.height+e.ny*drift+tangentY*curl-minDim*(.035+.075*spread)*p;
+        const rad=minDim*(.018+.060*softness)*(.55+r3*.85);
+        const a=life*(.035+.15*softness)*intensity*mistWeight;
+        const col=r2>.48?haloColor:flameColor;
         const g=ctx.createRadialGradient(x,y,0,x,y,rad);
-        g.addColorStop(0,hexToRgba(col,a));g.addColorStop(.55,hexToRgba(col,a*.35));g.addColorStop(1,hexToRgba(col,0));
+        g.addColorStop(0,hexToRgba(col,a));g.addColorStop(.48,hexToRgba(col,a*.42));g.addColorStop(1,hexToRgba(col,0));
         ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fill();
       }
       ctx.restore();
@@ -2370,7 +2426,7 @@
     function createFireMistCanvas(layer,sourceElement){
       if(!layer.fire?.enabled||layer.kind!=="image"||!layer.src) return null;
       const field=buildFireField(sourceElement,420);
-      const padX=Math.round(field.width*.20),padY=Math.round(field.height*.22);
+      const padX=Math.round(field.width*.30),padY=Math.round(field.height*.34);
       const canvas=document.createElement("canvas");
       canvas.className="fire-mist-canvas";
       canvas.width=field.width+padX*2; canvas.height=field.height+padY*2;
@@ -2835,8 +2891,10 @@
       shadowY: document.getElementById("propShadowY"),
       shadowOpacity: document.getElementById("propShadowOpacity"),
       fireEnabled: document.getElementById("propFireEnabled"),
+      fireMode: document.getElementById("propFireMode"),
       fireIntensity: document.getElementById("propFireIntensity"),
       fireSpread: document.getElementById("propFireSpread"),
+      fireTurbulence: document.getElementById("propFireTurbulence"),
       fireSoftness: document.getElementById("propFireSoftness"),
       fireSpeed: document.getElementById("propFireSpeed"),
       fireColor1: document.getElementById("propFireColor1"),
@@ -2930,7 +2988,7 @@
         intrinsicWidth: 0,
         intrinsicHeight: 0,
         shadow: { enabled:false, color:"#000000", blur:18, x:0, y:12, opacity:45 },
-        fire: { enabled:false, intensity:45, spread:58, softness:72, speed:4, colors:["#ff4fae","#8a63ff","#8feaff"] },
+        fire: { enabled:false, mode:"hybrid", intensity:52, spread:62, turbulence:68, softness:48, speed:4, colors:["#fff1c7","#ff4fae","#8a63ff"] },
         neon: { mode:"none", speed:4 },
         reflection: {
           enabled: false,
@@ -2979,9 +3037,9 @@
           ...(overrides.shadow || {})
         },
         fire: {
-          enabled:false, intensity:45, spread:58, softness:72, speed:4, colors:["#ff4fae","#8a63ff","#8feaff"],
+          enabled:false, mode:"hybrid", intensity:52, spread:62, turbulence:68, softness:48, speed:4, colors:["#fff1c7","#ff4fae","#8a63ff"],
           ...(overrides.fire || {}),
-          colors:Array.isArray(overrides.fire?.colors)?overrides.fire.colors.slice(0,3):["#ff4fae","#8a63ff","#8feaff"]
+          colors:Array.isArray(overrides.fire?.colors)?overrides.fire.colors.slice(0,3):["#fff1c7","#ff4fae","#8a63ff"]
         },
         neon: {
           mode:"none", speed:4,
@@ -3027,7 +3085,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.03,
+        version: 4.04,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -3064,7 +3122,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 4.03;
+      project.version = 4.04;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -4442,13 +4500,15 @@
       controls.shadowY.value=layer.shadow?.y??12;
       controls.shadowOpacity.value=layer.shadow?.opacity??45;
       controls.fireEnabled.checked=Boolean(layer.fire?.enabled);
-      controls.fireIntensity.value=layer.fire?.intensity??45;
-      controls.fireSpread.value=layer.fire?.spread??58;
-      controls.fireSoftness.value=layer.fire?.softness??72;
+      controls.fireMode.value=layer.fire?.mode||"hybrid";
+      controls.fireIntensity.value=layer.fire?.intensity??52;
+      controls.fireSpread.value=layer.fire?.spread??62;
+      controls.fireTurbulence.value=layer.fire?.turbulence??68;
+      controls.fireSoftness.value=layer.fire?.softness??48;
       controls.fireSpeed.value=layer.fire?.speed??4;
-      controls.fireColor1.value=layer.fire?.colors?.[0]||"#ff4fae";
-      controls.fireColor2.value=layer.fire?.colors?.[1]||"#8a63ff";
-      controls.fireColor3.value=layer.fire?.colors?.[2]||"#8feaff";
+      controls.fireColor1.value=layer.fire?.colors?.[0]||"#fff1c7";
+      controls.fireColor2.value=layer.fire?.colors?.[1]||"#ff4fae";
+      controls.fireColor3.value=layer.fire?.colors?.[2]||"#8a63ff";
       const fireColorDisabled = layer.kind !== "image";
       [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach(c => c.disabled = fireColorDisabled);
       controls.neonMode.value=layer.neon?.mode||"none";
@@ -4516,9 +4576,10 @@
         propShadowXValue: `${layer.shadow?.x ?? 0}px`,
         propShadowYValue: `${layer.shadow?.y ?? 12}px`,
         propShadowOpacityValue: `${layer.shadow?.opacity ?? 45}%`,
-        propFireIntensityValue: `${layer.fire?.intensity ?? 45}%`,
-        propFireSpreadValue: `${layer.fire?.spread ?? 58}%`,
-        propFireSoftnessValue: `${layer.fire?.softness ?? 72}%`,
+        propFireIntensityValue: `${layer.fire?.intensity ?? 52}%`,
+        propFireSpreadValue: `${layer.fire?.spread ?? 62}%`,
+        propFireTurbulenceValue: `${layer.fire?.turbulence ?? 68}%`,
+        propFireSoftnessValue: `${layer.fire?.softness ?? 48}%`,
         propFireSpeedValue: `${layer.fire?.speed ?? 4}s`,
         propNeonSpeedValue: `${layer.neon?.speed ?? 4}s`
       };
@@ -4645,8 +4706,10 @@
         shadowY: "shadow.y",
         shadowOpacity: "shadow.opacity",
         fireEnabled: "fire.enabled",
+        fireMode: "fire.mode",
         fireIntensity: "fire.intensity",
         fireSpread: "fire.spread",
+        fireTurbulence: "fire.turbulence",
         fireSoftness: "fire.softness",
         fireSpeed: "fire.speed",
         neonMode: "neon.mode",
@@ -5571,7 +5634,7 @@
         if (layer.fire?.enabled) {
           asset.fireField = buildFireField(processed, 420);
           if (asset.fireField) {
-            const padX=Math.round(asset.fireField.width*.20), padY=Math.round(asset.fireField.height*.22);
+            const padX=Math.round(asset.fireField.width*.30), padY=Math.round(asset.fireField.height*.34);
             asset.fireFrame=document.createElement("canvas");
             asset.fireFrame.width=asset.fireField.width+padX*2;
             asset.fireFrame.height=asset.fireField.height+padY*2;
@@ -6456,7 +6519,6 @@
     document.getElementById("addCloudFxBtn").addEventListener("click", () => addEffectLayer("cloudfx"));
     document.getElementById("addExplosionBtn").addEventListener("click", () => addEffectLayer("explosion"));
     document.getElementById("addShootingStarsBtn").addEventListener("click", addShootingStarsLayer);
-    document.getElementById("toggleAllVisibilityBtn").addEventListener("click", toggleAllLayersVisible);
     document.getElementById("showAllBtn").addEventListener("click", () => setAllLayersVisible(true));
     document.getElementById("hideAllBtn").addEventListener("click", () => setAllLayersVisible(false));
     document.getElementById("undoBtn").addEventListener("click", undoProject);
@@ -6469,9 +6531,9 @@
       const applyValue = () => {
         const layer = selectedLayer();
         if(!layer || layer.kind !== "image") return;
-        layer.fire = layer.fire || {enabled:false,intensity:45,spread:58,softness:72,speed:4,colors:["#ff4fae","#8a63ff","#8feaff"]};
-        if(!Array.isArray(layer.fire.colors)) layer.fire.colors=["#ff4fae","#8a63ff","#8feaff"];
-        while(layer.fire.colors.length < 3) layer.fire.colors.push("#8feaff");
+        layer.fire = layer.fire || {enabled:false,mode:"hybrid",intensity:52,spread:62,turbulence:68,softness:48,speed:4,colors:["#fff1c7","#ff4fae","#8a63ff"]};
+        if(!Array.isArray(layer.fire.colors)) layer.fire.colors=["#fff1c7","#ff4fae","#8a63ff"];
+        while(layer.fire.colors.length < 3) layer.fire.colors.push("#8a63ff");
         layer.fire.colors[index] = control.value;
       };
       control.addEventListener("input", applyValue);

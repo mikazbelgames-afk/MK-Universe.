@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.0.4 — Flame Flow + UI Polish · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.0 — Scene Manager · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1093,7 +1093,7 @@
     }
 
   
-    /* MK Universe 4.0.4 — Flame Flow + UI Polish · editor pro */
+    /* MK Universe 4.2.0 — Scene Manager · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1133,7 +1133,7 @@
     }
 
 
-    /* 4.0.4 · limpieza de interfaz */
+    /* 4.1.0 · limpieza de interfaz */
     .card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.025));border:1px solid rgba(255,211,232,.16);border-radius:14px;padding:13px;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
     .card + .card{margin-top:12px}
     .tabs{position:sticky;top:-16px;z-index:90;padding:8px 0 10px;background:linear-gradient(180deg,rgba(27,19,35,.99) 72%,rgba(27,19,35,0));backdrop-filter:blur(8px)}
@@ -1149,12 +1149,45 @@
     .control select,.control input[type="text"]{background:rgba(255,255,255,.055)}
     .fire-mode-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
+  
+
+    /* MK Universe 4.1 — Live Layout Builder */
+    .live-layout-card{margin-top:12px;padding:12px;border:1px solid rgba(255,166,214,.16);border-radius:14px;background:linear-gradient(135deg,rgba(255,126,198,.07),rgba(173,137,255,.055))}
+    .live-layout-card h4{margin:0 0 5px;font-size:.92rem;color:#ffe9f6}
+    .live-layout-card p{margin:0 0 10px;color:#bdb4ca;font-size:.78rem;line-height:1.35}
+    .live-layout-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+    .live-layout-grid .btn{width:100%;justify-content:center;min-height:38px;padding:7px 8px}
+    .live-layout-current{margin-top:9px;padding:7px 9px;border-radius:9px;background:rgba(0,0,0,.18);font-size:.75rem;color:#d8cfe4}
+    .live-slot-layer{pointer-events:auto!important;overflow:visible!important;cursor:move}.live-slot-guide{pointer-events:none}
+    .live-slot-guide{position:relative;width:100%;height:100%;box-sizing:border-box;border:2px dashed rgba(255,174,222,.82);border-radius:18px;background:linear-gradient(135deg,rgba(255,112,194,.10),rgba(175,137,255,.07));box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 20px rgba(255,112,194,.12);display:flex;align-items:center;justify-content:center;color:#fff5fb;text-align:center;font-weight:900;letter-spacing:.04em;text-shadow:0 2px 8px rgba(0,0,0,.65)}
+    .live-slot-guide.camera{border-color:rgba(255,149,211,.9)}
+    .live-slot-guide.chat{border-color:rgba(180,147,255,.92);background:linear-gradient(135deg,rgba(175,137,255,.12),rgba(255,112,194,.055))}
+    .live-slot-guide.widget{border-color:rgba(255,217,138,.88)}
+    .live-slot-guide .slot-copy{display:flex;flex-direction:column;gap:4px;align-items:center;padding:10px 14px;border-radius:12px;background:rgba(20,14,38,.60);backdrop-filter:blur(4px);box-shadow:0 8px 24px rgba(0,0,0,.22)}
+    .live-slot-guide .slot-icon{font-size:1.45rem;line-height:1}
+    .live-slot-guide small{font-size:.68rem;font-weight:700;color:#d9cfdf;letter-spacing:0}
+    .slot-badge{display:inline-flex;align-items:center;border-radius:999px;padding:2px 6px;margin-left:5px;font-size:.62rem;font-weight:900;text-transform:uppercase;letter-spacing:.04em;background:rgba(180,147,255,.14);color:#decfff;border:1px solid rgba(180,147,255,.22)}
+    .live-layout-note{margin-top:8px;color:#9f96ae;font-size:.70rem;line-height:1.35}
+
+    /* 4.2.0 · Gestor de escenas */
+    .scene-manager-card{border-color:rgba(255,126,196,.28);background:linear-gradient(180deg,rgba(40,22,47,.96),rgba(25,18,33,.96))}
+    .scene-manager-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .scene-manager-head h3{margin:0}
+    .scene-manager-grid{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center}
+    .scene-manager-grid input,.scene-manager-grid select{min-width:0;width:100%}
+    .scene-tabs{display:flex;gap:6px;overflow-x:auto;padding:7px 1px 3px;scrollbar-width:thin}
+    .scene-tab{white-space:nowrap;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.035);color:#d8d0df;border-radius:999px;padding:6px 10px;font-size:.72rem;font-weight:800;cursor:pointer}
+    .scene-tab:hover{border-color:rgba(255,132,203,.45)}
+    .scene-tab.active{background:linear-gradient(135deg,rgba(255,103,190,.22),rgba(169,125,255,.20));border-color:rgba(255,130,202,.65);color:#fff}
+    .scene-type-pill{font-size:.66rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#ffc5e6;background:rgba(255,102,187,.10);border:1px solid rgba(255,130,202,.25);padding:4px 8px;border-radius:999px}
+    .scene-manager-note{margin-top:7px;color:#a69bad;font-size:.69rem;line-height:1.35}
+
   </style>
 </head>
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.0.4 · Flame Flow + UI Polish 🌸</h1>
+    <h1>🌸 MK Universe 4.2.0 · Scene Manager 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1176,6 +1209,25 @@
 
     <input id="filePicker" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" />
 
+    <section class="card scene-manager-card">
+      <div class="scene-manager-head">
+        <h3>🎬 Escenas del live</h3>
+        <span id="sceneTypePill" class="scene-type-pill">LIBRE</span>
+      </div>
+      <div class="scene-manager-grid">
+        <select id="sceneSelector" aria-label="Escena activa"></select>
+        <button id="duplicateSceneBtn" class="btn btn-mini" type="button" title="Duplicar escena">⧉</button>
+        <input id="sceneNameInput" type="text" placeholder="Nombre de escena" aria-label="Nombre de escena" />
+        <button id="deleteSceneBtn" class="btn btn-mini btn-danger" type="button" title="Eliminar escena">🗑️</button>
+      </div>
+      <div id="sceneQuickTabs" class="scene-tabs"></div>
+      <div class="row-wrap" style="margin-top:7px">
+        <button id="createLivePackBtn" class="btn btn-primary" type="button">✨ Crear pack MK</button>
+        <button id="newSceneBtn" class="btn" type="button">＋ Escena libre</button>
+      </div>
+      <div id="sceneManagerStatus" class="scene-manager-note">Cada escena conserva sus propias capas, grupos, animaciones y guías.</div>
+    </section>
+
     <section class="card project-card">
       <h3>Proyecto</h3>
       <div class="row-wrap" style="margin-top:10px">
@@ -1196,6 +1248,26 @@
         <label>Fondo de exportación
           <input id="sceneBackground" type="color" value="#000000" />
         </label>
+      </div>
+
+      <div class="live-layout-card">
+        <h4>🎥 Diseñador de overlays para directo</h4>
+        <p>Estas plantillas crean zonas-guía para cámara y chat. Las guías sirven para diseñar y <strong>no aparecen en el video exportado</strong>.</p>
+        <div class="live-layout-grid">
+          <button id="layoutCameraBtn" class="btn" type="button">🎥 Webcam</button>
+          <button id="layoutChatBtn" class="btn" type="button">💬 Chat</button>
+          <button id="layoutCameraChatBtn" class="btn btn-primary" type="button">🎥 + 💬 Cámara / Chat</button>
+          <button id="layoutFullCameraBtn" class="btn" type="button">🖥️ Cámara amplia</button>
+        </div>
+        <div class="row-wrap" style="margin-top:7px">
+          <button id="addCameraSlotBtn" class="btn btn-mini" type="button">＋ Cámara</button>
+          <button id="addChatSlotBtn" class="btn btn-mini" type="button">＋ Chat</button>
+          <button id="addGameSlotBtn" class="btn btn-mini" type="button">＋ Juego</button>
+          <button id="addMediaSlotBtn" class="btn btn-mini" type="button">＋ Video / Web</button>
+          <button id="clearLiveSlotsBtn" class="btn btn-mini" type="button">🧹 Quitar guías</button>
+        </div>
+        <div id="liveLayoutCurrent" class="live-layout-current">Modo actual: Escena libre</div>
+        <div class="live-layout-note">Después conectaremos estas zonas al runtime de OBS/TikTok. Por ahora funcionan como espacios reservados editables para que construyas el marco encima.</div>
       </div>
 
       <details style="margin-top:10px">
@@ -1353,6 +1425,31 @@
           <h3 style="margin-bottom:8px">📐 Dimensiones y centrado</h3>
           <div id="dimensionInfo">Sin datos.</div>
           <button id="centerLayerBtn" class="btn" type="button" style="width:100%;margin-top:8px">⌖ Centrar capa</button>
+        </div>
+        <div id="liveSlotInspector" class="card hidden" style="margin-top:12px">
+          <h3 style="margin-bottom:8px">🎥 Zona de directo</h3>
+          <div class="control">
+            <label for="propLiveSlotType">Tipo de zona</label>
+            <select id="propLiveSlotType">
+              <option value="camera">🎥 Cámara</option>
+              <option value="chat">💬 Chat</option>
+              <option value="game">🎮 Juego</option>
+              <option value="media">🖥️ Video / Web</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="propLiveSlotWidth">Ancho <span id="propLiveSlotWidthValue" class="value"></span></label>
+            <input id="propLiveSlotWidth" type="range" min="80" max="920" step="2" />
+          </div>
+          <div class="control">
+            <label for="propLiveSlotHeight">Alto <span id="propLiveSlotHeightValue" class="value"></span></label>
+            <input id="propLiveSlotHeight" type="range" min="60" max="520" step="2" />
+          </div>
+          <div class="control">
+            <label for="propLiveSlotRadius">Esquinas <span id="propLiveSlotRadiusValue" class="value"></span></label>
+            <input id="propLiveSlotRadius" type="range" min="0" max="80" step="1" />
+          </div>
+          <small>Estas zonas son guías transparentes. Sirven para reservar el espacio de la webcam, juego, navegador o chat y no aparecen en el video exportado.</small>
         </div>
       </section>
 
@@ -1990,7 +2087,7 @@
     }
 
     const defaultProject = {
-      version: 4.04,
+      version: 4.20,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2001,12 +2098,16 @@
         background: "#000000"
       },
       export: { duration: 15, fps: 30, quality: "high", format: "mp4" },
+      layout: { type: "scene" },
+      scenes: [],
+      activeSceneId: null,
       layers: []
     };
 
     let project = migrateProject(loadProject() || structuredClone(defaultProject));
     project.export = { ...(project.export || {}), duration: MASTER_LOOP_SECONDS };
     project.layers = (project.layers || []).map(layer => defaultLayer(layer));
+    ensureSceneSystem();
     if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
       project.selectedId = null;
     }
@@ -2025,6 +2126,11 @@
     const stageWrap = document.getElementById("stageWrap");
     const sceneFormat = document.getElementById("sceneFormat");
     const sceneBackground = document.getElementById("sceneBackground");
+    const sceneSelector = document.getElementById("sceneSelector");
+    const sceneNameInput = document.getElementById("sceneNameInput");
+    const sceneQuickTabs = document.getElementById("sceneQuickTabs");
+    const sceneTypePill = document.getElementById("sceneTypePill");
+    const sceneManagerStatus = document.getElementById("sceneManagerStatus");
     const videoProgressBar = document.getElementById("videoProgressBar");
     const videoStatus = document.getElementById("videoStatus");
 
@@ -2061,6 +2167,7 @@
       const previous = historyStack.pop();
       project = migrateProject(JSON.parse(previous));
       project.layers = (project.layers || []).map(layer => defaultLayer(layer));
+      ensureSceneSystem();
       lastHistoryKey = historyKeyOf(projectForHistory());
       lastHistorySnapshot = JSON.stringify(project);
       renderAll();
@@ -2815,6 +2922,10 @@
       rotation: document.getElementById("propRotation"),
       visible: document.getElementById("propVisible"),
       background: document.getElementById("propBackground"),
+      liveSlotType: document.getElementById("propLiveSlotType"),
+      liveSlotWidth: document.getElementById("propLiveSlotWidth"),
+      liveSlotHeight: document.getElementById("propLiveSlotHeight"),
+      liveSlotRadius: document.getElementById("propLiveSlotRadius"),
       opacity: document.getElementById("propOpacity"),
       brightness: document.getElementById("propBrightness"),
       contrast: document.getElementById("propContrast"),
@@ -2990,6 +3101,7 @@
         shadow: { enabled:false, color:"#000000", blur:18, x:0, y:12, opacity:45 },
         fire: { enabled:false, mode:"hybrid", intensity:52, spread:62, turbulence:68, softness:48, speed:4, colors:["#fff1c7","#ff4fae","#8a63ff"] },
         neon: { mode:"none", speed:4 },
+        liveSlot: { type:"camera", width:620, height:349, radius:18 },
         reflection: {
           enabled: false,
           sourceLayerId: null,
@@ -3045,6 +3157,10 @@
           mode:"none", speed:4,
           ...(overrides.neon || {})
         },
+        liveSlot: {
+          type:"camera", width:620, height:349, radius:18,
+          ...(overrides.liveSlot || {})
+        },
         animationFocus: {
           enabled: false,
           ...(overrides.animationFocus || {})
@@ -3081,11 +3197,171 @@
       };
     }
 
+    function normalizeSceneCanvas(canvas={}) {
+      const next={...structuredClone(defaultProject.canvas),...(canvas||{})};
+      if(next.orientation==="horizontal"){
+        next.logicalWidth=960;next.logicalHeight=540;next.outputWidth=1920;next.outputHeight=1080;
+      }else{
+        next.orientation="vertical";next.logicalWidth=540;next.logicalHeight=960;next.outputWidth=1080;next.outputHeight=1920;
+      }
+      return next;
+    }
+
+    function sceneTypeLabel(type) {
+      const labels={
+        free:"Libre", start:"Inicio", camera:"Cámara", game:"Juego", talk:"Talk / Navegación",
+        brb:"Vuelvo pronto", end:"Final", transition:"Transición"
+      };
+      return labels[type] || "Libre";
+    }
+
+    function sceneTypeIcon(type) {
+      return ({free:"🎬",start:"🌸",camera:"🎥",game:"🎮",talk:"🖥️",brb:"🌙",end:"🌙",transition:"✨"})[type] || "🎬";
+    }
+
+    function makeSceneRecord(name="Escena", type="free", options={}) {
+      const canvas=normalizeSceneCanvas(options.canvas || {orientation:"horizontal",background:"#000000"});
+      const layout={type:"scene",...(options.layout||{})};
+      const layers=Array.isArray(options.layers) ? options.layers.map(layer=>defaultLayer(layer)) : [];
+      return {id:options.id||newId("scene"),name,type,canvas,layout,layers};
+    }
+
+    function activeSceneRecord() {
+      return (project.scenes||[]).find(scene=>scene.id===project.activeSceneId) || null;
+    }
+
+    function bindProjectToScene(scene) {
+      if(!scene)return;
+      project.activeSceneId=scene.id;
+      project.canvas=scene.canvas;
+      project.layout=scene.layout;
+      project.layers=scene.layers;
+      project.selectedId=null;
+    }
+
+    function syncActiveSceneFromProject() {
+      const scene=activeSceneRecord();
+      if(!scene)return;
+      // Mantenemos las mismas referencias: evita clonar imágenes/DataURL en cada movimiento.
+      scene.canvas=project.canvas;
+      scene.layout=project.layout;
+      scene.layers=project.layers;
+    }
+
+    function ensureSceneSystem() {
+      if(!Array.isArray(project.scenes))project.scenes=[];
+      project.scenes=project.scenes.filter(Boolean).map(raw=>({
+        id:raw.id||newId("scene"),
+        name:raw.name||"Escena",
+        type:raw.type||"free",
+        canvas:normalizeSceneCanvas(raw.canvas||project.canvas),
+        layout:{type:"scene",...(raw.layout||{})},
+        layers:Array.isArray(raw.layers)?raw.layers.map(layer=>defaultLayer(layer)):[]
+      }));
+      if(!project.scenes.length){
+        const first={
+          id:newId("scene"),name:"Escena actual",type:"free",
+          canvas:normalizeSceneCanvas(project.canvas),layout:{type:"scene",...(project.layout||{})},layers:project.layers||[]
+        };
+        project.scenes.push(first);project.activeSceneId=first.id;
+      }
+      let active=project.scenes.find(scene=>scene.id===project.activeSceneId);
+      if(!active){active=project.scenes[0];project.activeSceneId=active.id;}
+      bindProjectToScene(active);
+    }
+
+    function sceneSlot(type, opts={}) {
+      const isChat=type==="chat",isGame=type==="game",isMedia=type==="media";
+      const defaults=isChat?{width:235,height:420}:isGame?{width:780,height:438}:isMedia?{width:420,height:236}:{width:620,height:349};
+      const names={camera:"Zona Cámara",chat:"Zona Chat",game:"Zona Juego",media:"Zona Video / Web"};
+      return defaultLayer({
+        id:newId("slot"),name:opts.name||names[type]||"Zona",kind:"slot",background:false,animation:"none",opacity:100,
+        x:Number(opts.x||0),y:Number(opts.y||0),scale:Number(opts.scale||100),
+        liveSlot:{type,width:Number(opts.width||defaults.width),height:Number(opts.height||defaults.height),radius:Number(opts.radius||18)}
+      });
+    }
+
+    function mkSceneTemplate(type) {
+      const horizontal={orientation:"horizontal",background:"#000000"};
+      if(type==="start") return makeSceneRecord("Inicio","start",{canvas:horizontal,layers:[sceneSlot("chat",{name:"Chat · Inicio",x:350,y:20,width:210,height:410})]});
+      if(type==="camera") return makeSceneRecord("Cámara","camera",{canvas:horizontal,layers:[sceneSlot("camera",{name:"Cámara principal",x:-80,y:0,width:720,height:405}),sceneSlot("chat",{name:"Chat lateral",x:370,y:0,width:180,height:420})]});
+      if(type==="game") return makeSceneRecord("Juego","game",{canvas:horizontal,layers:[sceneSlot("game",{name:"Juego principal",x:-65,y:-20,width:790,height:444}),sceneSlot("camera",{name:"Cámara pequeña",x:335,y:185,width:235,height:132}),sceneSlot("chat",{name:"Chat · Juego",x:365,y:-90,width:185,height:275})]});
+      if(type==="talk") return makeSceneRecord("Talk / Navegación","talk",{canvas:horizontal,layers:[sceneSlot("media",{name:"Video / Navegador",x:-135,y:5,width:570,height:320}),sceneSlot("camera",{name:"Cámara pequeña",x:335,y:-145,width:230,height:129}),sceneSlot("chat",{name:"Chat · Talk",x:350,y:105,width:200,height:270})]});
+      if(type==="brb") return makeSceneRecord("Vuelvo pronto","brb",{canvas:horizontal,layers:[sceneSlot("chat",{name:"Chat · Vuelvo",x:350,y:20,width:210,height:410})]});
+      if(type==="end") return makeSceneRecord("Final","end",{canvas:horizontal,layers:[sceneSlot("chat",{name:"Chat · Final",x:350,y:20,width:210,height:410})]});
+      if(type==="transition") return makeSceneRecord("Transición","transition",{canvas:horizontal,layers:[]});
+      return makeSceneRecord("Escena libre","free",{canvas:horizontal,layers:[]});
+    }
+
+    function renderSceneManager() {
+      if(!sceneSelector||!sceneQuickTabs)return;
+      const active=activeSceneRecord();
+      sceneSelector.innerHTML="";
+      (project.scenes||[]).forEach(scene=>{
+        const option=document.createElement("option");option.value=scene.id;option.textContent=`${sceneTypeIcon(scene.type)} ${scene.name}`;sceneSelector.appendChild(option);
+      });
+      if(active){sceneSelector.value=active.id;sceneNameInput.value=active.name;sceneTypePill.textContent=sceneTypeLabel(active.type);}
+      sceneQuickTabs.innerHTML="";
+      (project.scenes||[]).forEach(scene=>{
+        const btn=document.createElement("button");btn.type="button";btn.className=`scene-tab${scene.id===project.activeSceneId?" active":""}`;
+        btn.textContent=`${sceneTypeIcon(scene.type)} ${scene.name}`;btn.addEventListener("click",()=>switchScene(scene.id));sceneQuickTabs.appendChild(btn);
+      });
+    }
+
+    function switchScene(id) {
+      if(id===project.activeSceneId)return;
+      syncActiveSceneFromProject();
+      const next=(project.scenes||[]).find(scene=>scene.id===id);if(!next)return;
+      bindProjectToScene(next);
+      groupSelection.clear();
+      sceneFormat.value=project.canvas.orientation;
+      sceneBackground.value=project.canvas.background||"#000000";
+      historyStack=[];lastHistoryKey="";lastHistorySnapshot="";
+      renderAll();initHistory();
+      sceneManagerStatus.textContent=`Escena activa: ${next.name}`;
+    }
+
+    function createScene(type="free") {
+      syncActiveSceneFromProject();
+      const scene=mkSceneTemplate(type);project.scenes.push(scene);bindProjectToScene(scene);groupSelection.clear();renderAll();
+      sceneManagerStatus.textContent=`Creada: ${scene.name}`;
+    }
+
+    function duplicateActiveScene() {
+      const current=activeSceneRecord();if(!current)return;
+      syncActiveSceneFromProject();
+      const copy=makeSceneRecord(`${current.name} copia`,current.type,{canvas:structuredClone(current.canvas),layout:structuredClone(current.layout),layers:structuredClone(current.layers)});
+      project.scenes.push(copy);bindProjectToScene(copy);groupSelection.clear();renderAll();sceneManagerStatus.textContent="Escena duplicada.";
+    }
+
+    function deleteActiveScene() {
+      if((project.scenes||[]).length<=1){sceneManagerStatus.textContent="Debe existir al menos una escena.";return;}
+      const idx=project.scenes.findIndex(scene=>scene.id===project.activeSceneId);if(idx<0)return;
+      const removed=project.scenes[idx];project.scenes.splice(idx,1);
+      const next=project.scenes[Math.min(idx,project.scenes.length-1)];bindProjectToScene(next);groupSelection.clear();renderAll();sceneManagerStatus.textContent=`Eliminada: ${removed.name}`;
+    }
+
+    function renameActiveScene(name) {
+      const scene=activeSceneRecord();if(!scene)return;
+      const next=String(name||"").trim();if(!next){sceneNameInput.value=scene.name;return;}
+      scene.name=next;renderSceneManager();saveProject("Escena renombrada.");
+    }
+
+    function createMkLivePack() {
+      syncActiveSceneFromProject();
+      const wanted=["start","camera","game","talk","brb","end","transition"];
+      const existing=new Set((project.scenes||[]).map(scene=>scene.type));
+      const added=[];
+      wanted.forEach(type=>{if(!existing.has(type)){const scene=mkSceneTemplate(type);project.scenes.push(scene);added.push(scene);}});
+      if(added.length){bindProjectToScene(added[0]);groupSelection.clear();renderAll();sceneManagerStatus.textContent=`Pack MK preparado · ${added.length} escenas nuevas.`;}
+      else{renderSceneManager();sceneManagerStatus.textContent="El pack MK ya está creado.";}
+    }
+
     function migrateProject(raw) {
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.04,
+        version: 4.20,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -3093,6 +3369,10 @@
         export: {
           ...structuredClone(defaultProject.export),
           ...((raw || {}).export || {})
+        },
+        layout: {
+          ...structuredClone(defaultProject.layout),
+          ...((raw || {}).layout || {})
         }
       };
       if (next.canvas.orientation === "horizontal") {
@@ -3108,6 +3388,8 @@
         next.canvas.outputHeight = 1920;
       }
       next.layers = Array.isArray(next.layers) ? next.layers : [];
+      next.scenes = Array.isArray(next.scenes) ? next.scenes : [];
+      next.activeSceneId = next.activeSceneId || null;
       return next;
     }
 
@@ -3121,8 +3403,9 @@
     }
 
     function saveProject(message = "Proyecto guardado.") {
+      syncActiveSceneFromProject();
       captureHistoryIfChanged();
-      project.version = 4.04;
+      project.version = 4.20;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -3341,10 +3624,82 @@
       projectStatus.textContent = `Preset ${name === "petals" ? "Pétalos" : name === "clouds" ? "Nubes" : name === "fog" ? "Niebla" : name === "smoke" ? "Humo" : "Explosión"} aplicado.`;
     }
 
+    function liveSlotLabel(type) {
+      if (type === "chat") return { icon:"💬", title:"ZONA CHAT", badge:"chat" };
+      if (type === "game") return { icon:"🎮", title:"ZONA JUEGO", badge:"juego" };
+      if (type === "media") return { icon:"🖥️", title:"ZONA VIDEO / WEB", badge:"media" };
+      if (type === "widget") return { icon:"✨", title:"ZONA WIDGET", badge:"widget" };
+      return { icon:"🎥", title:"ZONA CÁMARA", badge:"cámara" };
+    }
+
+    function addLiveSlot(type="camera", options={}) {
+      const isChat = type === "chat", isGame=type === "game", isMedia=type === "media";
+      const defaultSize=isChat?{width:250,height:420}:isGame?{width:780,height:438}:isMedia?{width:420,height:236}:{width:620,height:349};
+      const defaultName={camera:"Zona Cámara",chat:"Zona Chat",game:"Zona Juego",media:"Zona Video / Web"}[type]||"Zona";
+      const slot = defaultLayer({
+        id:newId("slot"),
+        name: options.name || defaultName,
+        kind:"slot",
+        background:false,
+        animation:"none",
+        opacity:100,
+        x:Number(options.x || 0),
+        y:Number(options.y || 0),
+        scale:Number(options.scale || 100),
+        liveSlot:{
+          type,
+          width:Number(options.width || defaultSize.width),
+          height:Number(options.height || defaultSize.height),
+          radius:Number(options.radius || 18)
+        }
+      });
+      project.layers.push(slot);
+      project.selectedId=slot.id;
+      return slot;
+    }
+
+    function clearLiveSlots(render=true) {
+      const ids=new Set(project.layers.filter(l=>l.kind==="slot").map(l=>l.id));
+      ids.forEach(id=>groupSelection.delete(id));
+      project.layers=project.layers.filter(l=>l.kind!=="slot");
+      if(ids.has(project.selectedId)) project.selectedId=null;
+      if(render) renderAll();
+    }
+
+    function updateLiveLayoutLabel() {
+      const el=document.getElementById("liveLayoutCurrent");
+      if(!el)return;
+      const names={scene:"Escena libre",camera:"Overlay de webcam",chat:"Overlay de chat",cameraChat:"Cámara + chat",fullCamera:"Cámara amplia"};
+      el.textContent=`Modo actual: ${names[project.layout?.type] || "Escena libre"}`;
+    }
+
+    function applyLiveLayoutTemplate(type) {
+      // Conserva imágenes, animaciones y grupos; solo reemplaza las guías del layout.
+      clearLiveSlots(false);
+      if(type!=="scene" && project.canvas.orientation!=="horizontal") setSceneFormat("horizontal",true);
+      project.layout={...(project.layout||{}),type};
+      if(type==="camera") {
+        addLiveSlot("camera",{name:"Webcam principal",x:0,y:0,width:650,height:366});
+      } else if(type==="chat") {
+        addLiveSlot("chat",{name:"Chat principal",x:0,y:0,width:330,height:460});
+      } else if(type==="cameraChat") {
+        addLiveSlot("camera",{name:"Cámara",x:-145,y:10,width:590,height:332});
+        addLiveSlot("chat",{name:"Chat",x:330,y:10,width:235,height:420});
+      } else if(type==="fullCamera") {
+        addLiveSlot("camera",{name:"Cámara amplia",x:-55,y:0,width:790,height:444});
+        addLiveSlot("chat",{name:"Chat lateral",x:365,y:0,width:190,height:430});
+      }
+      renderAll();
+      updateLiveLayoutLabel();
+      projectStatus.textContent="Plantilla de directo preparada. Las zonas punteadas son solo guías y no se exportan.";
+    }
+
     function renderAll() {
       renderStage();
       renderLayersList();
       renderInspector();
+      updateLiveLayoutLabel();
+      renderSceneManager();
       saveProject("Cambios guardados automáticamente.");
     }
 
@@ -3407,6 +3762,30 @@
         const index = project.layers.indexOf(layer);
         const container = document.createElement("div");
 
+        if (layer.kind === "slot") {
+          configureContainerTransform(container, layer, index, false);
+          container.classList.add("live-slot-layer");
+          const width=Math.max(40,Number(layer.liveSlot?.width||620));
+          const height=Math.max(40,Number(layer.liveSlot?.height||349));
+          container.style.width=`${width}px`;
+          container.style.height=`${height}px`;
+          const info=liveSlotLabel(layer.liveSlot?.type||"camera");
+          const guide=document.createElement("div");
+          guide.className=`live-slot-guide ${layer.liveSlot?.type||"camera"}`;
+          guide.style.borderRadius=`${Number(layer.liveSlot?.radius||18)}px`;
+          guide.innerHTML=`<div class="slot-copy"><span class="slot-icon">${info.icon}</span><span>${info.title}</span><small>${Math.round(width*2)} × ${Math.round(height*2)} salida · no se exporta</small></div>`;
+          container.appendChild(guide);
+          container.addEventListener("pointerdown", event => {
+            if (event.button !== undefined && event.button !== 0) return;
+            if (project.selectedId !== layer.id) {
+              project.selectedId = layer.id;
+              renderLayersList();
+              renderInspector();
+            }
+          });
+          return container;
+        }
+
         if (layer.kind === "group") {
           configureContainerTransform(container, layer, index, true);
           const motion = document.createElement("div");
@@ -3456,7 +3835,7 @@
         dot.style.top = `${clampedTop}%`;
         const label = document.createElement("div");
         label.className = "sel-label";
-        label.textContent = `${selected.kind === "group" ? "🧩 " : ""}${selected.name} · X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}`;
+        label.textContent = `${selected.kind === "group" ? "🧩 " : selected.kind === "slot" ? (selected.liveSlot?.type === "chat" ? "💬 " : "🎥 ") : ""}${selected.name} · X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}`;
         label.style.left = `${clampedLeft}%`;
         label.style.top = `${Math.max(8, Math.min(92, clampedTop + 2.2))}%`;
         guides.append(v, h, dot, label);
@@ -4285,7 +4664,7 @@
 
         card.innerHTML = `
           <div class="layer-title">
-            <span class="layer-name" title="${escapeHtml(layer.name)}"><input class="group-select" type="checkbox" ${groupSelection.has(layer.id)?"checked":""} /> <span class="layer-name-text">${escapeHtml(layer.name)}</span><input class="layer-rename-input" type="text" value="${escapeHtml(layer.name)}" aria-label="Nuevo nombre de capa" />${layer.kind==="group"?'<span class="group-badge">grupo</span>':layer.parentId?'<span class="group-badge">hijo</span>':""}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion","shootingStars"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
+            <span class="layer-name" title="${escapeHtml(layer.name)}"><input class="group-select" type="checkbox" ${groupSelection.has(layer.id)?"checked":""} /> <span class="layer-name-text">${escapeHtml(layer.name)}</span><input class="layer-rename-input" type="text" value="${escapeHtml(layer.name)}" aria-label="Nuevo nombre de capa" />${layer.kind==="group"?'<span class="group-badge">grupo</span>':layer.kind==="slot"?`<span class="slot-badge">${liveSlotLabel(layer.liveSlot?.type).badge}</span>`:layer.parentId?'<span class="group-badge">hijo</span>':""}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion","shootingStars"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
             <div class="row">
               <button class="btn btn-mini rename-layer" type="button" title="Renombrar capa">✏️</button>
               <button class="btn btn-mini move-up" type="button" title="Adelante">▲</button>
@@ -4513,9 +4892,25 @@
       [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach(c => c.disabled = fireColorDisabled);
       controls.neonMode.value=layer.neon?.mode||"none";
       controls.neonSpeed.value=layer.neon?.speed??4;
+      const slotCard=document.getElementById("liveSlotInspector");
+      if(layer.kind==="slot") {
+        slotCard?.classList.remove("hidden");
+        controls.liveSlotType.value=layer.liveSlot?.type||"camera";
+        controls.liveSlotWidth.value=Number(layer.liveSlot?.width||620);
+        controls.liveSlotHeight.value=Number(layer.liveSlot?.height||349);
+        controls.liveSlotRadius.value=Number(layer.liveSlot?.radius||18);
+      } else {
+        slotCard?.classList.add("hidden");
+      }
       const eff=effectiveLayerState(layer);
       const di=document.getElementById("dimensionInfo");
-      if(di) di.innerHTML=`<strong>Archivo:</strong> ${layer.intrinsicWidth||"—"} × ${layer.intrinsicHeight||"—"} px<br><strong>Posición:</strong> X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}<br><strong>Centro:</strong> ${Math.abs(eff.x)<1&&Math.abs(eff.y)<1?"Sí":"No"}${layer.parentId?`<br><strong>Grupo padre:</strong> ${escapeHtml(layerById(layer.parentId)?.name||"—")}`:""}`;
+      if(di) {
+        if(layer.kind==="slot") {
+          di.innerHTML=`<strong>Guía:</strong> ${liveSlotLabel(layer.liveSlot?.type).title}<br><strong>Tamaño:</strong> ${Math.round(Number(layer.liveSlot?.width||0)*2)} × ${Math.round(Number(layer.liveSlot?.height||0)*2)} px de salida<br><strong>Posición:</strong> X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}<br><strong>Exportación:</strong> No aparece`;
+        } else {
+          di.innerHTML=`<strong>Archivo:</strong> ${layer.intrinsicWidth||"—"} × ${layer.intrinsicHeight||"—"} px<br><strong>Posición:</strong> X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}<br><strong>Centro:</strong> ${Math.abs(eff.x)<1&&Math.abs(eff.y)<1?"Sí":"No"}${layer.parentId?`<br><strong>Grupo padre:</strong> ${escapeHtml(layerById(layer.parentId)?.name||"—")}`:""}`;
+        }
+      }
 
       updateAnimationInspectorLayout(layer);
       updateValueLabels(layer);
@@ -4581,7 +4976,10 @@
         propFireTurbulenceValue: `${layer.fire?.turbulence ?? 68}%`,
         propFireSoftnessValue: `${layer.fire?.softness ?? 48}%`,
         propFireSpeedValue: `${layer.fire?.speed ?? 4}s`,
-        propNeonSpeedValue: `${layer.neon?.speed ?? 4}s`
+        propNeonSpeedValue: `${layer.neon?.speed ?? 4}s`,
+        propLiveSlotWidthValue: `${Math.round(Number(layer.liveSlot?.width ?? 620)*2)} px salida`,
+        propLiveSlotHeightValue: `${Math.round(Number(layer.liveSlot?.height ?? 349)*2)} px salida`,
+        propLiveSlotRadiusValue: `${Math.round(Number(layer.liveSlot?.radius ?? 18)*2)} px salida`
       };
 
       Object.entries(values).forEach(([id, text]) => {
@@ -4636,6 +5034,10 @@
         rotation: "rotation",
         visible: "visible",
         background: "background",
+        liveSlotType: "liveSlot.type",
+        liveSlotWidth: "liveSlot.width",
+        liveSlotHeight: "liveSlot.height",
+        liveSlotRadius: "liveSlot.radius",
         opacity: "opacity",
         brightness: "brightness",
         contrast: "contrast",
@@ -4729,7 +5131,12 @@
               ? Number(control.value)
               : control.value;
 
-          if (prop.startsWith("shadow.")) {
+          if (prop.startsWith("liveSlot.")) {
+            const slotProp = prop.split(".")[1];
+            layer.liveSlot = { type:"camera", width:620, height:349, radius:18, ...(layer.liveSlot || {}) };
+            layer.liveSlot[slotProp] = value;
+            if (slotProp === "type") layer.name = ({camera:"Zona Cámara",chat:"Zona Chat",game:"Zona Juego",media:"Zona Video / Web"}[value] || "Zona");
+          } else if (prop.startsWith("shadow.")) {
             layer.shadow[prop.split(".")[1]] = value;
           } else if (prop.startsWith("fire.")) {
             layer.fire[prop.split(".")[1]] = value;
@@ -6285,7 +6692,7 @@
       const ctx=canvas.getContext("2d");const logical=getLogicalSize();const sx=canvas.width/logical.width,sy=canvas.height/logical.height;
       ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle=project.canvas.background||"#000";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(sx,sy);
       project.layers.forEach(layer=>{
-        if(!isLayerEffectivelyVisible(layer) || layer.kind==="group")return;
+        if(!isLayerEffectivelyVisible(layer) || layer.kind==="group" || layer.kind==="slot")return;
         if(layer.kind==="particles") drawParticleExport(ctx,layer,seconds,loopDuration);
         else {
           const asset=exportAssetCache.get(layer.id);if(!asset)return;
@@ -6467,6 +6874,7 @@
     }
 
     function exportProject() {
+      syncActiveSceneFromProject();
       const blob = new Blob([JSON.stringify(project, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -6482,12 +6890,12 @@
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
-          if (!Array.isArray(parsed.layers)) throw new Error("Formato inválido");
+          if (!Array.isArray(parsed.layers) && !Array.isArray(parsed.scenes)) throw new Error("Formato inválido");
           project = migrateProject(parsed);
-          project.layers = parsed.layers.map(layer => defaultLayer(layer));
-          if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
-            project.selectedId = null;
-          }
+          project.layers = Array.isArray(parsed.layers) ? parsed.layers.map(layer => defaultLayer(layer)) : [];
+          ensureSceneSystem();
+          if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) project.selectedId = null;
+          sceneFormat.value=project.canvas.orientation;sceneBackground.value=project.canvas.background||"#000000";
           renderAll();
           projectStatus.textContent = "Proyecto importado.";
         } catch {
@@ -6573,9 +6981,23 @@
       jsonPicker.value = "";
     });
 
+    document.getElementById("layoutCameraBtn")?.addEventListener("click",()=>applyLiveLayoutTemplate("camera"));
+    document.getElementById("layoutChatBtn")?.addEventListener("click",()=>applyLiveLayoutTemplate("chat"));
+    document.getElementById("layoutCameraChatBtn")?.addEventListener("click",()=>applyLiveLayoutTemplate("cameraChat"));
+    document.getElementById("layoutFullCameraBtn")?.addEventListener("click",()=>applyLiveLayoutTemplate("fullCamera"));
+    document.getElementById("addCameraSlotBtn")?.addEventListener("click",()=>{project.layout={...(project.layout||{}),type:project.layout?.type||"scene"};addLiveSlot("camera",{x:0,y:0});renderAll();updateLiveLayoutLabel();});
+    document.getElementById("addChatSlotBtn")?.addEventListener("click",()=>{project.layout={...(project.layout||{}),type:project.layout?.type||"scene"};addLiveSlot("chat",{x:0,y:0});renderAll();updateLiveLayoutLabel();});
+    document.getElementById("addGameSlotBtn")?.addEventListener("click",()=>{project.layout={...(project.layout||{}),type:project.layout?.type||"scene"};addLiveSlot("game",{x:0,y:0});renderAll();});
+    document.getElementById("addMediaSlotBtn")?.addEventListener("click",()=>{project.layout={...(project.layout||{}),type:project.layout?.type||"scene"};addLiveSlot("media",{x:0,y:0});renderAll();});
+    document.getElementById("clearLiveSlotsBtn")?.addEventListener("click",()=>{clearLiveSlots(false);project.layout={...(project.layout||{}),type:"scene"};renderAll();updateLiveLayoutLabel();projectStatus.textContent="Guías de directo retiradas.";});
+    updateLiveLayoutLabel();
+
     document.getElementById("resetBtn").addEventListener("click", () => {
       if (!confirm("¿Borrar todas las capas y comenzar de cero?")) return;
       project = migrateProject(structuredClone(defaultProject));
+      project.layers=(project.layers||[]).map(layer=>defaultLayer(layer));
+      ensureSceneSystem();
+      groupSelection.clear();
       sceneFormat.value = project.canvas.orientation;
       sceneBackground.value = project.canvas.background;
       renderAll();
@@ -6624,6 +7046,14 @@
     document.getElementById("videoFps").value = String(project.export?.fps || 30);
     document.getElementById("videoQuality").value = project.export?.quality || "high";
     document.getElementById("videoFormat").value = project.export?.format || "mp4";
+    sceneSelector?.addEventListener("change",()=>switchScene(sceneSelector.value));
+    sceneNameInput?.addEventListener("change",()=>renameActiveScene(sceneNameInput.value));
+    sceneNameInput?.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();renameActiveScene(sceneNameInput.value);sceneNameInput.blur();}});
+    document.getElementById("newSceneBtn")?.addEventListener("click",()=>createScene("free"));
+    document.getElementById("duplicateSceneBtn")?.addEventListener("click",duplicateActiveScene);
+    document.getElementById("deleteSceneBtn")?.addEventListener("click",deleteActiveScene);
+    document.getElementById("createLivePackBtn")?.addEventListener("click",createMkLivePack);
+
     sceneFormat.addEventListener("change", () => setSceneFormat(sceneFormat.value, true));
     sceneBackground.addEventListener("input", () => { project.canvas.background=sceneBackground.value;stageWrap.style.background=sceneBackground.value;saveProject(); });
     document.getElementById("exportVideoBtn").addEventListener("click", exportVideo);

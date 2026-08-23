@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.0.1 — Group + FX Core · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.0.2 — Fire Mist + Layer Rename · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1058,7 +1058,7 @@
     }
 
   
-    /* MK Universe 4.0.1 — Group + FX Core · editor pro */
+    /* MK Universe 4.0.2 — Fire Mist + Layer Rename · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1082,7 +1082,8 @@
     .group-select{width:17px;height:17px;accent-color:var(--accent)}
     .dimension-card{font-size:12px;line-height:1.55}
     .dimension-card strong{color:var(--accent-2)}
-    .fire-aura-layer{position:absolute;inset:-8%;z-index:1;pointer-events:none;mix-blend-mode:screen;filter:blur(var(--fire-blur,14px)) saturate(1.22);transform:scale(var(--fire-scale,1.08));opacity:.9;animation:mkFireAura var(--fire-speed,4s) ease-in-out infinite}
+    .fire-mist-canvas{position:absolute!important;z-index:1!important;pointer-events:none;mix-blend-mode:screen;overflow:visible;max-width:none!important;filter:saturate(1.08)}
+    .layer-rename-input{min-width:120px;max-width:230px;width:100%;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,143,209,.62);background:rgba(13,9,20,.94);color:#fff7fb;font:inherit;font-weight:750;outline:none;box-shadow:0 0 0 2px rgba(255,143,209,.10)}
     .flame-layer{position:absolute;inset:-10%;z-index:4;pointer-events:none;mix-blend-mode:screen}
     .neon-breathe{animation:mkNeonBreathe var(--neon-speed,4s) ease-in-out infinite}
     .neon-retro{animation:mkNeonRetro var(--neon-speed,3.2s) steps(1,end) infinite}
@@ -1102,7 +1103,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.0.1 · Group + FX Core 🌸</h1>
+    <h1>🌸 MK Universe 4.0.2 · Fire Mist + Layer Rename 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1463,14 +1464,17 @@
         </div>
 
         <div class="card" style="margin-top:14px">
-          <h3 style="margin-bottom:10px">🔥 Fuego alrededor</h3>
-          <div class="check-row"><input id="propFireEnabled" type="checkbox" /><label for="propFireEnabled">Activar llamas</label></div>
+          <h3 style="margin-bottom:10px">🔥 Aura de llama / neblina</h3>
+          <div class="check-row"><input id="propFireEnabled" type="checkbox" /><label for="propFireEnabled">Activar aura animada</label></div>
+          <div class="hint">Emite neblina luminosa desde el contorno real de la imagen. Los tres colores se mezclan durante el movimiento.</div>
           <div class="control"><label for="propFireIntensity">Intensidad <span id="propFireIntensityValue" class="value"></span></label><input id="propFireIntensity" type="range" min="1" max="100" step="1" /></div>
+          <div class="control"><label for="propFireSpread">Expansión <span id="propFireSpreadValue" class="value"></span></label><input id="propFireSpread" type="range" min="10" max="100" step="1" /></div>
+          <div class="control"><label for="propFireSoftness">Neblina <span id="propFireSoftnessValue" class="value"></span></label><input id="propFireSoftness" type="range" min="10" max="100" step="1" /></div>
           <div class="control"><label for="propFireSpeed">Velocidad <span id="propFireSpeedValue" class="value"></span></label><input id="propFireSpeed" type="range" min="1" max="12" step=".25" /></div>
           <div class="effect-palette-grid">
-            <label class="effect-color-box"><span>Fuego 1</span><input id="propFireColor1" type="color" /></label>
-            <label class="effect-color-box"><span>Fuego 2</span><input id="propFireColor2" type="color" /></label>
-            <label class="effect-color-box"><span>Fuego 3</span><input id="propFireColor3" type="color" /></label>
+            <label class="effect-color-box"><span>Color 1</span><input id="propFireColor1" type="color" /></label>
+            <label class="effect-color-box"><span>Color 2</span><input id="propFireColor2" type="color" /></label>
+            <label class="effect-color-box"><span>Color 3</span><input id="propFireColor3" type="color" /></label>
           </div>
         </div>
 
@@ -1927,7 +1931,7 @@
     }
 
     const defaultProject = {
-      version: 4.01,
+      version: 4.02,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2170,21 +2174,123 @@
       projectStatus.textContent=`Grupo desarmado. ${children.length} elementos conservaron su posición y sus animaciones.`;
     }
 
-    function addFlameCanvas(layer, stack){
-      if(!layer.fire?.enabled || layer.kind!=="image" || !layer.src) return;
-      const colors=layer.fire.colors||["#ff4fae","#ff8a3d","#fff1a8"];
-      const aura=document.createElement("div");
-      aura.className="fire-aura-layer";
-      aura.style.setProperty("--fire-speed",`${Math.max(.2,Number(layer.fire.speed||4))}s`);
-      aura.style.setProperty("--fire-blur",`${10 + Math.max(0,Number(layer.fire.intensity||45))*0.24}px`);
-      aura.style.setProperty("--fire-scale",`${1.05 + Math.max(0,Number(layer.fire.intensity||45))*0.0018}`);
-      aura.style.webkitMaskImage=`url("${layer.src}")`;
-      aura.style.maskImage=`url("${layer.src}")`;
-      aura.style.webkitMaskRepeat="no-repeat"; aura.style.maskRepeat="no-repeat";
-      aura.style.webkitMaskPosition="center"; aura.style.maskPosition="center";
-      aura.style.webkitMaskSize="contain"; aura.style.maskSize="contain";
-      aura.style.background=`conic-gradient(from 0deg, ${hexToRgba(colors[0],.95)} 0%, ${hexToRgba(colors[1],.85)} 24%, ${hexToRgba(colors[2],.82)} 42%, ${hexToRgba(colors[0],.88)} 62%, ${hexToRgba(colors[1],.72)} 82%, ${hexToRgba(colors[0],.95)} 100%)`;
-      stack.prepend(aura);
+    function buildFireField(sourceElement, maxSize=380){
+      const sw=sourceElement.naturalWidth||sourceElement.width||1;
+      const sh=sourceElement.naturalHeight||sourceElement.height||1;
+      const scale=Math.min(1,maxSize/Math.max(sw,sh));
+      const w=Math.max(24,Math.round(sw*scale)),h=Math.max(24,Math.round(sh*scale));
+      const mask=document.createElement("canvas"); mask.width=w; mask.height=h;
+      const mctx=mask.getContext("2d",{willReadFrequently:true});
+      mctx.drawImage(sourceElement,0,0,w,h);
+      const img=mctx.getImageData(0,0,w,h),d=img.data;
+      // Convertimos a máscara alfa limpia para que el efecto nazca del contorno, no del rectángulo.
+      for(let i=0;i<d.length;i+=4){ const a=d[i+3]; d[i]=d[i+1]=d[i+2]=255; d[i+3]=a>18?255:0; }
+      mctx.putImageData(img,0,0);
+      const data=mctx.getImageData(0,0,w,h).data;
+      const alpha=(x,y)=>{ if(x<0||x>=w||y<0||y>=h)return 0; return data[(y*w+x)*4+3]; };
+      const emitters=[]; let sumX=0,sumY=0,count=0;
+      for(let y=1;y<h-1;y+=2) for(let x=1;x<w-1;x+=2){ if(alpha(x,y)>40){sumX+=x;sumY+=y;count++;} }
+      const cx=count?sumX/count:w/2,cy=count?sumY/count:h/2;
+      const step=Math.max(1,Math.round(Math.max(w,h)/260));
+      for(let y=2;y<h-2;y+=step){
+        for(let x=2;x<w-2;x+=step){
+          if(alpha(x,y)<80) continue;
+          if(alpha(x-2,y)>20&&alpha(x+2,y)>20&&alpha(x,y-2)>20&&alpha(x,y+2)>20) continue;
+          // Gradiente alfa = normal aproximada del contorno. Si es casi cero usamos dirección radial.
+          let nx=(alpha(x-2,y)-alpha(x+2,y))/255, ny=(alpha(x,y-2)-alpha(x,y+2))/255;
+          let len=Math.hypot(nx,ny);
+          if(len<.12){nx=(x-cx)/Math.max(1,w);ny=(y-cy)/Math.max(1,h);len=Math.hypot(nx,ny)||1;}
+          nx/=len; ny/=len;
+          // Un poco de tendencia hacia arriba para que se comporte como llama/neblina caliente.
+          ny=ny*.58-.42;
+          len=Math.hypot(nx,ny)||1; nx/=len; ny/=len;
+          emitters.push({x:x/w,y:y/h,nx,ny});
+        }
+      }
+      if(!emitters.length) emitters.push({x:.5,y:.5,nx:0,ny:-1});
+      return {mask,emitters,width:w,height:h};
+    }
+
+    function renderFireMistFrame(ctx,field,layer,seconds){
+      if(!field) return;
+      const W=ctx.canvas.width,H=ctx.canvas.height,padX=(W-field.width)/2,padY=(H-field.height)/2;
+      ctx.clearRect(0,0,W,H);
+      const colors=layer.fire?.colors||["#ff4fae","#8a63ff","#8feaff"];
+      const intensity=Math.max(.01,Math.min(1,Number(layer.fire?.intensity??45)/100));
+      const spread=Math.max(.10,Math.min(1,Number(layer.fire?.spread??58)/100));
+      const softness=Math.max(.10,Math.min(1,Number(layer.fire?.softness??72)/100));
+      const speed=Math.max(.25,Number(layer.fire?.speed||4));
+      const minDim=Math.min(field.width,field.height);
+      const particleCount=Math.round(34+intensity*86);
+      const baseTravel=minDim*(.055+.26*spread);
+      const cycleRate=.10+speed*.035;
+
+      // Halo de borde muy fino. Da continuidad entre la imagen y la neblina sin crear una mancha densa.
+      ctx.save();
+      ctx.globalCompositeOperation="screen";
+      ctx.globalAlpha=.10+.14*intensity;
+      ctx.shadowColor=colors[0];
+      ctx.shadowBlur=4+softness*10;
+      ctx.drawImage(field.mask,padX,padY);
+      ctx.restore();
+
+      ctx.save(); ctx.globalCompositeOperation="screen";
+      for(let i=0;i<particleCount;i++){
+        const r0=seededNumber(layer.id,15000+i*13),r1=seededNumber(layer.id,15001+i*13),r2=seededNumber(layer.id,15002+i*13),r3=seededNumber(layer.id,15003+i*13),r4=seededNumber(layer.id,15004+i*13);
+        const e=field.emitters[Math.min(field.emitters.length-1,Math.floor(r0*field.emitters.length))];
+        const p=((seconds*cycleRate+r1)%1+1)%1;
+        const life=Math.pow(Math.sin(Math.PI*p),1.18);
+        if(life<=.002) continue;
+        const tangentX=-e.ny,tangentY=e.nx;
+        const travel=baseTravel*(.48+r2*.92)*p;
+        const wav=Math.sin(p*Math.PI*2*(1.0+r3*1.5)+r4*Math.PI*2)*minDim*(.008+.032*spread);
+        const lift=minDim*(.018+.105*spread)*p*(.35+r3*.85);
+        const x=padX+e.x*field.width+e.nx*travel+tangentX*wav;
+        const y=padY+e.y*field.height+e.ny*travel+tangentY*wav-lift;
+        const radius=minDim*(.012+.046*softness)*(.52+r4*.9)*(1-.34*p);
+        const color=colors[(i+Math.floor(r3*3))%colors.length]||colors[0];
+        const alpha=life*(.065+.31*intensity)*(.55+r2*.55);
+        ctx.save();
+        ctx.translate(x,y);
+        ctx.rotate((r0-.5)*.55 + Math.sin(p*Math.PI*2+r2*6.28)*.12);
+        ctx.scale(.65+r1*.42,1.20+softness*.95+r3*.35);
+        const g=ctx.createRadialGradient(0,0,0,0,0,Math.max(2,radius));
+        g.addColorStop(0,hexToRgba(color,alpha*.82));
+        g.addColorStop(.28,hexToRgba(color,alpha*.52));
+        g.addColorStop(.66,hexToRgba(color,alpha*.18));
+        g.addColorStop(1,hexToRgba(color,0));
+        ctx.fillStyle=g;
+        ctx.beginPath();ctx.arc(0,0,Math.max(2,radius),0,Math.PI*2);ctx.fill();
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    function createFireMistCanvas(layer,sourceElement){
+      if(!layer.fire?.enabled||layer.kind!=="image"||!layer.src) return null;
+      const field=buildFireField(sourceElement,420);
+      const padX=Math.round(field.width*.20),padY=Math.round(field.height*.22);
+      const canvas=document.createElement("canvas");
+      canvas.className="fire-mist-canvas";
+      canvas.width=field.width+padX*2; canvas.height=field.height+padY*2;
+      canvas.style.width=`${(canvas.width/field.width)*100}%`;
+      canvas.style.height=`${(canvas.height/field.height)*100}%`;
+      canvas.style.left=`-${(padX/field.width)*100}%`;
+      canvas.style.top=`-${(padY/field.height)*100}%`;
+      const ctx=canvas.getContext("2d");
+      let connected=false;
+      function frame(t){
+        if(connected&&!canvas.isConnected)return; connected=connected||canvas.isConnected;
+        if(!document.body.classList.contains("paused")) renderFireMistFrame(ctx,field,layer,t/1000);
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+      return canvas;
+    }
+
+    function addFlameCanvas(layer,stack,sourceElement){
+      const canvas=createFireMistCanvas(layer,sourceElement);
+      if(canvas) stack.insertBefore(canvas,stack.firstChild);
     }
 
     function neonFactor(layer, seconds, loopDuration){
@@ -2629,6 +2735,8 @@
       shadowOpacity: document.getElementById("propShadowOpacity"),
       fireEnabled: document.getElementById("propFireEnabled"),
       fireIntensity: document.getElementById("propFireIntensity"),
+      fireSpread: document.getElementById("propFireSpread"),
+      fireSoftness: document.getElementById("propFireSoftness"),
       fireSpeed: document.getElementById("propFireSpeed"),
       fireColor1: document.getElementById("propFireColor1"),
       fireColor2: document.getElementById("propFireColor2"),
@@ -2721,7 +2829,7 @@
         intrinsicWidth: 0,
         intrinsicHeight: 0,
         shadow: { enabled:false, color:"#000000", blur:18, x:0, y:12, opacity:45 },
-        fire: { enabled:false, intensity:45, speed:4, colors:["#ff4fae","#ff8a3d","#fff1a8"] },
+        fire: { enabled:false, intensity:45, spread:58, softness:72, speed:4, colors:["#ff4fae","#8a63ff","#8feaff"] },
         neon: { mode:"none", speed:4 },
         reflection: {
           enabled: false,
@@ -2770,9 +2878,9 @@
           ...(overrides.shadow || {})
         },
         fire: {
-          enabled:false, intensity:45, speed:4, colors:["#ff4fae","#ff8a3d","#fff1a8"],
+          enabled:false, intensity:45, spread:58, softness:72, speed:4, colors:["#ff4fae","#8a63ff","#8feaff"],
           ...(overrides.fire || {}),
-          colors:Array.isArray(overrides.fire?.colors)?overrides.fire.colors.slice(0,3):["#ff4fae","#ff8a3d","#fff1a8"]
+          colors:Array.isArray(overrides.fire?.colors)?overrides.fire.colors.slice(0,3):["#ff4fae","#8a63ff","#8feaff"]
         },
         neon: {
           mode:"none", speed:4,
@@ -2818,7 +2926,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.01,
+        version: 4.02,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -2855,7 +2963,7 @@
 
     function saveProject(message = "Proyecto guardado.") {
       captureHistoryIfChanged();
-      project.version = 4.01;
+      project.version = 4.02;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -3264,7 +3372,7 @@
           stack.style.setProperty("--neon-color",layer.glowColor||"#ff8fd1");
           stack.style.setProperty("--neon-blur",`${Math.max(3,Math.min(9,Number(layer.glowBlur||18)*.28))}px`);
         }
-        addFlameCanvas(layer, stack);
+        addFlameCanvas(layer, stack, reflected);
         motion.replaceChildren(stack);
         addMetalShine(layer, stack);
       };
@@ -4018,8 +4126,9 @@
 
         card.innerHTML = `
           <div class="layer-title">
-            <span class="layer-name" title="${escapeHtml(layer.name)}"><input class="group-select" type="checkbox" ${groupSelection.has(layer.id)?"checked":""} /> ${escapeHtml(layer.name)}${layer.kind==="group"?'<span class="group-badge">grupo</span>':layer.parentId?'<span class="group-badge">hijo</span>':""}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion","shootingStars"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
+            <span class="layer-name" title="${escapeHtml(layer.name)}"><input class="group-select" type="checkbox" ${groupSelection.has(layer.id)?"checked":""} /> <span class="layer-name-text">${escapeHtml(layer.name)}</span>${layer.kind==="group"?'<span class="group-badge">grupo</span>':layer.parentId?'<span class="group-badge">hijo</span>':""}${layer.reflection?.enabled ? '<span class="reflection-badge">🌊 reflejo</span>' : ''}${["smoke","fogfx","cloudfx","explosion","shootingStars"].includes(layer.particleType) ? '<span class="vfx-badge">VFX</span>' : ''}</span>
             <div class="row">
+              <button class="btn btn-mini rename-layer" type="button" title="Renombrar capa">✏️</button>
               <button class="btn btn-mini move-up" type="button" title="Adelante">▲</button>
               <button class="btn btn-mini move-down" type="button" title="Atrás">▼</button>
             </div>
@@ -4045,8 +4154,33 @@
           if (!e.target.closest(".group-select")) selectLayer(layer.id);
         });
         card.addEventListener("click", event => {
-          if (!event.target.closest("button, .group-select")) selectLayer(layer.id);
+          if (!event.target.closest("button, .group-select, .layer-rename-input")) selectLayer(layer.id);
         });
+
+        const beginRename = () => {
+          const textNode = card.querySelector(".layer-name-text");
+          if (!textNode) return;
+          const input = document.createElement("input");
+          input.className = "layer-rename-input";
+          input.value = layer.name || "Capa";
+          textNode.replaceWith(input);
+          input.focus(); input.select();
+          let finished=false;
+          const finish=(commit=true)=>{
+            if(finished)return; finished=true;
+            if(commit){ const next=input.value.trim(); if(next) layer.name=next; }
+            renderLayersList(); renderInspector(); saveProject();
+          };
+          ["pointerdown","mousedown","click"].forEach(type=>input.addEventListener(type,e=>e.stopPropagation()));
+          input.addEventListener("keydown",e=>{
+            e.stopPropagation();
+            if(e.key==="Enter"){e.preventDefault();finish(true);}
+            else if(e.key==="Escape"){e.preventDefault();finish(false);}
+          });
+          input.addEventListener("blur",()=>finish(true),{once:true});
+        };
+        card.querySelector(".rename-layer").addEventListener("click", e => { e.stopPropagation(); beginRename(); });
+        card.querySelector(".layer-name-text")?.addEventListener("dblclick", e => { e.stopPropagation(); beginRename(); });
 
         card.querySelector(".move-up").addEventListener("click", () => {
           if (realIndex < project.layers.length - 1) {
@@ -4208,10 +4342,12 @@
       controls.shadowOpacity.value=layer.shadow?.opacity??45;
       controls.fireEnabled.checked=Boolean(layer.fire?.enabled);
       controls.fireIntensity.value=layer.fire?.intensity??45;
+      controls.fireSpread.value=layer.fire?.spread??58;
+      controls.fireSoftness.value=layer.fire?.softness??72;
       controls.fireSpeed.value=layer.fire?.speed??4;
       controls.fireColor1.value=layer.fire?.colors?.[0]||"#ff4fae";
-      controls.fireColor2.value=layer.fire?.colors?.[1]||"#ff8a3d";
-      controls.fireColor3.value=layer.fire?.colors?.[2]||"#fff1a8";
+      controls.fireColor2.value=layer.fire?.colors?.[1]||"#8a63ff";
+      controls.fireColor3.value=layer.fire?.colors?.[2]||"#8feaff";
       const fireColorDisabled = layer.kind !== "image";
       [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach(c => c.disabled = fireColorDisabled);
       controls.neonMode.value=layer.neon?.mode||"none";
@@ -4280,6 +4416,8 @@
         propShadowYValue: `${layer.shadow?.y ?? 12}px`,
         propShadowOpacityValue: `${layer.shadow?.opacity ?? 45}%`,
         propFireIntensityValue: `${layer.fire?.intensity ?? 45}%`,
+        propFireSpreadValue: `${layer.fire?.spread ?? 58}%`,
+        propFireSoftnessValue: `${layer.fire?.softness ?? 72}%`,
         propFireSpeedValue: `${layer.fire?.speed ?? 4}s`,
         propNeonSpeedValue: `${layer.neon?.speed ?? 4}s`
       };
@@ -4407,6 +4545,8 @@
         shadowOpacity: "shadow.opacity",
         fireEnabled: "fire.enabled",
         fireIntensity: "fire.intensity",
+        fireSpread: "fire.spread",
+        fireSoftness: "fire.softness",
         fireSpeed: "fire.speed",
         neonMode: "neon.mode",
         neonSpeed: "neon.speed"
@@ -5327,6 +5467,15 @@
         const img = await loadImageSource(layer.src);
         const processed = processImage(layer, img);
         const asset = { image: processed, width: processed.naturalWidth || processed.width, height: processed.naturalHeight || processed.height };
+        if (layer.fire?.enabled) {
+          asset.fireField = buildFireField(processed, 420);
+          if (asset.fireField) {
+            const padX=Math.round(asset.fireField.width*.20), padY=Math.round(asset.fireField.height*.22);
+            asset.fireFrame=document.createElement("canvas");
+            asset.fireFrame.width=asset.fireField.width+padX*2;
+            asset.fireFrame.height=asset.fireField.height+padY*2;
+          }
+        }
         if (["outlineBreathe","outlineRetro","outlineChase"].includes(layer.neon?.mode || "")) {
           asset.neonEdgeMask = buildNeonEdgeMask(processed, 760, Math.max(1, Math.min(3, Number(layer.edgeThickness || 2))));
           if (asset.neonEdgeMask) {
@@ -5943,17 +6092,17 @@
 
 
     function drawFireExport(ctx,layer,asset,seconds,loopDuration){
-      if(!asset?.image) return;
-      const logical=getLogicalSize(), image=asset.baseWithoutMask||asset.image, iw=asset.width, ih=asset.height;
+      if(!asset?.image||!asset?.fireField||!asset?.fireFrame) return;
+      const logical=getLogicalSize(), iw=asset.width, ih=asset.height;
       let dw=logical.width, dh=logical.width*ih/iw;
       if(layer.background){ const scale=Math.max(logical.width/iw,logical.height/ih); dw=iw*scale; dh=ih*scale; }
       const anim=animationTransform(layer,seconds,loopDuration), gs=Number(layer.scale||100)/100;
       const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
       const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
-      const colors=layer.fire?.colors||["#ff4fae","#ff8a3d","#fff1a8"];
-      const inten=Math.max(.1,Number(layer.fire?.intensity||45)/100), speed=Math.max(.2,Number(layer.fire?.speed||4));
-      const pulse=.76+.24*(.5+.5*Math.sin(seconds*speed*1.7 + stableLayerRandom(layer.id)*6.28));
-      const orbit=seconds*speed*2.6;
+      const fctx=asset.fireFrame.getContext("2d");
+      renderFireMistFrame(fctx,asset.fireField,layer,seconds);
+      const effectDw=dw*(asset.fireFrame.width/asset.fireField.width);
+      const effectDh=dh*(asset.fireFrame.height/asset.fireField.height);
       ctx.save();
       ctx.translate(logical.width/2,logical.height/2);
       applyAncestorGroupExportTransform(ctx,layer,seconds,loopDuration);
@@ -5964,20 +6113,7 @@
       ctx.transform(1,ky,kx,1,0,0);
       ctx.scale(sx,sy);
       ctx.globalCompositeOperation="screen";
-      [
-        { color: colors[0], blur: (18 + Number(layer.glowBlur||18)*.75) * pulse, alpha: (.18 + inten*.16) * pulse },
-        { color: colors[1], blur: (28 + Number(layer.glowBlur||18)) * pulse, alpha: (.15 + inten*.13) * pulse },
-        { color: colors[2], blur: (12 + Number(layer.glowBlur||18)*.45) * pulse, alpha: (.12 + inten*.10) * pulse }
-      ].forEach((pass, idx) => {
-        ctx.save();
-        ctx.globalAlpha *= pass.alpha;
-        ctx.shadowColor = pass.color;
-        ctx.shadowBlur = pass.blur;
-        ctx.shadowOffsetX = Math.cos(orbit + idx * 1.7) * (2 + idx * 2) * inten;
-        ctx.shadowOffsetY = Math.sin(orbit * 1.15 + idx) * (3 + idx * 2) * inten - 1.5;
-        ctx.drawImage(image,-dw/2,-dh/2,dw,dh);
-        ctx.restore();
-      });
+      ctx.drawImage(asset.fireFrame,-effectDw/2,-effectDh/2,effectDw,effectDh);
       ctx.restore();
     }
 
@@ -6232,9 +6368,9 @@
       const applyValue = () => {
         const layer = selectedLayer();
         if(!layer || layer.kind !== "image") return;
-        layer.fire = layer.fire || {enabled:false,intensity:45,speed:4,colors:["#ff4fae","#ff8a3d","#fff1a8"]};
-        if(!Array.isArray(layer.fire.colors)) layer.fire.colors=["#ff4fae","#ff8a3d","#fff1a8"];
-        while(layer.fire.colors.length < 3) layer.fire.colors.push("#fff1a8");
+        layer.fire = layer.fire || {enabled:false,intensity:45,spread:58,softness:72,speed:4,colors:["#ff4fae","#8a63ff","#8feaff"]};
+        if(!Array.isArray(layer.fire.colors)) layer.fire.colors=["#ff4fae","#8a63ff","#8feaff"];
+        while(layer.fire.colors.length < 3) layer.fire.colors.push("#8feaff");
         layer.fire.colors[index] = control.value;
       };
       control.addEventListener("input", applyValue);

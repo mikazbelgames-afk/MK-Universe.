@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.1 — Backlight Engine · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.2 — Compact Backlight · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -496,7 +496,7 @@
 
 
 
-    /* MK 4.2.1 — Motor de luz posterior / aura real */
+    /* MK 4.2.2 — Luz posterior compacta: pegada al objeto, sin perder respiración */
     .visual-stack {
       position: relative;
       width: 100%;
@@ -523,16 +523,17 @@
 
     /* Luz posterior: no rellena el centro. Simula LED/plasma detrás del panel. */
     .aura-layer.backlight {
-      inset: calc(-1 * var(--aura-spread, 8px));
+      /* El backlight nace prácticamente pegado al borde. La profundidad viene del blur, no de alejar la caja. */
+      inset: calc(-1 * var(--aura-spread, 2px));
       border-radius: var(--aura-radius, 28px);
-      border: 1px solid var(--aura-edge-color, rgba(214,184,255,.36));
+      border: 1px solid var(--aura-edge-color, rgba(214,184,255,.30));
       background: transparent;
       box-shadow:
-        0 0 var(--aura-blur-1, 12px) var(--aura-light-strong, rgba(214,184,255,.72)),
-        0 0 var(--aura-blur-2, 30px) var(--aura-light-medium, rgba(190,132,255,.46)),
-        0 0 var(--aura-blur-3, 58px) var(--aura-light-soft, rgba(255,111,207,.24)),
-        0 0 var(--aura-blur-4, 88px) var(--aura-light-faint, rgba(182,141,255,.13));
-      filter: saturate(1.08);
+        0 0 var(--aura-blur-1, 8px) var(--aura-light-strong, rgba(214,184,255,.68)),
+        0 0 var(--aura-blur-2, 16px) var(--aura-light-medium, rgba(190,132,255,.40)),
+        0 0 var(--aura-blur-3, 26px) var(--aura-light-soft, rgba(255,111,207,.18)),
+        0 0 var(--aura-blur-4, 36px) var(--aura-light-faint, rgba(182,141,255,.08));
+      filter: saturate(1.04);
     }
 
     /* Aura clásica: sigue el alfa del PNG. Útil para personajes y objetos. */
@@ -1119,7 +1120,7 @@
     }
 
   
-    /* MK Universe 4.2.1 — Backlight Engine · editor pro */
+    /* MK Universe 4.2.2 — Compact Backlight · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
       position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
@@ -1213,7 +1214,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.1 · Backlight Engine 🌸</h1>
+    <h1>🌸 MK Universe 4.2.2 · Compact Backlight 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1586,7 +1587,7 @@
 
           <div class="control">
             <label for="propAuraSpread">Separación detrás del objeto <span id="propAuraSpreadValue" class="value"></span></label>
-            <input id="propAuraSpread" type="range" min="0" max="80" step="1" />
+            <input id="propAuraSpread" type="range" min="0" max="30" step="1" />
           </div>
 
           <div class="control">
@@ -2129,7 +2130,7 @@
     }
 
     const defaultProject = {
-      version: 4.21,
+      version: 4.22,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -3124,8 +3125,8 @@
           intensity: 46,
           pulse: 22,
           blur: 34,
-          spread: 8,
-          depth: 72,
+          spread: 2,
+          depth: 58,
           radius: 28,
           speed: 5,
           scale: 2.5,
@@ -3174,8 +3175,8 @@
           intensity: 46,
           pulse: 22,
           blur: 34,
-          spread: 8,
-          depth: 72,
+          spread: 2,
+          depth: 58,
           radius: 28,
           speed: 5,
           scale: 2.5,
@@ -3412,7 +3413,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.21,
+        version: 4.22,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -3441,6 +3442,20 @@
       next.layers = Array.isArray(next.layers) ? next.layers : [];
       next.scenes = Array.isArray(next.scenes) ? next.scenes : [];
       next.activeSceneId = next.activeSceneId || null;
+
+      // 4.2.2: convierte el backlight 4.2.1, que podía quedar demasiado separado,
+      // a una luz más compacta sin alterar la velocidad ni la respiración elegidas.
+      const sourceVersion = Number((raw || {}).version || 0);
+      if (sourceVersion > 0 && sourceVersion < 4.22) {
+        const compactBacklight = layer => {
+          if (!layer?.aura || layer.aura.mode !== "backlight") return;
+          layer.aura.spread = Math.max(0, Math.min(4, Number(layer.aura.spread ?? 2) * .30));
+          layer.aura.blur = Math.max(0, Math.min(30, Number(layer.aura.blur ?? 28)));
+          layer.aura.depth = Math.max(0, Math.min(62, Number(layer.aura.depth ?? 58)));
+        };
+        next.layers.forEach(compactBacklight);
+        next.scenes.forEach(scene => (scene?.layers || []).forEach(compactBacklight));
+      }
       return next;
     }
 
@@ -3456,7 +3471,7 @@
     function saveProject(message = "Proyecto guardado.") {
       syncActiveSceneFromProject();
       captureHistoryIfChanged();
-      project.version = 4.21;
+      project.version = 4.22;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -4244,9 +4259,9 @@
         minOpacity,
         maxOpacity,
         scale: 1 + Math.max(0, Number(auraConfig.scale ?? 2.5)) / 100 * wave,
-        blur: Math.max(0, Number(auraConfig.blur ?? 34)),
-        spread: Math.max(0, Number(auraConfig.spread ?? 8)),
-        depth: Math.max(0, Math.min(100, Number(auraConfig.depth ?? 72))) / 100,
+        blur: Math.max(0, Number(auraConfig.blur ?? 28)),
+        spread: Math.max(0, Number(auraConfig.spread ?? 2)),
+        depth: Math.max(0, Math.min(100, Number(auraConfig.depth ?? 58))) / 100,
         radius: Math.max(0, Number(auraConfig.radius ?? 28)),
         color: auraConfig.color || "#d9b8ff"
       };
@@ -4279,10 +4294,10 @@
       aura.style.setProperty("--aura-focus-size", `${Math.max(5, Math.min(160, Number(auraConfig.focusSize ?? 36)))}%`);
 
       if (mode === "backlight") {
-        const alphaStrong = Math.min(.92, .26 + intensity * .54);
-        const alphaMedium = Math.min(.72, .12 + intensity * .42);
-        const alphaSoft = Math.min(.48, .06 + intensity * .26) * (.55 + depth * .45);
-        const alphaFaint = Math.min(.30, .025 + intensity * .15) * (.35 + depth * .65);
+        const alphaStrong = Math.min(.88, .24 + intensity * .50);
+        const alphaMedium = Math.min(.64, .10 + intensity * .36);
+        const alphaSoft = Math.min(.36, .045 + intensity * .20) * (.68 + depth * .32);
+        const alphaFaint = Math.min(.16, .012 + intensity * .08) * (.58 + depth * .42);
         aura.style.setProperty("--aura-spread", `${spread}px`);
         aura.style.setProperty("--aura-radius", `${Math.max(0, state.radius + spread * .35)}px`);
         aura.style.setProperty("--aura-edge-color", hexToRgba(color, Math.min(.42, .08 + intensity * .22)));
@@ -4290,10 +4305,10 @@
         aura.style.setProperty("--aura-light-medium", hexToRgba(color, alphaMedium));
         aura.style.setProperty("--aura-light-soft", hexToRgba(color, alphaSoft));
         aura.style.setProperty("--aura-light-faint", hexToRgba(color, alphaFaint));
-        aura.style.setProperty("--aura-blur-1", `${Math.max(2, blur * .36)}px`);
-        aura.style.setProperty("--aura-blur-2", `${Math.max(4, blur * .92)}px`);
-        aura.style.setProperty("--aura-blur-3", `${Math.max(7, blur * (1.55 + depth * .65))}px`);
-        aura.style.setProperty("--aura-blur-4", `${Math.max(10, blur * (2.25 + depth * 1.05))}px`);
+        aura.style.setProperty("--aura-blur-1", `${Math.max(2, blur * .28)}px`);
+        aura.style.setProperty("--aura-blur-2", `${Math.max(4, blur * .55)}px`);
+        aura.style.setProperty("--aura-blur-3", `${Math.max(6, blur * (.82 + depth * .18))}px`);
+        aura.style.setProperty("--aura-blur-4", `${Math.max(8, blur * (1.05 + depth * .22))}px`);
       } else if (mode === "silhouette") {
         const maskUrl = `url("${layer.src}")`;
         aura.style.webkitMaskImage = maskUrl;
@@ -4344,10 +4359,10 @@
         const y = -h / 2;
         const radius = Math.max(0, state.radius + spread * .35);
         const passes = [
-          { blur: Math.max(2, state.blur * .36), alpha: Math.min(.80, .20 + intensity * .42), line: 1.05 },
-          { blur: Math.max(4, state.blur * .92), alpha: Math.min(.58, .10 + intensity * .30), line: 1.25 },
-          { blur: Math.max(7, state.blur * (1.55 + state.depth * .65)), alpha: Math.min(.34, .04 + intensity * .17) * (.55 + state.depth * .45), line: 1.5 },
-          { blur: Math.max(10, state.blur * (2.25 + state.depth * 1.05)), alpha: Math.min(.22, .02 + intensity * .10) * (.35 + state.depth * .65), line: 1.8 }
+          { blur: Math.max(2, state.blur * .28), alpha: Math.min(.76, .18 + intensity * .38), line: 1.05 },
+          { blur: Math.max(4, state.blur * .55), alpha: Math.min(.52, .08 + intensity * .26), line: 1.20 },
+          { blur: Math.max(6, state.blur * (.82 + state.depth * .18)), alpha: Math.min(.27, .03 + intensity * .13) * (.68 + state.depth * .32), line: 1.35 },
+          { blur: Math.max(8, state.blur * (1.05 + state.depth * .22)), alpha: Math.min(.13, .01 + intensity * .06) * (.58 + state.depth * .42), line: 1.55 }
         ];
         for (const pass of passes) {
           ctx.save();
@@ -4997,9 +5012,9 @@
       controls.auraColor.value = layer.aura?.color || "#d9b8ff";
       controls.auraIntensity.value = layer.aura?.intensity ?? 55;
       controls.auraPulse.value = layer.aura?.pulse ?? 45;
-      controls.auraBlur.value = layer.aura?.blur ?? 34;
-      controls.auraSpread.value = layer.aura?.spread ?? 8;
-      controls.auraDepth.value = layer.aura?.depth ?? 72;
+      controls.auraBlur.value = layer.aura?.blur ?? 28;
+      controls.auraSpread.value = layer.aura?.spread ?? 2;
+      controls.auraDepth.value = layer.aura?.depth ?? 58;
       controls.auraRadius.value = layer.aura?.radius ?? 28;
       controls.auraSpeed.value = layer.aura?.speed ?? 5;
       controls.auraScale.value = layer.aura?.scale ?? 3;
@@ -5112,9 +5127,9 @@
         propShineSpeedValue: `${layer.shineSpeed ?? 6}s`,
         propAuraIntensityValue: `${layer.aura?.intensity ?? 55}%`,
         propAuraPulseValue: `${layer.aura?.pulse ?? 45}%`,
-        propAuraBlurValue: `${layer.aura?.blur ?? 34}px`,
-        propAuraSpreadValue: `${layer.aura?.spread ?? 8}px`,
-        propAuraDepthValue: `${layer.aura?.depth ?? 72}%`,
+        propAuraBlurValue: `${layer.aura?.blur ?? 28}px`,
+        propAuraSpreadValue: `${layer.aura?.spread ?? 2}px`,
+        propAuraDepthValue: `${layer.aura?.depth ?? 58}%`,
         propAuraRadiusValue: `${layer.aura?.radius ?? 28}px`,
         propAuraSpeedValue: `${layer.aura?.speed ?? 5}s`,
         propAuraScaleValue: `${layer.aura?.scale ?? 3}%`,

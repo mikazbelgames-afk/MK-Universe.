@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.5 — True Rear Glow · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.5 — True Rear Glow · Motor maestro de overlays — Local Content Mirror</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -3868,8 +3868,12 @@
         const globalScale = Number(layer.scale || 100) / 100;
         const axisScaleX = Number(layer.scaleX ?? 100) / 100;
         const axisScaleY = Number(layer.scaleY ?? 100) / 100;
-        container.style.setProperty("--scale-x", globalScale * axisScaleX * (layer.flipX ? -1 : 1));
-        container.style.setProperty("--scale-y", globalScale * axisScaleY * (layer.flipY ? -1 : 1));
+        // MK 4.2.9: en imágenes el espejo pertenece al CONTENIDO, no a la caja de transformación.
+        // Así X/Y, tamaño, Scale X/Y, rotación y skew permanecen literalmente iguales.
+        const outerFlipX = layer.kind === "image" ? 1 : (layer.flipX ? -1 : 1);
+        const outerFlipY = layer.kind === "image" ? 1 : (layer.flipY ? -1 : 1);
+        container.style.setProperty("--scale-x", globalScale * axisScaleX * outerFlipX);
+        container.style.setProperty("--scale-y", globalScale * axisScaleY * outerFlipY);
         container.style.setProperty("--rotation", `${Number(layer.rotation||0)}deg`);
         container.style.setProperty("--skew-x", `${layer.skewX || 0}deg`);
         container.style.setProperty("--skew-y", `${layer.skewY || 0}deg`);
@@ -3951,6 +3955,14 @@
       // Lienzo limpio: sin nombre de archivo, coordenadas ni líneas de centro sobre el diseño.
     }
 
+    function applyImageContentMirror(layer, node) {
+      if (!node || layer?.kind !== "image") return;
+      const mx = layer.flipX ? -1 : 1;
+      const my = layer.flipY ? -1 : 1;
+      node.style.transformOrigin = "50% 50%";
+      node.style.transform = `scale(${mx}, ${my})`;
+    }
+
     function loadImageLayer(layer, motion) {
       const img = new Image();
       img.alt = layer.name;
@@ -3991,6 +4003,7 @@
             styleVisual(layer, focusVisual);
             focusMotion.appendChild(focusVisual);
             stack.append(baseWrap, focusMotion);
+            applyImageContentMirror(layer, stack);
             motion.replaceChildren(stack);
           } catch (error) {
             console.warn("No se pudo aplicar la animación focal; se volverá al modo normal.", error);
@@ -4019,6 +4032,7 @@
           stack.style.setProperty("--neon-blur",`${Math.max(3,Math.min(9,Number(layer.glowBlur||18)*.28))}px`);
         }
         addFlameCanvas(layer, stack, reflected);
+        applyImageContentMirror(layer, stack);
         motion.replaceChildren(stack);
         addMetalShine(layer, stack);
       };
@@ -5101,18 +5115,16 @@
       copy.x += Number(offset || 0);
       copy.y += Number(offset || 0);
 
-      if ((mirrorX || mirrorY) && copy.kind === "image") {
-        await bakeMirrorIntoLayer(copy, mirrorX, mirrorY);
-      } else {
-        // Grupos/slots siguen usando transformación geométrica porque no poseen bitmap.
-        if (mirrorX) copy.flipX = !copy.flipX;
-        if (mirrorY) copy.flipY = !copy.flipY;
-      }
+      // MK 4.2.9: el espejo NO reescribe el PNG y NO toca ninguna dimensión.
+      // Solo cambia el estado de espejo del contenido dentro de la misma caja.
+      if (mirrorX) copy.flipX = !Boolean(copy.flipX);
+      if (mirrorY) copy.flipY = !Boolean(copy.flipY);
+      normalizeLayerTransform(copy);
 
       project.layers.splice(idx + 1, 0, copy);
       project.selectedId = copy.id;
       saveProject(mirrorX || mirrorY
-        ? "Copia espejo exacta creada: mismo tamaño y ajustes, bitmap reflejado."
+        ? "Copia espejo local creada: caja y ajustes idénticos; solo el contenido fue reflejado."
         : "Copia exacta creada con todos los ajustes visuales.");
       renderAll();
       return copy;
@@ -5653,18 +5665,8 @@
               }
             }
           } else {
-            if ((prop === "flipX" || prop === "flipY") && layer.kind === "image" && value === true) {
-              // Para imágenes, el espejo es una operación de bitmap exacta. Esto evita
-              // que una escala negativa cambie la caja visual o interfiera con Scale X/Y.
-              // El checkbox vuelve a falso después de aplicar el espejo.
-              bakeMirrorIntoLayer(layer, prop === "flipX", prop === "flipY").then(() => {
-                renderStage();
-                renderLayersList();
-                renderInspector();
-                saveProject("Espejo aplicado sin alterar el tamaño de la imagen.");
-              });
-              return;
-            }
+            // MK 4.2.9: flipX/flipY son estados persistentes del contenido.
+            // No se hornea el bitmap, no se resetean valores y no se toca el tamaño.
             layer[prop] = value;
             if (prop === "particleType") applyParticleTypeDefaults(layer, value);
           }
@@ -6641,8 +6643,8 @@
       }
       const anim=useAnimation ? animationTransform(layer,seconds,loopDuration) : {x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
       const gs=Number(layer.scale||100)/100;
-      const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
-      const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
+      const sx=gs*(Number(layer.scaleX??100)/100)*anim.scaleX;
+      const sy=gs*(Number(layer.scaleY??100)/100)*anim.scaleY;
       ctx.save();
       ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
       ctx.globalAlpha=1;
@@ -6654,6 +6656,8 @@
       const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
       ctx.transform(1,ky,kx,1,0,0);
       ctx.scale(sx,sy);
+      // Espejo local: ocurre dentro de la caja ya dimensionada/rotada.
+      ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
       ctx.filter=canvasFilter(layer);
       const neonState = neonImageState(layer,seconds,loopDuration);
       const nf = neonState.factor;
@@ -6719,8 +6723,8 @@
       const cropCenterX = -fullDw / 2 + (bounds.x + bounds.width / 2) * fullDw / iw;
       const cropCenterY = -fullDh / 2 + (bounds.y + bounds.height / 2) * fullDh / ih;
       const gs = Number(layer.scale || 100) / 100;
-      const baseScaleX = gs * (Number(layer.scaleX ?? 100) / 100) * (layer.flipX ? -1 : 1);
-      const baseScaleY = gs * (Number(layer.scaleY ?? 100) / 100) * (layer.flipY ? -1 : 1);
+      const baseScaleX = gs * (Number(layer.scaleX ?? 100) / 100);
+      const baseScaleY = gs * (Number(layer.scaleY ?? 100) / 100);
       const kx = Math.tan(Number(layer.skewX || 0) * Math.PI / 180);
       const ky = Math.tan(Number(layer.skewY || 0) * Math.PI / 180);
 
@@ -6734,6 +6738,7 @@
       ctx.rotate(Number(layer.rotation || 0) * Math.PI / 180);
       ctx.transform(1, ky, kx, 1, 0, 0);
       ctx.scale(baseScaleX, baseScaleY);
+      ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
       ctx.filter = canvasFilter(layer);
       const neonState = neonImageState(layer, seconds, loopDuration);
       if (neonState.isFullImage) {
@@ -7139,8 +7144,8 @@
       let dw=logical.width, dh=logical.width*ih/iw;
       if(layer.background){ const scale=Math.max(logical.width/iw,logical.height/ih); dw=iw*scale; dh=ih*scale; }
       const anim=animationTransform(layer,seconds,loopDuration), gs=Number(layer.scale||100)/100;
-      const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
-      const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
+      const sx=gs*(Number(layer.scaleX??100)/100)*anim.scaleX;
+      const sy=gs*(Number(layer.scaleY??100)/100)*anim.scaleY;
       const fctx=asset.fireFrame.getContext("2d");
       renderFireMistFrame(fctx,asset.fireField,layer,seconds);
       const effectDw=dw*(asset.fireFrame.width/asset.fireField.width);
@@ -7154,6 +7159,7 @@
       const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
       ctx.transform(1,ky,kx,1,0,0);
       ctx.scale(sx,sy);
+      ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
       ctx.globalCompositeOperation="screen";
       ctx.drawImage(asset.fireFrame,-effectDw/2,-effectDh/2,effectDw,effectDh);
       ctx.restore();

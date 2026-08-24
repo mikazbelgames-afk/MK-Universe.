@@ -5058,19 +5058,61 @@
       return normalizeLayerTransform(copy);
     }
 
-    function duplicateLayer(layer, { mirrorX = false, mirrorY = false, offset = 0 } = {}) {
+    async function mirrorDataUrl(source, mirrorX = false, mirrorY = false) {
+      if (!source || (!mirrorX && !mirrorY)) return source;
+      const img = await loadImageSource(source);
+      const width = Math.max(1, img.naturalWidth || img.width || 1);
+      const height = Math.max(1, img.naturalHeight || img.height || 1);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.save();
+      ctx.translate(mirrorX ? width : 0, mirrorY ? height : 0);
+      ctx.scale(mirrorX ? -1 : 1, mirrorY ? -1 : 1);
+      ctx.drawImage(img, 0, 0, width, height);
+      ctx.restore();
+      return canvas.toDataURL("image/png");
+    }
+
+    async function bakeMirrorIntoLayer(layer, mirrorX = false, mirrorY = false) {
+      if (!layer || layer.kind !== "image" || (!mirrorX && !mirrorY)) return layer;
+
+      // El espejo se hornea en el bitmap manteniendo EXACTAMENTE el mismo lienzo
+      // de píxeles. Así tamaño, scale/scaleX/scaleY, rotación, skew y efectos no
+      // participan en el espejo y no pueden cambiar visualmente de magnitud.
+      layer.src = await mirrorDataUrl(layer.src, mirrorX, mirrorY);
+      if (layer.originalSrc) layer.originalSrc = await mirrorDataUrl(layer.originalSrc, mirrorX, mirrorY);
+      if (layer.maskSrc) layer.maskSrc = await mirrorDataUrl(layer.maskSrc, mirrorX, mirrorY);
+
+      // Compatibilidad: cualquier flip de transformación anterior se consume en
+      // el bitmap. El render vuelve a una escala siempre positiva y estable.
+      layer.flipX = false;
+      layer.flipY = false;
+      normalizeLayerTransform(layer);
+      return layer;
+    }
+
+    async function duplicateLayer(layer, { mirrorX = false, mirrorY = false, offset = 0 } = {}) {
       if (!layer) return null;
       const idx = project.layers.indexOf(layer);
       if (idx < 0) return null;
       const copy = cloneLayerForDuplicate(layer);
       copy.x += Number(offset || 0);
       copy.y += Number(offset || 0);
-      if (mirrorX) copy.flipX = !copy.flipX;
-      if (mirrorY) copy.flipY = !copy.flipY;
+
+      if ((mirrorX || mirrorY) && copy.kind === "image") {
+        await bakeMirrorIntoLayer(copy, mirrorX, mirrorY);
+      } else {
+        // Grupos/slots siguen usando transformación geométrica porque no poseen bitmap.
+        if (mirrorX) copy.flipX = !copy.flipX;
+        if (mirrorY) copy.flipY = !copy.flipY;
+      }
+
       project.layers.splice(idx + 1, 0, copy);
       project.selectedId = copy.id;
       saveProject(mirrorX || mirrorY
-        ? "Copia espejo creada sin cambiar tamaño, rotación ni efectos."
+        ? "Copia espejo exacta creada: mismo tamaño y ajustes, bitmap reflejado."
         : "Copia exacta creada con todos los ajustes visuales.");
       renderAll();
       return copy;
@@ -5611,6 +5653,18 @@
               }
             }
           } else {
+            if ((prop === "flipX" || prop === "flipY") && layer.kind === "image" && value === true) {
+              // Para imágenes, el espejo es una operación de bitmap exacta. Esto evita
+              // que una escala negativa cambie la caja visual o interfiera con Scale X/Y.
+              // El checkbox vuelve a falso después de aplicar el espejo.
+              bakeMirrorIntoLayer(layer, prop === "flipX", prop === "flipY").then(() => {
+                renderStage();
+                renderLayersList();
+                renderInspector();
+                saveProject("Espejo aplicado sin alterar el tamaño de la imagen.");
+              });
+              return;
+            }
             layer[prop] = value;
             if (prop === "particleType") applyParticleTypeDefaults(layer, value);
           }

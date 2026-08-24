@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.5 — True Rear Glow · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.6 — Exact Mirror Order · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -142,6 +142,7 @@
       transform:
         translate(-50%, -50%)
         translate(var(--x-px, 0px), var(--y-px, 0px))
+        scale(var(--flip-x, 1), var(--flip-y, 1))
         rotate(var(--rotation, 0deg))
         skewX(var(--skew-x, 0deg))
         skewY(var(--skew-y, 0deg))
@@ -160,6 +161,7 @@
       height: 100%;
       transform:
         translate(var(--x-px, 0px), var(--y-px, 0px))
+        scale(var(--flip-x, 1), var(--flip-y, 1))
         rotate(var(--rotation, 0deg))
         skewX(var(--skew-x, 0deg))
         skewY(var(--skew-y, 0deg))
@@ -1267,7 +1269,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.5 · True Rear Glow 🌸</h1>
+    <h1>🌸 MK Universe 4.2.6 · Exact Mirror Order 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1474,11 +1476,6 @@
           <div class="check-row">
             <input id="propFlipY" type="checkbox" />
             <label for="propFlipY">Espejo vertical</label>
-          </div>
-
-          <div class="transform-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px">
-            <button id="duplicateExactBtn" class="btn btn-mini" type="button" title="Duplica la capa conservando exactamente tamaño, retoques y efectos">⧉ Duplicar exacto</button>
-            <button id="duplicateMirrorXBtn" class="btn btn-mini" type="button" title="Duplica la capa y crea la copia reflejada horizontalmente sin alterar el tamaño">↔ Copia espejo H</button>
           </div>
 
           <div class="control">
@@ -2188,7 +2185,7 @@
     }
 
     const defaultProject = {
-      version: 4.27,
+      version: 4.25,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2207,7 +2204,7 @@
 
     let project = migrateProject(loadProject() || structuredClone(defaultProject));
     project.export = { ...(project.export || {}), duration: MASTER_LOOP_SECONDS };
-    project.layers = (project.layers || []).map(layer => normalizeLayerTransform(defaultLayer(layer)));
+    project.layers = (project.layers || []).map(layer => defaultLayer(layer));
     ensureSceneSystem();
     if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
       project.selectedId = null;
@@ -3136,6 +3133,7 @@
         scale: 100,
         scaleX: 100,
         scaleY: 100,
+        // Espejo independiente: no altera scaleX/scaleY.
         flipX: false,
         flipY: false,
         skewX: 0,
@@ -3868,8 +3866,13 @@
         const globalScale = Number(layer.scale || 100) / 100;
         const axisScaleX = Number(layer.scaleX ?? 100) / 100;
         const axisScaleY = Number(layer.scaleY ?? 100) / 100;
-        container.style.setProperty("--scale-x", globalScale * axisScaleX * (layer.flipX ? -1 : 1));
-        container.style.setProperty("--scale-y", globalScale * axisScaleY * (layer.flipY ? -1 : 1));
+        // 4.2.6 Exact Mirror Order: el espejo vive en una transformación externa.
+        // Así refleja el resultado COMPLETO (escala, skew y rotación) sin cambiar
+        // los valores ni deformar la copia.
+        container.style.setProperty("--flip-x", layer.flipX ? -1 : 1);
+        container.style.setProperty("--flip-y", layer.flipY ? -1 : 1);
+        container.style.setProperty("--scale-x", globalScale * axisScaleX);
+        container.style.setProperty("--scale-y", globalScale * axisScaleY);
         container.style.setProperty("--rotation", `${Number(layer.rotation||0)}deg`);
         container.style.setProperty("--skew-x", `${layer.skewX || 0}deg`);
         container.style.setProperty("--skew-y", `${layer.skewY || 0}deg`);
@@ -4998,49 +5001,13 @@
         .forEach(control => setControlVisible(control, isVfx));
     }
 
-    function normalizeLayerTransform(layer) {
-      // El tamaño y el espejo son estados independientes. Nunca usamos escalas
-      // negativas para reflejar una capa: una escala negativa heredada se
-      // convierte en flipX / flipY y se conserva su magnitud positiva.
-      layer.scale = Math.max(0.01, Math.abs(Number(layer.scale ?? 100)));
-
-      let sx = Number(layer.scaleX ?? 100);
-      let sy = Number(layer.scaleY ?? 100);
-      if (!Number.isFinite(sx)) sx = 100;
-      if (!Number.isFinite(sy)) sy = 100;
-      if (sx < 0) { layer.flipX = !Boolean(layer.flipX); sx = Math.abs(sx); }
-      if (sy < 0) { layer.flipY = !Boolean(layer.flipY); sy = Math.abs(sy); }
-      layer.scaleX = Math.max(0.01, sx);
-      layer.scaleY = Math.max(0.01, sy);
-      layer.flipX = Boolean(layer.flipX);
-      layer.flipY = Boolean(layer.flipY);
-      layer.rotation = Number(layer.rotation ?? 0);
-      layer.skewX = Number(layer.skewX ?? 0);
-      layer.skewY = Number(layer.skewY ?? 0);
-      return layer;
-    }
-
     function cloneLayerForDuplicate(layer) {
-      // Clon exacto y profundo: bitmap retocado, máscara, tamaño, rotación,
-      // deformación, espejo, animación y FX quedan idénticos e independientes.
-      const source = structuredClone(layer);
-      const copy = defaultLayer(source);
+      // Duplicado visual exacto: conserva el bitmap ya retocado (src), máscaras,
+      // transformaciones, animación y todos los efectos. Cada estructura anidada
+      // queda independiente para poder editar la copia sin alterar el original.
+      const copy = defaultLayer(structuredClone(layer));
       copy.id = newId();
       copy.name = `${layer.name} copia`;
-
-      // Transformación exacta. Es importante reasignarla explícitamente para
-      // que duplicar + espejar jamás resetee el tamaño o una deformación previa.
-      copy.x = Number(layer.x ?? 0);
-      copy.y = Number(layer.y ?? 0);
-      copy.scale = Number(layer.scale ?? 100);
-      copy.scaleX = Number(layer.scaleX ?? 100);
-      copy.scaleY = Number(layer.scaleY ?? 100);
-      copy.flipX = Boolean(layer.flipX);
-      copy.flipY = Boolean(layer.flipY);
-      copy.rotation = Number(layer.rotation ?? 0);
-      copy.skewX = Number(layer.skewX ?? 0);
-      copy.skewY = Number(layer.skewY ?? 0);
-
       copy.src = layer.src || "";
       copy.originalSrc = layer.originalSrc || null;
       copy.maskSrc = layer.maskSrc || null;
@@ -5055,66 +5022,6 @@
       copy.vfx = structuredClone(layer.vfx || copy.vfx);
       copy.liveSlot = structuredClone(layer.liveSlot || copy.liveSlot);
       copy.reflection = structuredClone(layer.reflection || copy.reflection);
-      return normalizeLayerTransform(copy);
-    }
-
-    async function mirrorDataUrl(source, mirrorX = false, mirrorY = false) {
-      if (!source || (!mirrorX && !mirrorY)) return source;
-      const img = await loadImageSource(source);
-      const width = Math.max(1, img.naturalWidth || img.width || 1);
-      const height = Math.max(1, img.naturalHeight || img.height || 1);
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.save();
-      ctx.translate(mirrorX ? width : 0, mirrorY ? height : 0);
-      ctx.scale(mirrorX ? -1 : 1, mirrorY ? -1 : 1);
-      ctx.drawImage(img, 0, 0, width, height);
-      ctx.restore();
-      return canvas.toDataURL("image/png");
-    }
-
-    async function bakeMirrorIntoLayer(layer, mirrorX = false, mirrorY = false) {
-      if (!layer || layer.kind !== "image" || (!mirrorX && !mirrorY)) return layer;
-
-      // El espejo se hornea en el bitmap manteniendo EXACTAMENTE el mismo lienzo
-      // de píxeles. Así tamaño, scale/scaleX/scaleY, rotación, skew y efectos no
-      // participan en el espejo y no pueden cambiar visualmente de magnitud.
-      layer.src = await mirrorDataUrl(layer.src, mirrorX, mirrorY);
-      if (layer.originalSrc) layer.originalSrc = await mirrorDataUrl(layer.originalSrc, mirrorX, mirrorY);
-      if (layer.maskSrc) layer.maskSrc = await mirrorDataUrl(layer.maskSrc, mirrorX, mirrorY);
-
-      // Compatibilidad: cualquier flip de transformación anterior se consume en
-      // el bitmap. El render vuelve a una escala siempre positiva y estable.
-      layer.flipX = false;
-      layer.flipY = false;
-      normalizeLayerTransform(layer);
-      return layer;
-    }
-
-    async function duplicateLayer(layer, { mirrorX = false, mirrorY = false, offset = 0 } = {}) {
-      if (!layer) return null;
-      const idx = project.layers.indexOf(layer);
-      if (idx < 0) return null;
-      const copy = cloneLayerForDuplicate(layer);
-      copy.x += Number(offset || 0);
-      copy.y += Number(offset || 0);
-
-      if ((mirrorX || mirrorY) && copy.kind === "image") {
-        await bakeMirrorIntoLayer(copy, mirrorX, mirrorY);
-      } else {
-        // Grupos/slots siguen usando transformación geométrica porque no poseen bitmap.
-        if (mirrorX) copy.flipX = !copy.flipX;
-        if (mirrorY) copy.flipY = !copy.flipY;
-      }
-
-      project.layers.splice(idx + 1, 0, copy);
-      project.selectedId = copy.id;
-      saveProject(mirrorX || mirrorY
-        ? "Copia espejo exacta creada: mismo tamaño y ajustes, bitmap reflejado."
-        : "Copia exacta creada con todos los ajustes visuales.");
-      renderAll();
       return copy;
     }
 
@@ -5213,7 +5120,11 @@
         });
 
         card.querySelector(".duplicate").addEventListener("click", () => {
-          duplicateLayer(layer);
+          const copy = cloneLayerForDuplicate(layer);
+          project.layers.splice(realIndex + 1, 0, copy);
+          project.selectedId = copy.id;
+          saveProject("Copia creada con todos los ajustes visuales.");
+          renderAll();
         });
 
         card.querySelector(".delete").addEventListener("click", () => deleteLayer(layer.id));
@@ -5653,18 +5564,6 @@
               }
             }
           } else {
-            if ((prop === "flipX" || prop === "flipY") && layer.kind === "image" && value === true) {
-              // Para imágenes, el espejo es una operación de bitmap exacta. Esto evita
-              // que una escala negativa cambie la caja visual o interfiera con Scale X/Y.
-              // El checkbox vuelve a falso después de aplicar el espejo.
-              bakeMirrorIntoLayer(layer, prop === "flipX", prop === "flipY").then(() => {
-                renderStage();
-                renderLayersList();
-                renderInspector();
-                saveProject("Espejo aplicado sin alterar el tamaño de la imagen.");
-              });
-              return;
-            }
             layer[prop] = value;
             if (prop === "particleType") applyParticleTypeDefaults(layer, value);
           }
@@ -6599,14 +6498,15 @@
         const anim = animationTransform(group, seconds, loopDuration);
         ctx.globalAlpha *= Math.max(0, Math.min(1, Number(group.opacity ?? 100) / 100)) * anim.opacity;
         ctx.translate(Number(group.x || 0), Number(group.y || 0));
+        ctx.scale(group.flipX ? -1 : 1, group.flipY ? -1 : 1);
         ctx.rotate(Number(group.rotation || 0) * Math.PI / 180);
         const gkx = Math.tan(Number(group.skewX || 0) * Math.PI / 180);
         const gky = Math.tan(Number(group.skewY || 0) * Math.PI / 180);
         ctx.transform(1, gky, gkx, 1, 0, 0);
         const gs = Number(group.scale || 100) / 100;
         ctx.scale(
-          gs * (Number(group.scaleX ?? 100) / 100) * (group.flipX ? -1 : 1),
-          gs * (Number(group.scaleY ?? 100) / 100) * (group.flipY ? -1 : 1)
+          gs * (Number(group.scaleX ?? 100) / 100),
+          gs * (Number(group.scaleY ?? 100) / 100)
         );
         ctx.translate(anim.x, anim.y);
         ctx.rotate(anim.rotation * Math.PI / 180);
@@ -6641,8 +6541,8 @@
       }
       const anim=useAnimation ? animationTransform(layer,seconds,loopDuration) : {x:0,y:0,rotation:0,scaleX:1,scaleY:1,opacity:1};
       const gs=Number(layer.scale||100)/100;
-      const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
-      const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
+      const sx=gs*(Number(layer.scaleX??100)/100)*anim.scaleX;
+      const sy=gs*(Number(layer.scaleY??100)/100)*anim.scaleY;
       ctx.save();
       ctx.globalCompositeOperation = layer.blend === "normal" ? "source-over" : layer.blend;
       ctx.globalAlpha=1;
@@ -6650,6 +6550,7 @@
       applyAncestorGroupExportTransform(ctx,layer,seconds,loopDuration);
       ctx.globalAlpha*=(Number(layer.opacity||100)/100)*anim.opacity;
       ctx.translate(Number(layer.x||0)+anim.x,Number(layer.y||0)+anim.y);
+      ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
       ctx.rotate((Number(layer.rotation||0)+anim.rotation)*Math.PI/180);
       const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
       ctx.transform(1,ky,kx,1,0,0);
@@ -6719,8 +6620,8 @@
       const cropCenterX = -fullDw / 2 + (bounds.x + bounds.width / 2) * fullDw / iw;
       const cropCenterY = -fullDh / 2 + (bounds.y + bounds.height / 2) * fullDh / ih;
       const gs = Number(layer.scale || 100) / 100;
-      const baseScaleX = gs * (Number(layer.scaleX ?? 100) / 100) * (layer.flipX ? -1 : 1);
-      const baseScaleY = gs * (Number(layer.scaleY ?? 100) / 100) * (layer.flipY ? -1 : 1);
+      const baseScaleX = gs * (Number(layer.scaleX ?? 100) / 100);
+      const baseScaleY = gs * (Number(layer.scaleY ?? 100) / 100);
       const kx = Math.tan(Number(layer.skewX || 0) * Math.PI / 180);
       const ky = Math.tan(Number(layer.skewY || 0) * Math.PI / 180);
 
@@ -6731,6 +6632,7 @@
       applyAncestorGroupExportTransform(ctx, layer, seconds, loopDuration);
       ctx.globalAlpha *= Number(layer.opacity || 100) / 100;
       ctx.translate(Number(layer.x || 0), Number(layer.y || 0));
+      ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
       ctx.rotate(Number(layer.rotation || 0) * Math.PI / 180);
       ctx.transform(1, ky, kx, 1, 0, 0);
       ctx.scale(baseScaleX, baseScaleY);
@@ -6839,8 +6741,8 @@
         ? { x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1, opacity: 1 }
         : animationTransform(layer, seconds, loopDuration);
       const globalScale = Number(layer.scale || 100) / 100;
-      const scaleX = globalScale * (Number(layer.scaleX ?? 100) / 100) * (layer.flipX ? -1 : 1) * anim.scaleX;
-      const scaleY = globalScale * (Number(layer.scaleY ?? 100) / 100) * (layer.flipY ? -1 : 1) * anim.scaleY;
+      const scaleX = globalScale * (Number(layer.scaleX ?? 100) / 100) * anim.scaleX;
+      const scaleY = globalScale * (Number(layer.scaleY ?? 100) / 100) * anim.scaleY;
       const kx = Math.tan(Number(layer.skewX || 0) * Math.PI / 180);
       const ky = Math.tan(Number(layer.skewY || 0) * Math.PI / 180);
 
@@ -6851,6 +6753,7 @@
       applyAncestorGroupExportTransform(ctx, layer, seconds, loopDuration);
       ctx.globalAlpha *= (Number(layer.opacity || 100) / 100) * anim.opacity;
       ctx.translate(Number(layer.x || 0) + anim.x, Number(layer.y || 0) + anim.y);
+      ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
       ctx.rotate((Number(layer.rotation || 0) + anim.rotation) * Math.PI / 180);
       ctx.transform(1, ky, kx, 1, 0, 0);
       ctx.scale(scaleX, scaleY);
@@ -7139,8 +7042,8 @@
       let dw=logical.width, dh=logical.width*ih/iw;
       if(layer.background){ const scale=Math.max(logical.width/iw,logical.height/ih); dw=iw*scale; dh=ih*scale; }
       const anim=animationTransform(layer,seconds,loopDuration), gs=Number(layer.scale||100)/100;
-      const sx=gs*(Number(layer.scaleX??100)/100)*(layer.flipX?-1:1)*anim.scaleX;
-      const sy=gs*(Number(layer.scaleY??100)/100)*(layer.flipY?-1:1)*anim.scaleY;
+      const sx=gs*(Number(layer.scaleX??100)/100)*anim.scaleX;
+      const sy=gs*(Number(layer.scaleY??100)/100)*anim.scaleY;
       const fctx=asset.fireFrame.getContext("2d");
       renderFireMistFrame(fctx,asset.fireField,layer,seconds);
       const effectDw=dw*(asset.fireFrame.width/asset.fireField.width);
@@ -7150,6 +7053,7 @@
       applyAncestorGroupExportTransform(ctx,layer,seconds,loopDuration);
       ctx.globalAlpha*=Number(layer.opacity||100)/100*anim.opacity;
       ctx.translate(Number(layer.x||0)+anim.x,Number(layer.y||0)+anim.y);
+      ctx.scale(layer.flipX ? -1 : 1, layer.flipY ? -1 : 1);
       ctx.rotate((Number(layer.rotation||0)+anim.rotation)*Math.PI/180);
       const kx=Math.tan(Number(layer.skewX||0)*Math.PI/180), ky=Math.tan(Number(layer.skewY||0)*Math.PI/180);
       ctx.transform(1,ky,kx,1,0,0);
@@ -7583,20 +7487,18 @@
       moveSelectedLayer(event.shiftKey ? 10 : 2, 0);
     });
 
-    document.getElementById("duplicateExactBtn")?.addEventListener("click", () => {
-      duplicateLayer(selectedLayer());
-    });
-    document.getElementById("duplicateMirrorXBtn")?.addEventListener("click", () => {
-      duplicateLayer(selectedLayer(), { mirrorX: true });
-    });
-
     document.addEventListener("keydown", event => {
       if((event.ctrlKey||event.metaKey) && event.key.toLowerCase()==="z"){event.preventDefault();undoProject();return;}
       if((event.ctrlKey||event.metaKey) && event.key.toLowerCase()==="d"){
         const layer=selectedLayer();
         if(layer){
           event.preventDefault();
-          duplicateLayer(layer, { mirrorX: Boolean(event.shiftKey) });
+          const idx=project.layers.indexOf(layer);
+          const copy=cloneLayerForDuplicate(layer);
+          project.layers.splice(idx+1,0,copy);
+          project.selectedId=copy.id;
+          saveProject("Copia creada con todos los ajustes visuales.");
+          renderAll();
         }
         return;
       }

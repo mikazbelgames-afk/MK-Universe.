@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.7 — Smart Guides · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.8 — Transition Workshop · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1272,14 +1272,21 @@
     .scene-tab.active{background:linear-gradient(135deg,rgba(255,103,190,.22),rgba(169,125,255,.20));border-color:rgba(255,130,202,.65);color:#fff}
     .scene-type-pill{font-size:.66rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#ffc5e6;background:rgba(255,102,187,.10);border:1px solid rgba(255,130,202,.25);padding:4px 8px;border-radius:999px}
     .scene-manager-note{margin-top:7px;color:#a69bad;font-size:.69rem;line-height:1.35}
+    .transition-workshop{display:none;border-color:rgba(255,139,210,.30);background:linear-gradient(180deg,rgba(47,23,55,.96),rgba(25,18,33,.96))}
+    .transition-workshop.active{display:block}
+    .transition-workshop .transition-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+    .transition-workshop label{display:flex;flex-direction:column;gap:4px;color:#d9cddd;font-size:.71rem;font-weight:700}
+    .transition-workshop input,.transition-workshop select{width:100%}
+    .transition-cut-readout{margin-top:7px;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);font-size:.70rem;color:#dfd2e5}
+    .transition-cut-readout strong{color:#ffc6e6}
 
   </style>
 </head>
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.7 · Smart Guides 🌸</h1>
-    <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
+    <h1>🌸 MK Universe 4.2.8 · Transition Workshop 🌸</h1>
+    <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel, guías inteligentes y taller de Stinger para OBS.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
@@ -1317,6 +1324,39 @@
         <button id="newSceneBtn" class="btn" type="button">＋ Escena libre</button>
       </div>
       <div id="sceneManagerStatus" class="scene-manager-note">Cada escena conserva sus propias capas, grupos, animaciones y guías.</div>
+    </section>
+
+    <section id="transitionWorkshop" class="card transition-workshop">
+      <h3>🌸 Taller de transición · Stinger OBS</h3>
+      <p class="notice">Solo aparece en la escena <strong>Transición</strong>. Diseña aquí el barrido y expórtalo como WebM. El punto de corte es una guía para configurarlo después en OBS.</p>
+      <div class="transition-grid">
+        <label>Duración
+          <input id="transitionDuration" type="number" min="0.5" max="5" step="0.05" value="1.50" />
+        </label>
+        <label>Cambio de escena
+          <input id="transitionCutTime" type="number" min="0.1" max="4.9" step="0.01" value="0.78" />
+        </label>
+        <label>Dirección
+          <select id="transitionDirection">
+            <option value="upRight" selected>↗ Abajo izquierda → arriba derecha</option>
+            <option value="upLeft">↖ Abajo derecha → arriba izquierda</option>
+            <option value="downRight">↘ Arriba izquierda → abajo derecha</option>
+            <option value="downLeft">↙ Arriba derecha → abajo izquierda</option>
+          </select>
+        </label>
+        <label>Fondo
+          <select id="transitionAlpha">
+            <option value="transparent" selected>Transparente · Stinger</option>
+            <option value="solid">Color del lienzo</option>
+          </select>
+        </label>
+      </div>
+      <div class="row-wrap" style="margin-top:9px">
+        <button id="buildSakuraSweepBtn" class="btn btn-primary" type="button">🌸 Preparar Sakura Crystal Sweep</button>
+        <button id="exportStingerBtn" class="btn" type="button">🎬 Exportar Stinger WebM</button>
+      </div>
+      <div id="transitionCutReadout" class="transition-cut-readout">Punto de cambio OBS: <strong>0.78 s</strong> · 52% de la transición.</div>
+      <div id="transitionStatus" class="status" aria-live="polite"></div>
     </section>
 
     <section class="card project-card">
@@ -2169,6 +2209,10 @@
     const MASTER_LOOP_SECONDS = 15;
 
     function getMasterLoopSeconds() {
+      try {
+        const scene = (typeof project !== "undefined" && typeof activeSceneRecord === "function") ? activeSceneRecord() : null;
+        if (scene?.type === "transition") return Math.max(.5, Number(scene.transition?.duration || 1.5));
+      } catch {}
       return MASTER_LOOP_SECONDS;
     }
 
@@ -2194,7 +2238,7 @@
     }
 
     const defaultProject = {
-      version: 4.25,
+      version: 4.28,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2238,6 +2282,13 @@
     const sceneQuickTabs = document.getElementById("sceneQuickTabs");
     const sceneTypePill = document.getElementById("sceneTypePill");
     const sceneManagerStatus = document.getElementById("sceneManagerStatus");
+    const transitionWorkshop = document.getElementById("transitionWorkshop");
+    const transitionDuration = document.getElementById("transitionDuration");
+    const transitionCutTime = document.getElementById("transitionCutTime");
+    const transitionDirection = document.getElementById("transitionDirection");
+    const transitionAlpha = document.getElementById("transitionAlpha");
+    const transitionCutReadout = document.getElementById("transitionCutReadout");
+    const transitionStatus = document.getElementById("transitionStatus");
     const videoProgressBar = document.getElementById("videoProgressBar");
     const videoStatus = document.getElementById("videoStatus");
 
@@ -3340,7 +3391,8 @@
       const canvas=normalizeSceneCanvas(options.canvas || {orientation:"horizontal",background:"#000000"});
       const layout={type:"scene",...(options.layout||{})};
       const layers=Array.isArray(options.layers) ? options.layers.map(layer=>defaultLayer(layer)) : [];
-      return {id:options.id||newId("scene"),name,type,canvas,layout,layers};
+      const transition={duration:1.5,cutTime:.78,direction:"upRight",alpha:"transparent",preset:"sakuraCrystal",...(options.transition||{})};
+      return {id:options.id||newId("scene"),name,type,canvas,layout,layers,transition};
     }
 
     function activeSceneRecord() {
@@ -3373,12 +3425,14 @@
         type:raw.type||"free",
         canvas:normalizeSceneCanvas(raw.canvas||project.canvas),
         layout:{type:"scene",...(raw.layout||{})},
-        layers:Array.isArray(raw.layers)?raw.layers.map(layer=>defaultLayer(layer)):[]
+        layers:Array.isArray(raw.layers)?raw.layers.map(layer=>defaultLayer(layer)):[],
+        transition:{duration:1.5,cutTime:.78,direction:"upRight",alpha:"transparent",preset:"sakuraCrystal",...(raw.transition||{})}
       }));
       if(!project.scenes.length){
         const first={
           id:newId("scene"),name:"Escena actual",type:"free",
-          canvas:normalizeSceneCanvas(project.canvas),layout:{type:"scene",...(project.layout||{})},layers:project.layers||[]
+          canvas:normalizeSceneCanvas(project.canvas),layout:{type:"scene",...(project.layout||{})},layers:project.layers||[],
+          transition:{duration:1.5,cutTime:.78,direction:"upRight",alpha:"transparent",preset:"sakuraCrystal"}
         };
         project.scenes.push(first);project.activeSceneId=first.id;
       }
@@ -3417,7 +3471,19 @@
       (project.scenes||[]).forEach(scene=>{
         const option=document.createElement("option");option.value=scene.id;option.textContent=`${sceneTypeIcon(scene.type)} ${scene.name}`;sceneSelector.appendChild(option);
       });
-      if(active){sceneSelector.value=active.id;sceneNameInput.value=active.name;sceneTypePill.textContent=sceneTypeLabel(active.type);}
+      if(active){
+        sceneSelector.value=active.id;sceneNameInput.value=active.name;sceneTypePill.textContent=sceneTypeLabel(active.type);
+        const isTransition=active.type==="transition";
+        transitionWorkshop?.classList.toggle("active",isTransition);
+        if(isTransition){
+          active.transition={duration:1.5,cutTime:.78,direction:"upRight",alpha:"transparent",preset:"sakuraCrystal",...(active.transition||{})};
+          if(transitionDuration) transitionDuration.value=Number(active.transition.duration||1.5).toFixed(2);
+          if(transitionCutTime) transitionCutTime.value=Number(active.transition.cutTime||.78).toFixed(2);
+          if(transitionDirection) transitionDirection.value=active.transition.direction||"upRight";
+          if(transitionAlpha) transitionAlpha.value=active.transition.alpha||"transparent";
+          updateTransitionCutReadout();
+        }
+      }
       sceneQuickTabs.innerHTML="";
       (project.scenes||[]).forEach(scene=>{
         const btn=document.createElement("button");btn.type="button";btn.className=`scene-tab${scene.id===project.activeSceneId?" active":""}`;
@@ -3447,7 +3513,7 @@
     function duplicateActiveScene() {
       const current=activeSceneRecord();if(!current)return;
       syncActiveSceneFromProject();
-      const copy=makeSceneRecord(`${current.name} copia`,current.type,{canvas:structuredClone(current.canvas),layout:structuredClone(current.layout),layers:structuredClone(current.layers)});
+      const copy=makeSceneRecord(`${current.name} copia`,current.type,{canvas:structuredClone(current.canvas),layout:structuredClone(current.layout),layers:structuredClone(current.layers),transition:structuredClone(current.transition||{})});
       project.scenes.push(copy);bindProjectToScene(copy);groupSelection.clear();renderAll();sceneManagerStatus.textContent="Escena duplicada.";
     }
 
@@ -3474,11 +3540,107 @@
       else{renderSceneManager();sceneManagerStatus.textContent="El pack MK ya está creado.";}
     }
 
+    function updateTransitionCutReadout(){
+      const scene=activeSceneRecord();
+      if(!scene || scene.type!=="transition" || !transitionCutReadout)return;
+      const duration=Math.max(.5,Number(scene.transition?.duration||1.5));
+      const cut=Math.max(.01,Math.min(duration-.01,Number(scene.transition?.cutTime||.78)));
+      const pct=Math.round(cut/duration*100);
+      transitionCutReadout.innerHTML=`Punto de cambio OBS: <strong>${cut.toFixed(2)} s</strong> · ${pct}% de la transición.`;
+    }
+
+    function syncTransitionSettingsFromUI(){
+      const scene=activeSceneRecord();
+      if(!scene || scene.type!=="transition")return;
+      const duration=Math.max(.5,Math.min(5,Number(transitionDuration?.value||1.5)));
+      const cut=Math.max(.05,Math.min(duration-.05,Number(transitionCutTime?.value||.78)));
+      scene.transition={
+        duration,cutTime:cut,
+        direction:transitionDirection?.value||"upRight",
+        alpha:transitionAlpha?.value||"transparent",
+        preset:"sakuraCrystal"
+      };
+      if(transitionDuration)transitionDuration.value=duration.toFixed(2);
+      if(transitionCutTime)transitionCutTime.value=cut.toFixed(2);
+      updateTransitionCutReadout();
+      saveProject("Ajustes de transición guardados.");
+    }
+
+    function buildSakuraCrystalSweep(){
+      const scene=activeSceneRecord();
+      if(!scene || scene.type!=="transition"){
+        if(transitionStatus)transitionStatus.textContent="Abre primero la escena Transición.";
+        return;
+      }
+      syncTransitionSettingsFromUI();
+      const direction=scene.transition.direction||"upRight";
+      const duration=scene.transition.duration||1.5;
+      // Preset procedural editable: después puedes reemplazar pétalos/cristales por assets PNG sin cambiar el sistema Stinger.
+      const petalsBack=defaultLayer({
+        name:"Sakura · fondo",kind:"particles",particleType:"petals",background:true,blend:"screen",opacity:54,
+        particleCount:46,particleSize:7,animation:"none",duration,intensity:38,motionDirection:direction,motionMode:"loop",
+        motionDistance:920,motionRotation:310,motionRandomStart:false,
+        effectPalette:["#fff0f8","#ffd7ec","#f5b9e5","#dcb8ff","#ff9fd8","#f9e9ff"]
+      });
+      const petalsMain=defaultLayer({
+        name:"Sakura · corriente principal",kind:"particles",particleType:"petals",background:true,blend:"screen",opacity:88,
+        particleCount:72,particleSize:11,animation:"none",duration,intensity:52,motionDirection:direction,motionMode:"loop",
+        motionDistance:1120,motionRotation:390,motionRandomStart:false,
+        effectPalette:["#fff5fb","#ffd3e8","#f9add8","#e9b8ff","#ff83c8","#f8dcff"]
+      });
+      const petalsFront=defaultLayer({
+        name:"Sakura · primer plano",kind:"particles",particleType:"petals",background:true,blend:"screen",opacity:72,
+        particleCount:18,particleSize:18,animation:"none",duration,intensity:62,motionDirection:direction,motionMode:"loop",
+        motionDistance:1280,motionRotation:440,motionRandomStart:false,
+        effectPalette:["#fff5fb","#ffc9e4","#efb3ff","#ff8dce"]
+      });
+      const crystalSparkles=defaultLayer({
+        name:"Cristales · destellos guía",kind:"particles",particleType:"stars",background:true,blend:"screen",opacity:76,
+        particleCount:32,particleSize:6,starStyle:"mixed",animation:"twinkle",duration,intensity:24,
+        effectPalette:["#ffffff","#ffb3f5","#f04dff","#b14cff","#b68dff"]
+      });
+      const mist=defaultLayer({
+        name:"Bruma violeta · cobertura",kind:"particles",particleType:"fogfx",background:true,blend:"screen",opacity:36,
+        particleCount:26,particleSize:26,animation:"none",duration,intensity:25,
+        effectPalette:["#ff9bd6","#d9b8ff","#b14cff","#6e4bb8"]
+      });
+      project.layers=[mist,petalsBack,crystalSparkles,petalsMain,petalsFront];
+      project.selectedId=petalsMain.id;
+      scene.layers=project.layers;
+      renderAll();
+      if(transitionStatus)transitionStatus.textContent="Sakura Crystal Sweep preparado. Es un prototipo procedural editable; ya puedes sustituir capas por tus PNG definitivos.";
+    }
+
+    async function exportTransitionStinger(){
+      const scene=activeSceneRecord();
+      if(!scene || scene.type!=="transition"){if(transitionStatus)transitionStatus.textContent="Abre primero la escena Transición.";return;}
+      syncTransitionSettingsFromUI();
+      const duration=Math.max(.5,Number(scene.transition.duration||1.5));
+      const fps=Number(document.getElementById("videoFps")?.value||30);
+      const quality=document.getElementById("videoQuality")?.value||"high";
+      const transparent=scene.transition.alpha!=="solid";
+      const button=document.getElementById("exportStingerBtn");
+      button.disabled=true;
+      if(transitionStatus)transitionStatus.textContent="Preparando Stinger WebM…";
+      try{
+        await preloadExportAssets();
+        const size=getRenderSize(), canvas=document.createElement("canvas");
+        canvas.width=size.width;canvas.height=size.height;
+        const bitrate=(quality==="ultra"?22_000_000:14_000_000)*(fps===60?1.4:1);
+        const blob=await exportMediaRecorder(canvas,duration,fps,bitrate,"webm",{transparent,statusPrefix:"Renderizando Stinger"});
+        downloadBlob(blob,`mk-universe-stinger-sakura-${duration.toFixed(2)}s.webm`);
+        if(transitionStatus)transitionStatus.textContent=`Stinger exportado. En OBS usa cambio a ${Number(scene.transition.cutTime).toFixed(2)} s. ${transparent?"WebM se generó con lienzo transparente cuando el navegador/códec lo permite.":"Fondo sólido activado."}`;
+      }catch(err){
+        console.error(err);
+        if(transitionStatus)transitionStatus.textContent="No se pudo exportar el Stinger. Prueba 30 FPS / calidad Alta en Chrome o Edge.";
+      }finally{button.disabled=false;}
+    }
+
     function migrateProject(raw) {
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.25,
+        version: 4.28,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -7139,9 +7301,11 @@
       ctx.restore();
     }
 
-    function renderExportFrame(canvas, seconds, loopDuration) {
+    function renderExportFrame(canvas, seconds, loopDuration, options={}) {
       const ctx=canvas.getContext("2d");const logical=getLogicalSize();const sx=canvas.width/logical.width,sy=canvas.height/logical.height;
-      ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.fillStyle=project.canvas.background||"#000";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.scale(sx,sy);
+      ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);
+      if(!options.transparent){ctx.fillStyle=project.canvas.background||"#000";ctx.fillRect(0,0,canvas.width,canvas.height);}
+      ctx.scale(sx,sy);
       project.layers.forEach(layer=>{
         if(!isLayerEffectivelyVisible(layer) || layer.kind==="group" || layer.kind==="slot")return;
         if(layer.kind==="particles") drawParticleExport(ctx,layer,seconds,loopDuration);
@@ -7182,11 +7346,11 @@
       await encoder.flush();encoder.close();muxer.finalize();return new Blob([target.buffer],{type:"video/mp4"});
     }
 
-    async function exportMediaRecorder(canvas,duration,fps,bitrate,prefer){
+    async function exportMediaRecorder(canvas,duration,fps,bitrate,prefer,options={}){
       const stream=canvas.captureStream(fps);const types=prefer==="mp4"?["video/mp4;codecs=avc1","video/mp4","video/webm;codecs=vp9","video/webm"]:["video/webm;codecs=vp9","video/webm","video/mp4"];
       const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||"";const chunks=[];const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:bitrate});recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data);};
-      const done=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=reject;});recorder.start(500);const start=performance.now();
-      await new Promise(resolve=>{function tick(now){const sec=(now-start)/1000;renderExportFrame(canvas,Math.min(sec,duration-.001),duration);exportProgress(Math.min(95,sec/duration*95),`Grabando loop ${sec.toFixed(1)} / ${duration}s`);if(sec<duration)requestAnimationFrame(tick);else resolve();}requestAnimationFrame(tick);});
+      const done=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=reject;});recorder.start(250);const start=performance.now();
+      await new Promise(resolve=>{function tick(now){const sec=(now-start)/1000;renderExportFrame(canvas,Math.min(sec,duration-.001),duration,options);const prefix=options.statusPrefix||"Grabando loop";exportProgress(Math.min(95,sec/duration*95),`${prefix} ${sec.toFixed(1)} / ${duration}s`);if(sec<duration)requestAnimationFrame(tick);else resolve();}requestAnimationFrame(tick);});
       recorder.stop();await done;return new Blob(chunks,{type:mime||"video/webm"});
     }
 
@@ -7506,6 +7670,12 @@
 
     sceneFormat.addEventListener("change", () => setSceneFormat(sceneFormat.value, true));
     sceneBackground.addEventListener("input", () => { project.canvas.background=sceneBackground.value;stageWrap.style.background=sceneBackground.value;saveProject(); });
+    [transitionDuration,transitionCutTime,transitionDirection,transitionAlpha].forEach(el=>el?.addEventListener("change",syncTransitionSettingsFromUI));
+    transitionDuration?.addEventListener("input",()=>{const scene=activeSceneRecord();if(scene?.type==="transition"){scene.transition.duration=Math.max(.5,Math.min(5,Number(transitionDuration.value||1.5)));updateTransitionCutReadout();}});
+    transitionCutTime?.addEventListener("input",()=>{const scene=activeSceneRecord();if(scene?.type==="transition"){scene.transition.cutTime=Number(transitionCutTime.value||.78);updateTransitionCutReadout();}});
+    document.getElementById("buildSakuraSweepBtn")?.addEventListener("click",buildSakuraCrystalSweep);
+    document.getElementById("exportStingerBtn")?.addEventListener("click",exportTransitionStinger);
+
     document.getElementById("exportVideoBtn").addEventListener("click", exportVideo);
 
     document.getElementById("removeBackgroundBtn").addEventListener("click", () => openImageLab("background"));

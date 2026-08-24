@@ -1402,7 +1402,7 @@
       <div class="stage-wrap" id="stageWrap">
         <div id="stage" aria-label="Escena vertical 1080 por 1920"><div id="stageGuides" class="stage-guides"></div></div>
       </div>
-      <div class="editor-zoom-bar"><button id="zoomOutBtn" class="btn btn-mini" type="button">−</button><input id="editorZoom" type="range" min="25" max="200" value="100" step="5" /><span id="editorZoomValue" class="value">100%</span><button id="zoomInBtn" class="btn btn-mini" type="button">+</button><button id="toggleGuidesBtn" class="btn btn-mini" type="button">⌖ Centro</button></div>
+      <div class="editor-zoom-bar"><button id="zoomOutBtn" class="btn btn-mini" type="button">−</button><input id="editorZoom" type="range" min="25" max="200" value="100" step="5" /><span id="editorZoomValue" class="value">100%</span><button id="zoomInBtn" class="btn btn-mini" type="button">+</button></div>
     </div>
   </main>
 
@@ -1474,6 +1474,11 @@
           <div class="check-row">
             <input id="propFlipY" type="checkbox" />
             <label for="propFlipY">Espejo vertical</label>
+          </div>
+
+          <div class="transform-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 4px">
+            <button id="duplicateExactBtn" class="btn btn-mini" type="button" title="Duplica la capa conservando exactamente tamaño, retoques y efectos">⧉ Duplicar exacto</button>
+            <button id="duplicateMirrorXBtn" class="btn btn-mini" type="button" title="Duplica la capa y crea la copia reflejada horizontalmente sin alterar el tamaño">↔ Copia espejo H</button>
           </div>
 
           <div class="control">
@@ -2183,7 +2188,7 @@
     }
 
     const defaultProject = {
-      version: 4.25,
+      version: 4.27,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2202,7 +2207,7 @@
 
     let project = migrateProject(loadProject() || structuredClone(defaultProject));
     project.export = { ...(project.export || {}), duration: MASTER_LOOP_SECONDS };
-    project.layers = (project.layers || []).map(layer => defaultLayer(layer));
+    project.layers = (project.layers || []).map(layer => normalizeLayerTransform(defaultLayer(layer)));
     ensureSceneSystem();
     if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) {
       project.selectedId = null;
@@ -3534,7 +3539,7 @@
     function saveProject(message = "Proyecto guardado.") {
       syncActiveSceneFromProject();
       captureHistoryIfChanged();
-      project.version = 4.25;
+      project.version = 4.26;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -3835,11 +3840,11 @@
     function renderStage() {
       syncLinkedReflections();
       updateSceneGeometry();
-      const showGuides = stage.dataset.showGuides === "1";
+      stage.dataset.showGuides = "0";
       stage.innerHTML = "";
       const baseGuides = document.createElement("div");
       baseGuides.id = "stageGuides";
-      baseGuides.className = `stage-guides${showGuides ? " on" : ""}`;
+      baseGuides.className = "stage-guides";
       stage.appendChild(baseGuides);
 
       const orderedChildren = parentId => project.layers
@@ -3943,33 +3948,7 @@
       const roots = project.layers.filter(layer => !layer.parentId || !layerById(layer.parentId));
       roots.forEach(layer => stage.appendChild(renderNode(layer)));
 
-      const selected = selectedLayer();
-      if (selected) {
-        const eff = effectiveLayerState(selected);
-        const guides = document.createElement("div");
-        guides.className = "stage-selection-guides";
-        const left = 50 + (eff.x / Math.max(1, project.canvas.logicalWidth)) * 100;
-        const top = 50 + (eff.y / Math.max(1, project.canvas.logicalHeight)) * 100;
-        const clampedLeft = Math.max(0, Math.min(100, left));
-        const clampedTop = Math.max(0, Math.min(100, top));
-        const v = document.createElement("div");
-        v.className = "sel-v";
-        v.style.left = `${clampedLeft}%`;
-        const h = document.createElement("div");
-        h.className = "sel-h";
-        h.style.top = `${clampedTop}%`;
-        const dot = document.createElement("div");
-        dot.className = "sel-dot";
-        dot.style.left = `${clampedLeft}%`;
-        dot.style.top = `${clampedTop}%`;
-        const label = document.createElement("div");
-        label.className = "sel-label";
-        label.textContent = `${selected.kind === "group" ? "🧩 " : selected.kind === "slot" ? (selected.liveSlot?.type === "chat" ? "💬 " : "🎥 ") : ""}${selected.name} · X ${Math.round(eff.x)} · Y ${Math.round(eff.y)}`;
-        label.style.left = `${clampedLeft}%`;
-        label.style.top = `${Math.max(8, Math.min(92, clampedTop + 2.2))}%`;
-        guides.append(v, h, dot, label);
-        stage.appendChild(guides);
-      }
+      // Lienzo limpio: sin nombre de archivo, coordenadas ni líneas de centro sobre el diseño.
     }
 
     function loadImageLayer(layer, motion) {
@@ -5019,6 +4998,84 @@
         .forEach(control => setControlVisible(control, isVfx));
     }
 
+    function normalizeLayerTransform(layer) {
+      // El tamaño y el espejo son estados independientes. Nunca usamos escalas
+      // negativas para reflejar una capa: una escala negativa heredada se
+      // convierte en flipX / flipY y se conserva su magnitud positiva.
+      layer.scale = Math.max(0.01, Math.abs(Number(layer.scale ?? 100)));
+
+      let sx = Number(layer.scaleX ?? 100);
+      let sy = Number(layer.scaleY ?? 100);
+      if (!Number.isFinite(sx)) sx = 100;
+      if (!Number.isFinite(sy)) sy = 100;
+      if (sx < 0) { layer.flipX = !Boolean(layer.flipX); sx = Math.abs(sx); }
+      if (sy < 0) { layer.flipY = !Boolean(layer.flipY); sy = Math.abs(sy); }
+      layer.scaleX = Math.max(0.01, sx);
+      layer.scaleY = Math.max(0.01, sy);
+      layer.flipX = Boolean(layer.flipX);
+      layer.flipY = Boolean(layer.flipY);
+      layer.rotation = Number(layer.rotation ?? 0);
+      layer.skewX = Number(layer.skewX ?? 0);
+      layer.skewY = Number(layer.skewY ?? 0);
+      return layer;
+    }
+
+    function cloneLayerForDuplicate(layer) {
+      // Clon exacto y profundo: bitmap retocado, máscara, tamaño, rotación,
+      // deformación, espejo, animación y FX quedan idénticos e independientes.
+      const source = structuredClone(layer);
+      const copy = defaultLayer(source);
+      copy.id = newId();
+      copy.name = `${layer.name} copia`;
+
+      // Transformación exacta. Es importante reasignarla explícitamente para
+      // que duplicar + espejar jamás resetee el tamaño o una deformación previa.
+      copy.x = Number(layer.x ?? 0);
+      copy.y = Number(layer.y ?? 0);
+      copy.scale = Number(layer.scale ?? 100);
+      copy.scaleX = Number(layer.scaleX ?? 100);
+      copy.scaleY = Number(layer.scaleY ?? 100);
+      copy.flipX = Boolean(layer.flipX);
+      copy.flipY = Boolean(layer.flipY);
+      copy.rotation = Number(layer.rotation ?? 0);
+      copy.skewX = Number(layer.skewX ?? 0);
+      copy.skewY = Number(layer.skewY ?? 0);
+
+      copy.src = layer.src || "";
+      copy.originalSrc = layer.originalSrc || null;
+      copy.maskSrc = layer.maskSrc || null;
+      copy.effectPalette = Array.isArray(layer.effectPalette) ? [...layer.effectPalette] : normalizedPalette(layer);
+      copy.petalPalette = Array.isArray(layer.petalPalette) ? [...layer.petalPalette] : [...copy.effectPalette];
+      copy.animationFocus = structuredClone(layer.animationFocus || {enabled:false});
+      copy.aura = structuredClone(layer.aura || copy.aura);
+      copy.shadow = structuredClone(layer.shadow || copy.shadow);
+      copy.fire = structuredClone(layer.fire || copy.fire);
+      copy.neon = structuredClone(layer.neon || copy.neon);
+      copy.organic = structuredClone(layer.organic || copy.organic);
+      copy.vfx = structuredClone(layer.vfx || copy.vfx);
+      copy.liveSlot = structuredClone(layer.liveSlot || copy.liveSlot);
+      copy.reflection = structuredClone(layer.reflection || copy.reflection);
+      return normalizeLayerTransform(copy);
+    }
+
+    function duplicateLayer(layer, { mirrorX = false, mirrorY = false, offset = 0 } = {}) {
+      if (!layer) return null;
+      const idx = project.layers.indexOf(layer);
+      if (idx < 0) return null;
+      const copy = cloneLayerForDuplicate(layer);
+      copy.x += Number(offset || 0);
+      copy.y += Number(offset || 0);
+      if (mirrorX) copy.flipX = !copy.flipX;
+      if (mirrorY) copy.flipY = !copy.flipY;
+      project.layers.splice(idx + 1, 0, copy);
+      project.selectedId = copy.id;
+      saveProject(mirrorX || mirrorY
+        ? "Copia espejo creada sin cambiar tamaño, rotación ni efectos."
+        : "Copia exacta creada con todos los ajustes visuales.");
+      renderAll();
+      return copy;
+    }
+
     function renderLayersList() {
       layersList.innerHTML = "";
 
@@ -5114,12 +5171,7 @@
         });
 
         card.querySelector(".duplicate").addEventListener("click", () => {
-          const copy = structuredClone(layer);
-          copy.id = newId();
-          copy.name = `${layer.name} copia`;
-          project.layers.splice(realIndex + 1, 0, copy);
-          project.selectedId = copy.id;
-          renderAll();
+          duplicateLayer(layer);
         });
 
         card.querySelector(".delete").addEventListener("click", () => deleteLayer(layer.id));
@@ -7322,7 +7374,6 @@
     zoom.addEventListener("input",applyEditorZoom);
     document.getElementById("zoomOutBtn").addEventListener("click",()=>{zoom.value=Math.max(25,Number(zoom.value)-10);applyEditorZoom();});
     document.getElementById("zoomInBtn").addEventListener("click",()=>{zoom.value=Math.min(200,Number(zoom.value)+10);applyEditorZoom();});
-    document.getElementById("toggleGuidesBtn").addEventListener("click",()=>{stage.dataset.showGuides = stage.dataset.showGuides === "1" ? "0" : "1"; const guides = document.getElementById("stageGuides"); if (guides) guides.classList.toggle("on", stage.dataset.showGuides === "1");});
 
     document.getElementById("pauseBtn").addEventListener("click", event => {
       document.body.classList.toggle("paused");
@@ -7478,8 +7529,23 @@
       moveSelectedLayer(event.shiftKey ? 10 : 2, 0);
     });
 
+    document.getElementById("duplicateExactBtn")?.addEventListener("click", () => {
+      duplicateLayer(selectedLayer());
+    });
+    document.getElementById("duplicateMirrorXBtn")?.addEventListener("click", () => {
+      duplicateLayer(selectedLayer(), { mirrorX: true });
+    });
+
     document.addEventListener("keydown", event => {
       if((event.ctrlKey||event.metaKey) && event.key.toLowerCase()==="z"){event.preventDefault();undoProject();return;}
+      if((event.ctrlKey||event.metaKey) && event.key.toLowerCase()==="d"){
+        const layer=selectedLayer();
+        if(layer){
+          event.preventDefault();
+          duplicateLayer(layer, { mirrorX: Boolean(event.shiftKey) });
+        }
+        return;
+      }
       const tag = document.activeElement?.tagName;
       if (["INPUT", "SELECT", "TEXTAREA"].includes(tag)) return;
       const step = event.shiftKey ? 10 : 2;

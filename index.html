@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.6 — Exact Mirror Order · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.7 — Smart Guides · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1178,9 +1178,10 @@
     /* MK Universe 4.2.5 — True Rear Glow · editor pro */
     .scene-shell { position: relative; }
     .editor-zoom-bar{
-      position:sticky; bottom:8px; z-index:80; display:flex; gap:8px; align-items:center;
+      position:relative; bottom:auto; z-index:20; display:flex; gap:8px; align-items:center;
       padding:8px 10px; border:1px solid var(--border); border-radius:12px;
-      background:rgba(20,13,27,.94); backdrop-filter:blur(10px); margin-top:10px;
+      background:rgba(20,13,27,.94); backdrop-filter:blur(10px); margin:0 0 10px 0;
+      flex:0 0 auto;
     }
     .editor-zoom-bar input{ width:150px; }
     .stage-guides{position:absolute;inset:0;pointer-events:none;z-index:9997;display:none}
@@ -1194,6 +1195,14 @@
     .stage-selection-guides .sel-h{left:0;right:0;height:1px;transform:translateY(-.5px)}
     .stage-selection-guides .sel-dot{position:absolute;width:12px;height:12px;border-radius:999px;border:2px solid rgba(255,255,255,.95);background:rgba(255,155,207,.88);box-shadow:0 0 14px rgba(255,155,207,.85);transform:translate(-50%,-50%)}
     .stage-selection-guides .sel-label{position:absolute;max-width:calc(100% - 18px);padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;color:#fff7fb;background:rgba(21,13,29,.88);border:1px solid rgba(255,189,225,.45);box-shadow:0 10px 24px rgba(0,0,0,.25);white-space:nowrap;transform:translate(-50%,0)}
+    /* 4.2.7 Smart Guides: aparecen SOLO mientras se mueve una capa. */
+    .stage-smart-guides{position:absolute;inset:0;pointer-events:none;z-index:9999;display:none;overflow:hidden}
+    .stage-smart-guides.active{display:block}
+    .stage-smart-guides .smart-v,.stage-smart-guides .smart-h{position:absolute;background:rgba(255,111,207,.92);box-shadow:0 0 8px rgba(255,111,207,.55)}
+    .stage-smart-guides .smart-v{top:0;bottom:0;width:1px;transform:translateX(-.5px)}
+    .stage-smart-guides .smart-h{left:0;right:0;height:1px;transform:translateY(-.5px)}
+    .stage-smart-guides .smart-dot{position:absolute;width:7px;height:7px;border-radius:50%;background:#fff7fc;border:1px solid rgba(255,111,207,.95);box-shadow:0 0 8px rgba(255,111,207,.8);transform:translate(-50%,-50%)}
+    .stage-smart-guides .smart-badge{position:absolute;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.02em;color:#fff7fc;background:rgba(22,13,31,.86);border:1px solid rgba(255,111,207,.48);box-shadow:0 6px 16px rgba(0,0,0,.25);white-space:nowrap;transform:translate(-50%,-50%)}
     .group-badge{display:inline-flex;margin-left:6px;padding:2px 6px;border-radius:999px;font-size:10px;
       border:1px solid rgba(179,140,255,.35);background:rgba(179,140,255,.12);color:#eadfff}
     .group-select{width:17px;height:17px;accent-color:var(--accent)}
@@ -1269,7 +1278,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.6 · Exact Mirror Order 🌸</h1>
+    <h1>🌸 MK Universe 4.2.7 · Smart Guides 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel y nuevos controles de visibilidad.</p>
 
     <div class="toolbar row-wrap">
@@ -1400,11 +1409,11 @@
   </aside>
 
   <main class="scene-shell" id="sceneShell">
+    <div class="editor-zoom-bar"><button id="zoomOutBtn" class="btn btn-mini" type="button">−</button><input id="editorZoom" type="range" min="25" max="200" value="100" step="5" /><span id="editorZoomValue" class="value">100%</span><button id="zoomInBtn" class="btn btn-mini" type="button">+</button></div>
     <div class="stage-viewport" id="stageViewport">
       <div class="stage-wrap" id="stageWrap">
-        <div id="stage" aria-label="Escena vertical 1080 por 1920"><div id="stageGuides" class="stage-guides"></div></div>
+        <div id="stage" aria-label="Escena vertical 1080 por 1920"><div id="stageGuides" class="stage-guides"></div><div id="stageSmartGuides" class="stage-smart-guides"></div></div>
       </div>
-      <div class="editor-zoom-bar"><button id="zoomOutBtn" class="btn btn-mini" type="button">−</button><input id="editorZoom" type="range" min="25" max="200" value="100" step="5" /><span id="editorZoomValue" class="value">100%</span><button id="zoomInBtn" class="btn btn-mini" type="button">+</button></div>
     </div>
   </main>
 
@@ -3844,6 +3853,10 @@
       baseGuides.id = "stageGuides";
       baseGuides.className = "stage-guides";
       stage.appendChild(baseGuides);
+      const smartGuides = document.createElement("div");
+      smartGuides.id = "stageSmartGuides";
+      smartGuides.className = "stage-smart-guides";
+      stage.appendChild(smartGuides);
 
       const orderedChildren = parentId => project.layers
         .filter(layer => layer.parentId === parentId)
@@ -3951,7 +3964,7 @@
       const roots = project.layers.filter(layer => !layer.parentId || !layerById(layer.parentId));
       roots.forEach(layer => stage.appendChild(renderNode(layer)));
 
-      // Lienzo limpio: sin nombre de archivo, coordenadas ni líneas de centro sobre el diseño.
+      // Lienzo limpio: sin overlays permanentes. Las guías inteligentes aparecen solo durante el arrastre.
     }
 
     function loadImageLayer(layer, motion) {
@@ -5640,6 +5653,65 @@
       saveProject(message);
     }
 
+    // 4.2.7 — Guías inteligentes estilo Canva.
+    // No quedan visibles: solo aparecen durante el arrastre y se eliminan al soltar.
+    function clearSmartGuides() {
+      const guides = document.getElementById("stageSmartGuides");
+      if (!guides) return;
+      guides.classList.remove("active");
+      guides.replaceChildren();
+    }
+
+    function showSmartGuides(layer) {
+      const guides = document.getElementById("stageSmartGuides");
+      if (!guides || !layer) return;
+      guides.replaceChildren();
+      guides.classList.add("active");
+
+      const logical = getLogicalSize();
+      const centerX = logical.width / 2 + Number(layer.x || 0);
+      const centerY = logical.height / 2 + Number(layer.y || 0);
+      const threshold = 7; // px lógicos: visible pero sin sentirse pegajoso.
+      const nearCenterX = Math.abs(Number(layer.x || 0)) <= threshold;
+      const nearCenterY = Math.abs(Number(layer.y || 0)) <= threshold;
+
+      function line(cls, pos) {
+        const el = document.createElement("div");
+        el.className = cls;
+        if (cls === "smart-v") el.style.left = `${pos}px`;
+        else el.style.top = `${pos}px`;
+        guides.appendChild(el);
+      }
+
+      if (nearCenterX) line("smart-v", logical.width / 2);
+      if (nearCenterY) line("smart-h", logical.height / 2);
+
+      const dot = document.createElement("div");
+      dot.className = "smart-dot";
+      dot.style.left = `${Math.max(0, Math.min(logical.width, centerX))}px`;
+      dot.style.top = `${Math.max(0, Math.min(logical.height, centerY))}px`;
+      guides.appendChild(dot);
+
+      const badge = document.createElement("div");
+      badge.className = "smart-badge";
+      let label = `X ${Math.round(layer.x || 0)} · Y ${Math.round(layer.y || 0)}`;
+      if (nearCenterX && nearCenterY) label = "CENTRO";
+      else if (nearCenterX) label = `CENTRO X · Y ${Math.round(layer.y || 0)}`;
+      else if (nearCenterY) label = `X ${Math.round(layer.x || 0)} · CENTRO Y`;
+      badge.textContent = label;
+      badge.style.left = `${Math.max(44, Math.min(logical.width - 44, centerX))}px`;
+      badge.style.top = `${Math.max(18, Math.min(logical.height - 18, centerY - 20))}px`;
+      guides.appendChild(badge);
+    }
+
+    function applyCenterMagnet(layer) {
+      // Pequeño imán al centro, como Canva. Solo actúa muy cerca del eje.
+      // Fuera de ese rango no modifica la posición del usuario.
+      const snap = 5;
+      if (Math.abs(Number(layer.x || 0)) <= snap) layer.x = 0;
+      if (Math.abs(Number(layer.y || 0)) <= snap) layer.y = 0;
+    }
+
     function finishStageDrag(event) {
       if (!stageDrag) return;
       if (event && stageDrag.pointerId !== event.pointerId) return;
@@ -5648,6 +5720,7 @@
       } catch {}
       stageDrag = null;
       stage.classList.remove("dragging");
+      clearSmartGuides();
       renderStage();
       renderInspector();
       saveProject("Posición guardada.");
@@ -5667,6 +5740,7 @@
 
       stage.setPointerCapture?.(event.pointerId);
       stage.classList.add("dragging");
+      showSmartGuides(layer);
       event.preventDefault();
     });
 
@@ -5679,6 +5753,8 @@
       layer.y = Math.round(stageDrag.layerY + (event.clientY - stageDrag.startY) / Math.max(.01, editorScale));
       layer.x = Math.max(-1000, Math.min(1000, layer.x));
       layer.y = Math.max(-1800, Math.min(1800, layer.y));
+      applyCenterMagnet(layer);
+      showSmartGuides(layer);
       updateReflectionLinkOffsets(layer, "x");
       updateReflectionLinkOffsets(layer, "y");
 

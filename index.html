@@ -7768,5 +7768,1237 @@
     updateSceneGeometry();
     renderAll();
   </script>
+  <script>
+/* =========================================================
+   MK Universe 4.2.8 · OBS HTML Export Add-on
+
+   Exporta la escena ACTIVA como:
+   - HTML autocontenido
+   - fondo transparente real
+   - animaciones activas
+   - imágenes incluidas
+   - VFX incluidos
+   - grupos incluidos
+   - zonas Cámara / Chat / Juego ocultas
+
+   El HTML resultante puede cargarse directamente
+   como Browser Source / Archivo local en OBS.
+   ========================================================= */
+
+(() => {
+
+  const OBS_PAYLOAD =
+    window.__MK_OBS_PAYLOAD__ ||
+    null;
+
+
+  /* =======================================================
+     NOMBRE DE ARCHIVO SEGURO
+     ======================================================= */
+
+  function safeFileName(
+    value = "overlay"
+  ) {
+
+    return String(
+      value ||
+      "overlay"
+    )
+      .normalize("NFD")
+
+      .replace(
+        /[\u0300-\u036f]/g,
+        ""
+      )
+
+      .replace(
+        /[^a-zA-Z0-9_-]+/g,
+        "-"
+      )
+
+      .replace(
+        /^-+|-+$/g,
+        ""
+      )
+
+      .toLowerCase() ||
+      "overlay";
+  }
+
+
+  /* =======================================================
+     DESCARGAR HTML
+     ======================================================= */
+
+  function downloadHtml(
+    text,
+    filename
+  ) {
+
+    const blob =
+      new Blob(
+        [text],
+        {
+          type:
+            "text/html;charset=utf-8"
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+
+    const a =
+      document.createElement(
+        "a"
+      );
+
+
+    a.href =
+      url;
+
+    a.download =
+      filename;
+
+
+    document.body
+      .appendChild(
+        a
+      );
+
+
+    a.click();
+
+    a.remove();
+
+
+    setTimeout(
+      () => {
+        URL.revokeObjectURL(
+          url
+        );
+      },
+      2000
+    );
+  }
+
+
+  /* =======================================================
+     CSS EXCLUSIVO PARA OBS
+
+     El editor desaparece por completo.
+
+     IMPORTANTE:
+     El fondo negro del editor NO se exporta.
+     ======================================================= */
+
+  function obsRuntimeCss() {
+
+    return `
+
+      html,
+      body {
+
+        width:
+          100% !important;
+
+        height:
+          100% !important;
+
+        margin:
+          0 !important;
+
+        padding:
+          0 !important;
+
+        overflow:
+          hidden !important;
+
+        background:
+          transparent !important;
+
+      }
+
+
+      body {
+
+        display:
+          block !important;
+
+        min-height:
+          0 !important;
+
+      }
+
+
+      /*
+       * Ocultar absolutamente
+       * todo el editor.
+       */
+
+      body > .panel,
+      .editor-zoom-bar,
+      .preview-exit,
+      #imageLabModal {
+
+        display:
+          none !important;
+
+      }
+
+
+      /*
+       * La escena ocupa
+       * toda la Browser Source.
+       */
+
+      .scene-shell {
+
+        position:
+          fixed !important;
+
+        inset:
+          0 !important;
+
+        width:
+          100vw !important;
+
+        height:
+          100vh !important;
+
+        min-width:
+          0 !important;
+
+        min-height:
+          0 !important;
+
+        margin:
+          0 !important;
+
+        padding:
+          0 !important;
+
+        border:
+          0 !important;
+
+        border-radius:
+          0 !important;
+
+        overflow:
+          hidden !important;
+
+        display:
+          block !important;
+
+        background:
+          transparent !important;
+
+      }
+
+
+      .stage-viewport {
+
+        position:
+          absolute !important;
+
+        margin:
+          0 !important;
+
+        padding:
+          0 !important;
+
+        overflow:
+          visible !important;
+
+        background:
+          transparent !important;
+
+      }
+
+
+      .stage-wrap {
+
+        margin:
+          0 !important;
+
+        padding:
+          0 !important;
+
+        border:
+          0 !important;
+
+        border-radius:
+          0 !important;
+
+        box-shadow:
+          none !important;
+
+        overflow:
+          visible !important;
+
+        background:
+          transparent !important;
+
+        transform-origin:
+          top left !important;
+
+      }
+
+
+      #stage {
+
+        background:
+          transparent !important;
+
+        cursor:
+          default !important;
+
+        pointer-events:
+          none !important;
+
+      }
+
+
+      /*
+       * NO mostrar en OBS:
+       *
+       * - guías centrales
+       * - Smart Guides
+       * - selección
+       * - rectángulos Cámara
+       * - rectángulos Chat
+       * - Juego
+       * - Video/Web
+       */
+
+      .stage-guides,
+      .stage-smart-guides,
+      .stage-selection-guides,
+      .live-slot-layer {
+
+        display:
+          none !important;
+
+      }
+
+    `;
+  }
+
+
+  /* =======================================================
+     AJUSTAR ESCENA AL TAMAÑO DE OBS
+     ======================================================= */
+
+  function fitObsStage() {
+
+    if (
+      typeof project ===
+        "undefined" ||
+
+      typeof stageWrap ===
+        "undefined" ||
+
+      typeof stageViewport ===
+        "undefined"
+    ) {
+
+      return;
+    }
+
+
+    const logicalWidth =
+      Number(
+        project.canvas
+          ?.logicalWidth ||
+        960
+      );
+
+
+    const logicalHeight =
+      Number(
+        project.canvas
+          ?.logicalHeight ||
+        540
+      );
+
+
+    const viewportWidth =
+      Math.max(
+        1,
+        window.innerWidth
+      );
+
+
+    const viewportHeight =
+      Math.max(
+        1,
+        window.innerHeight
+      );
+
+
+    /*
+     * Horizontal:
+     *
+     * 960 × 540
+     *     ↓
+     * 1920 × 1080
+     *
+     * scale = 2
+     *
+     *
+     * Vertical:
+     *
+     * 540 × 960
+     *     ↓
+     * 1080 × 1920
+     *
+     * scale = 2
+     */
+
+    const scale =
+      Math.min(
+
+        viewportWidth /
+        logicalWidth,
+
+        viewportHeight /
+        logicalHeight
+
+      );
+
+
+    const renderedWidth =
+      logicalWidth *
+      scale;
+
+
+    const renderedHeight =
+      logicalHeight *
+      scale;
+
+
+    stageWrap.style
+      .setProperty(
+        "--editor-scale",
+        scale
+      );
+
+
+    stageWrap.style
+      .background =
+      "transparent";
+
+
+    stageViewport.style
+      .width =
+      `${renderedWidth}px`;
+
+
+    stageViewport.style
+      .height =
+      `${renderedHeight}px`;
+
+
+    /*
+     * Si por alguna razón OBS
+     * usa otra relación de aspecto,
+     * dejamos la escena centrada.
+     */
+
+    stageViewport.style
+      .left =
+      `${
+        (
+          viewportWidth -
+          renderedWidth
+        ) /
+        2
+      }px`;
+
+
+    stageViewport.style
+      .top =
+      `${
+        (
+          viewportHeight -
+          renderedHeight
+        ) /
+        2
+      }px`;
+  }
+
+
+  /* =======================================================
+     ARRANCAR HTML EXPORTADO EN MODO OBS
+     ======================================================= */
+
+  function bootObsRuntime(
+    payload
+  ) {
+
+    /*
+     * Inyectar CSS transparente.
+     */
+
+    const style =
+      document.createElement(
+        "style"
+      );
+
+
+    style.id =
+      "mkObsRuntimeStyle";
+
+
+    style.textContent =
+      obsRuntimeCss();
+
+
+    document.head
+      .appendChild(
+        style
+      );
+
+
+    document.documentElement
+      .style
+      .background =
+      "transparent";
+
+
+    document.body
+      .style
+      .background =
+      "transparent";
+
+
+    document.body
+      .classList
+      .remove(
+        "preview-mode",
+        "paused"
+      );
+
+
+    document.body
+      .classList
+      .add(
+        "mk-obs-runtime"
+      );
+
+
+    try {
+
+      /*
+       * Estas funciones YA existen
+       * dentro de MK Universe 4.2.8.
+       *
+       * No estamos creando
+       * un motor paralelo.
+       *
+       * Estamos reutilizando
+       * TU MISMO MOTOR.
+       */
+
+      project =
+        migrateProject(
+
+          structuredClone(
+            payload.project
+          )
+
+        );
+
+
+      project.layers =
+        (
+          project.layers ||
+          []
+        ).map(
+
+          layer =>
+            defaultLayer(
+              layer
+            )
+
+        );
+
+
+      ensureSceneSystem();
+
+
+      project.selectedId =
+        null;
+
+
+      if (
+        typeof groupSelection !==
+        "undefined"
+      ) {
+
+        groupSelection
+          .clear();
+
+      }
+
+
+      /*
+       * El HTML para OBS
+       * NO debe alterar
+       * localStorage.
+       */
+
+      saveProject =
+        () => {};
+
+
+      /*
+       * Render normal del motor.
+       *
+       * Esto conserva:
+       *
+       * - animaciones
+       * - grupos
+       * - reflejos
+       * - glow
+       * - backlight
+       * - metal
+       * - fuego
+       * - neón
+       * - partículas
+       * - máscaras
+       * - movimiento orgánico
+       */
+
+      renderAll();
+
+
+      /*
+       * Ajustar tamaño.
+       */
+
+      fitObsStage();
+
+
+      requestAnimationFrame(
+        fitObsStage
+      );
+
+
+      setTimeout(
+        fitObsStage,
+        80
+      );
+
+
+      setTimeout(
+        fitObsStage,
+        350
+      );
+
+
+      /*
+       * Si OBS cambia
+       * la resolución:
+       */
+
+      window
+        .addEventListener(
+          "resize",
+          () => {
+
+            requestAnimationFrame(
+              fitObsStage
+            );
+
+          }
+        );
+
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        "MK OBS Runtime: no se pudo cargar la escena exportada.",
+        error
+      );
+
+    }
+  }
+
+
+  /* =======================================================
+     CREAR SNAPSHOT SOLO DE LA ESCENA ACTIVA
+     ======================================================= */
+
+  function buildActiveSceneSnapshot() {
+
+    /*
+     * Sincronizar primero
+     * los últimos cambios.
+     */
+
+    syncActiveSceneFromProject();
+
+
+    const active =
+      activeSceneRecord();
+
+
+    if (!active) {
+
+      throw new Error(
+        "No hay una escena activa para exportar."
+      );
+
+    }
+
+
+    /*
+     * Solo copiamos ESTA escena.
+     *
+     * Inicio no arrastra Juego.
+     * Juego no arrastra BRB.
+     * Cámara no arrastra Final.
+     */
+
+    const scene =
+      structuredClone(
+        active
+      );
+
+
+    scene.layers =
+      (
+        scene.layers ||
+        []
+      ).map(
+
+        layer =>
+          defaultLayer(
+
+            structuredClone(
+              layer
+            )
+
+          )
+
+      );
+
+
+    return {
+
+      version:
+        4.28,
+
+
+      selectedId:
+        null,
+
+
+      canvas:
+        structuredClone(
+          scene.canvas
+        ),
+
+
+      export: {
+
+        ...(
+          project.export ||
+          {}
+        ),
+
+        duration:
+          MASTER_LOOP_SECONDS
+
+      },
+
+
+      layout:
+        structuredClone(
+
+          scene.layout ||
+          {
+            type:
+              "scene"
+          }
+
+        ),
+
+
+      /*
+       * El runtime conserva
+       * el sistema de escenas,
+       * pero con UNA sola escena.
+       */
+
+      scenes:
+        [
+          scene
+        ],
+
+
+      activeSceneId:
+        scene.id,
+
+
+      layers:
+        scene.layers
+
+    };
+  }
+
+
+  /* =======================================================
+     LIMPIAR COPIA DEL EDITOR
+
+     Evita duplicar imágenes DataURL
+     que ya estarán guardadas
+     dentro del proyecto exportado.
+     ======================================================= */
+
+  function cleanCloneForExport(
+    clone
+  ) {
+
+    [
+      "#stage",
+      "#layersList",
+      "#sceneQuickTabs",
+      "#sceneSelector"
+
+    ].forEach(
+      selector => {
+
+        const node =
+          clone.querySelector(
+            selector
+          );
+
+
+        if (node) {
+
+          node.innerHTML =
+            "";
+
+        }
+
+      }
+    );
+
+
+    clone
+      .querySelectorAll(
+        'input[type="file"]'
+      )
+      .forEach(
+        input => {
+
+          input.removeAttribute(
+            "value"
+          );
+
+        }
+      );
+
+
+    clone
+      .querySelectorAll(
+        ".stage-guides,.stage-smart-guides,.stage-selection-guides"
+      )
+      .forEach(
+        node => {
+
+          node.remove();
+
+        }
+      );
+
+
+    const cloneBody =
+      clone.querySelector(
+        "body"
+      );
+
+
+    cloneBody
+      ?.classList
+      .remove(
+        "preview-mode",
+        "paused",
+        "mk-obs-runtime"
+      );
+
+
+    return clone;
+  }
+
+
+  /* =======================================================
+     EXPORTAR ESCENA ACTIVA COMO HTML OBS
+     ======================================================= */
+
+  function exportActiveSceneAsObsHtml() {
+
+    const button =
+      document.getElementById(
+        "exportObsHtmlBtn"
+      );
+
+
+    const status =
+      document.getElementById(
+        "obsExportStatus"
+      );
+
+
+    if (button) {
+
+      button.disabled =
+        true;
+
+    }
+
+
+    if (status) {
+
+      status.textContent =
+        "Preparando HTML transparente para OBS…";
+
+    }
+
+
+    try {
+
+      const active =
+        activeSceneRecord();
+
+
+      const snapshot =
+        buildActiveSceneSnapshot();
+
+
+      /*
+       * Todo el proyecto
+       * queda DENTRO del HTML.
+       *
+       * Esto incluye DataURL
+       * de los PNG.
+       */
+
+      const payload = {
+
+        obs:
+          true,
+
+
+        sceneName:
+          active?.name ||
+          "Overlay MK",
+
+
+        exportedAt:
+          new Date()
+            .toISOString(),
+
+
+        project:
+          snapshot
+
+      };
+
+
+      /*
+       * Clonamos el mismo
+       * MK Universe.
+       *
+       * Por eso el HTML exportado
+       * utiliza exactamente
+       * las mismas animaciones.
+       */
+
+      const clone =
+        cleanCloneForExport(
+
+          document.documentElement
+            .cloneNode(
+              true
+            )
+
+        );
+
+
+      /*
+       * Este pequeño script
+       * se pone en <head>.
+       *
+       * Así el HTML sabe
+       * qué escena debe cargar.
+       */
+
+      const bootstrap =
+        document.createElement(
+          "script"
+        );
+
+
+      const payloadJson =
+        JSON.stringify(
+          payload
+        )
+          .replace(
+            /</g,
+            "\\u003c"
+          );
+
+
+      bootstrap.textContent =
+        `window.__MK_OBS_PAYLOAD__=${payloadJson};`;
+
+
+      clone
+        .querySelector(
+          "head"
+        )
+        .appendChild(
+          bootstrap
+        );
+
+
+      const html =
+        "<!DOCTYPE html>\n" +
+        clone.outerHTML;
+
+
+      const filename =
+        `mk-overlay-${
+          safeFileName(
+            active?.name ||
+            "escena"
+          )
+        }.html`;
+
+
+      /*
+       * Descargar archivo
+       * generado directamente
+       * por TU navegador.
+       */
+
+      downloadHtml(
+        html,
+        filename
+      );
+
+
+      if (status) {
+
+        status.textContent =
+          `✅ ${filename} creado. Transparencia real + animaciones + guías ocultas.`;
+
+      }
+
+
+    } catch (
+      error
+    ) {
+
+      console.error(
+        error
+      );
+
+
+      if (status) {
+
+        status.textContent =
+          "❌ No se pudo crear el HTML para OBS.";
+
+      }
+
+
+    } finally {
+
+      if (button) {
+
+        button.disabled =
+          false;
+
+      }
+
+    }
+  }
+
+
+  /* =======================================================
+     AÑADIR BOTÓN AL MK UNIVERSE
+     ======================================================= */
+
+  function installObsExportButton() {
+
+    /*
+     * Si ya existe,
+     * no duplicarlo.
+     */
+
+    if (
+      document.getElementById(
+        "exportObsHtmlBtn"
+      )
+    ) {
+
+      return;
+    }
+
+
+    const jsonButton =
+      document.getElementById(
+        "exportBtn"
+      );
+
+
+    if (!jsonButton) {
+
+      return;
+    }
+
+
+    const button =
+      document.createElement(
+        "button"
+      );
+
+
+    button.id =
+      "exportObsHtmlBtn";
+
+
+    button.className =
+      "btn btn-primary";
+
+
+    button.type =
+      "button";
+
+
+    button.textContent =
+      "🌐 Exportar HTML OBS";
+
+
+    button.title =
+      "Exporta la escena activa como overlay HTML transparente y animado para OBS";
+
+
+    /*
+     * Lo ponemos junto
+     * a Exportar JSON.
+     */
+
+    jsonButton
+      .insertAdjacentElement(
+        "afterend",
+        button
+      );
+
+
+    button
+      .addEventListener(
+        "click",
+        exportActiveSceneAsObsHtml
+      );
+
+
+    /*
+     * Texto de estado.
+     */
+
+    const projectCard =
+      jsonButton.closest(
+        ".project-card"
+      );
+
+
+    if (
+      projectCard &&
+      !document.getElementById(
+        "obsExportStatus"
+      )
+    ) {
+
+      const status =
+        document.createElement(
+          "div"
+        );
+
+
+      status.id =
+        "obsExportStatus";
+
+
+      status.className =
+        "status";
+
+
+      status.setAttribute(
+        "aria-live",
+        "polite"
+      );
+
+
+      projectCard
+        .appendChild(
+          status
+        );
+
+    }
+  }
+
+
+  /* =======================================================
+     ARRANQUE
+     ======================================================= */
+
+  /*
+   * CASO 1
+   *
+   * Estamos dentro
+   * de un HTML exportado:
+   *
+   * → iniciar modo OBS.
+   */
+
+  if (
+    OBS_PAYLOAD?.obs &&
+    OBS_PAYLOAD?.project
+  ) {
+
+    bootObsRuntime(
+      OBS_PAYLOAD
+    );
+
+  }
+
+
+  /*
+   * CASO 2
+   *
+   * Estamos dentro
+   * del editor normal:
+   *
+   * → añadir botón Exportar.
+   */
+
+  else {
+
+    installObsExportButton();
+
+  }
+
+})();
+</script>
 </body>
 </html>

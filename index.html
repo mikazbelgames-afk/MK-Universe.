@@ -1380,8 +1380,8 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.8 · Transition Workshop 🌸</h1>
-    <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel, guías inteligentes y taller de Stinger para OBS.</p>
+    <h1>🌸 MK Universe 4.2.10 · Frame Hole 🌸</h1>
+    <p class="subtitle">Reset estable: capas, VFX, exportación HTML transparente para OBS y marcos con hueco visual. Sin Smart Frames ni control directo de fuentes OBS.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
@@ -1562,8 +1562,12 @@
       <button class="btn tab" data-tab="animation" type="button">Animación</button>
     </div>
 
+    <div id="frameHoleQuickGuide" class="reflection-note">
+      <b>🪟 Hueco para OBS:</b> selecciona una capa de <b>Imagen</b> y abre <b>Apariencia</b>. La cámara de OBS permanece rectangular debajo; MK Universe solo vuelve transparente la ventana del overlay.
+    </div>
+
     <div id="emptyInspector" class="notice">
-      Selecciona una capa para editarla.
+      Selecciona una capa para editarla. Para probar el hueco: pulsa <b>➕ Imagen</b>, selecciona el asset y luego abre <b>Apariencia</b>.
     </div>
 
     <div id="inspector" class="hidden">
@@ -1830,6 +1834,8 @@
         <div id="frameHoleCard" class="card" style="margin-top:14px">
           <h3 style="margin-bottom:8px">🪟 Hueco para OBS</h3>
           <div class="reflection-note">El asset sigue teniendo lienzo rectangular. Esta herramienta solo vuelve transparente una ventana dentro de la imagen para que se vea la cámara o captura rectangular colocada debajo en OBS.</div>
+          <div id="frameHoleAvailabilityNote" class="notice hidden" style="margin-bottom:10px">⚠️ Esta herramienta se aplica únicamente a capas de tipo <b>Imagen</b>. Selecciona el marco/fondo que quieras perforar.</div>
+          <div id="frameHoleControls">
           <div class="check-row">
             <input id="propFrameHoleEnabled" type="checkbox" />
             <label for="propFrameHoleEnabled">Activar hueco transparente</label>
@@ -1862,6 +1868,7 @@
             <input id="propFrameHoleRadius" type="range" min="0" max="50" step="0.5" />
           </div>
           <div class="notice">Para huecos completamente irregulares, usa un PNG con esa transparencia ya dibujada. MK Universe no tocará ninguna fuente de OBS.</div>
+          </div>
         </div>
 
         <div class="card" style="margin-top:14px">
@@ -5675,7 +5682,18 @@
       controls.neonMode.value=layer.neon?.mode||"none";
       controls.neonSpeed.value=layer.neon?.speed??4;
       const frameHoleCard=document.getElementById("frameHoleCard");
-      if (frameHoleCard) frameHoleCard.classList.toggle("hidden", layer.kind !== "image");
+      const frameHoleAvailabilityNote=document.getElementById("frameHoleAvailabilityNote");
+      const frameHoleControls=document.getElementById("frameHoleControls");
+      const isImageLayer = layer.kind === "image";
+      if (frameHoleCard) frameHoleCard.classList.remove("hidden");
+      if (frameHoleAvailabilityNote) frameHoleAvailabilityNote.classList.toggle("hidden", isImageLayer);
+      if (frameHoleControls) {
+        frameHoleControls.style.opacity = isImageLayer ? "1" : ".45";
+        frameHoleControls.style.pointerEvents = isImageLayer ? "auto" : "none";
+      }
+      [controls.frameHoleEnabled, controls.frameHoleShape, controls.frameHoleX, controls.frameHoleY, controls.frameHoleWidth, controls.frameHoleHeight, controls.frameHoleRadius].forEach(control => {
+        if (control) control.disabled = !isImageLayer;
+      });
       const frameHoleRadiusControl=document.getElementById("frameHoleRadiusControl");
       if (frameHoleRadiusControl) frameHoleRadiusControl.classList.toggle("hidden", (layer.frameHole?.shape || "rounded") === "ellipse");
 

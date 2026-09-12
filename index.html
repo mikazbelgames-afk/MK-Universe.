@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.12 — Reset estable + OBS HTML + Multi Frame Hole + Dark Veil + Ear Idle · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.13 — JSON Persistence + Merge + OBS HTML + Multi Frame Hole + Dark Veil + Ear Idle · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1380,7 +1380,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.12 · Dark Veil 🌸</h1>
+    <h1>🌸 MK Universe 4.2.13 · JSON Persistence + Merge 🌸</h1>
     <p class="subtitle">Reset estable: capas, VFX, exportación HTML transparente para OBS y marcos con hueco visual. Sin Smart Frames ni control directo de fuentes OBS.</p>
 
     <div class="toolbar row-wrap">
@@ -1460,10 +1460,13 @@
         <button id="saveBtn" class="btn" type="button">💾 Guardar</button>
         <button id="exportBtn" class="btn" type="button">📤 Exportar JSON</button>
         <button id="exportObsHtmlBtn" class="btn btn-primary" type="button">🌐 Exportar HTML OBS</button>
-        <button id="importBtn" class="btn" type="button">📥 Importar JSON</button>
+        <button id="importBtn" class="btn" type="button">📥 Importar JSON · Reemplazar</button>
+        <button id="mergeImportBtn" class="btn btn-primary" type="button">➕ Fusionar JSON a escena</button>
         <button id="resetBtn" class="btn btn-danger" type="button">↩️ Restablecer</button>
       </div>
+      <div class="notice" style="margin-top:8px">📥 <b>Reemplazar</b> abre un proyecto completo. ➕ <b>Fusionar</b> agrega las capas del JSON a la escena actual sin borrar tus huecos, fondo ni capas existentes.</div>
       <input id="jsonPicker" type="file" accept=".json,application/json" class="hidden" />
+      <input id="mergeJsonPicker" type="file" accept=".json,application/json" class="hidden" />
 
       <div class="format-grid">
         <label>Formato del lienzo
@@ -2446,6 +2449,7 @@
     const layersList = document.getElementById("layersList");
     const filePicker = document.getElementById("filePicker");
     const jsonPicker = document.getElementById("jsonPicker");
+    const mergeJsonPicker = document.getElementById("mergeJsonPicker");
     const inspector = document.getElementById("inspector");
     const emptyInspector = document.getElementById("emptyInspector");
     const projectStatus = document.getElementById("projectStatus");
@@ -3369,6 +3373,13 @@
     }
 
     function defaultLayer(overrides = {}) {
+      const holeDefaults = { enabled:false, shape:"rounded", x:50, y:50, width:72, height:42, radius:8 };
+      const importedFrameHoles = Array.isArray(overrides.frameHoles) && overrides.frameHoles.length
+        ? overrides.frameHoles.map(hole => ({ ...holeDefaults, ...(hole || {}) }))
+        : (overrides.frameHole && typeof overrides.frameHole === "object")
+          ? [{ ...holeDefaults, ...overrides.frameHole }]
+          : [{ ...holeDefaults }];
+      const importedHoleIndex = Math.max(0, Math.min(importedFrameHoles.length - 1, Number(overrides.frameHoleActiveIndex ?? 0) || 0));
       return {
         id: newId(),
         name: "Nueva capa",
@@ -3548,6 +3559,15 @@
           centerY: 55,
           ...(overrides.vfx || {})
         },
+        darkVeil: {
+          enabled: false,
+          intensity: 45,
+          color: "#000000",
+          ...(overrides.darkVeil || {})
+        },
+        frameHoles: importedFrameHoles,
+        frameHoleActiveIndex: importedHoleIndex,
+        frameHole: importedFrameHoles[importedHoleIndex],
         effectPalette: Array.isArray(overrides.effectPalette)
           ? overrides.effectPalette.slice(0, 6)
           : Array.isArray(overrides.petalPalette)
@@ -8078,15 +8098,41 @@
       }
     }
 
+    function normalizeProjectSnapshotForJson(sourceProject = project) {
+      const snapshot = structuredClone(sourceProject);
+      snapshot.layers = Array.isArray(snapshot.layers) ? snapshot.layers.map(layer => defaultLayer(layer)) : [];
+      snapshot.scenes = Array.isArray(snapshot.scenes)
+        ? snapshot.scenes.map(scene => ({
+            ...scene,
+            layers: Array.isArray(scene.layers) ? scene.layers.map(layer => defaultLayer(layer)) : []
+          }))
+        : [];
+      return snapshot;
+    }
+
     function exportProject() {
       syncActiveSceneFromProject();
-      const blob = new Blob([JSON.stringify(project, null, 2)], { type: "application/json" });
+      const snapshot = normalizeProjectSnapshotForJson(project);
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = "mk-universe-project.json";
       link.click();
       URL.revokeObjectURL(url);
+      projectStatus.textContent = "JSON exportado con huecos y ajustes visuales.";
+    }
+
+    function importProjectData(parsed) {
+      if (!Array.isArray(parsed?.layers) && !Array.isArray(parsed?.scenes)) throw new Error("Formato inválido");
+      project = migrateProject(parsed);
+      project.layers = Array.isArray(project.layers) ? project.layers.map(layer => defaultLayer(layer)) : [];
+      ensureSceneSystem();
+      if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) project.selectedId = null;
+      sceneFormat.value = project.canvas.orientation;
+      sceneBackground.value = project.canvas.background || "#000000";
+      renderAll();
+      saveProject("Proyecto importado con huecos y ajustes restaurados.");
     }
 
     function importProject(file) {
@@ -8094,17 +8140,68 @@
       const reader = new FileReader();
       reader.onload = () => {
         try {
-          const parsed = JSON.parse(reader.result);
-          if (!Array.isArray(parsed.layers) && !Array.isArray(parsed.scenes)) throw new Error("Formato inválido");
-          project = migrateProject(parsed);
-          project.layers = Array.isArray(parsed.layers) ? parsed.layers.map(layer => defaultLayer(layer)) : [];
-          ensureSceneSystem();
-          if (project.selectedId && !project.layers.some(layer => layer.id === project.selectedId)) project.selectedId = null;
-          sceneFormat.value=project.canvas.orientation;sceneBackground.value=project.canvas.background||"#000000";
-          renderAll();
-          projectStatus.textContent = "Proyecto importado.";
-        } catch {
+          importProjectData(JSON.parse(reader.result));
+        } catch (error) {
+          console.error(error);
           projectStatus.textContent = "No se pudo importar el archivo.";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function sourceLayersFromImportedProject(parsed) {
+      const scenes = Array.isArray(parsed?.scenes) ? parsed.scenes.filter(Boolean) : [];
+      if (scenes.length) {
+        const active = scenes.find(scene => scene.id === parsed.activeSceneId) || scenes[0];
+        if (Array.isArray(active?.layers)) return active.layers;
+      }
+      return Array.isArray(parsed?.layers) ? parsed.layers : [];
+    }
+
+    function mergeProjectData(parsed) {
+      if (!Array.isArray(parsed?.layers) && !Array.isArray(parsed?.scenes)) throw new Error("Formato inválido");
+      const sourceLayers = sourceLayersFromImportedProject(parsed);
+      if (!sourceLayers.length) return 0;
+
+      syncActiveSceneFromProject();
+      const idMap = new Map();
+      sourceLayers.forEach(raw => {
+        if (raw?.id) idMap.set(raw.id, newId("merged"));
+      });
+
+      const mergedLayers = sourceLayers.map(raw => {
+        const copy = defaultLayer(structuredClone(raw || {}));
+        const oldId = raw?.id || null;
+        copy.id = oldId && idMap.has(oldId) ? idMap.get(oldId) : newId("merged");
+        if (copy.parentId) copy.parentId = idMap.get(copy.parentId) || null;
+        if (copy.reflection?.sourceLayerId) {
+          copy.reflection = {
+            ...copy.reflection,
+            sourceLayerId: idMap.get(copy.reflection.sourceLayerId) || null
+          };
+        }
+        ensureFrameHoleState(copy);
+        return copy;
+      });
+
+      project.layers.push(...mergedLayers);
+      if (mergedLayers.length) project.selectedId = mergedLayers[mergedLayers.length - 1].id;
+      syncActiveSceneFromProject();
+      renderAll();
+      saveProject(`${mergedLayers.length} capa${mergedLayers.length === 1 ? "" : "s"} fusionada${mergedLayers.length === 1 ? "" : "s"} en la escena actual.`);
+      return mergedLayers.length;
+    }
+
+    function mergeProject(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const count = mergeProjectData(JSON.parse(reader.result));
+          if (!count) projectStatus.textContent = "El JSON no contiene capas para fusionar.";
+        } catch (error) {
+          console.error(error);
+          projectStatus.textContent = "No se pudo fusionar el archivo.";
         }
       };
       reader.readAsText(file);
@@ -8184,6 +8281,11 @@
     jsonPicker.addEventListener("change", () => {
       importProject(jsonPicker.files[0]);
       jsonPicker.value = "";
+    });
+    document.getElementById("mergeImportBtn").addEventListener("click", () => mergeJsonPicker.click());
+    mergeJsonPicker.addEventListener("change", () => {
+      mergeProject(mergeJsonPicker.files[0]);
+      mergeJsonPicker.value = "";
     });
 
     document.getElementById("layoutCameraBtn")?.addEventListener("click",()=>applyLiveLayoutTemplate("camera"));

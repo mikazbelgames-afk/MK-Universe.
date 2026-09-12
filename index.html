@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.10 — Reset estable + OBS HTML + Frame Hole + Ear Idle · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.12 — Reset estable + OBS HTML + Multi Frame Hole + Dark Veil + Ear Idle · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1380,7 +1380,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.10 · Frame Hole 🌸</h1>
+    <h1>🌸 MK Universe 4.2.12 · Dark Veil 🌸</h1>
     <p class="subtitle">Reset estable: capas, VFX, exportación HTML transparente para OBS y marcos con hueco visual. Sin Smart Frames ni control directo de fuentes OBS.</p>
 
     <div class="toolbar row-wrap">
@@ -1706,6 +1706,26 @@
           <input id="propSaturation" type="range" min="0" max="250" step="1" />
         </div>
 
+        <div id="darkVeilCard" class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:8px">🖤 Velo oscuro</h3>
+          <div class="reflection-note">Oscurece la imagen sin volverla transparente. Conserva el alfa real y respeta los huecos para OBS.</div>
+          <div id="darkVeilAvailabilityNote" class="notice hidden" style="margin-bottom:10px">⚠️ El velo oscuro se aplica únicamente a capas de tipo <b>Imagen</b>.</div>
+          <div id="darkVeilControls">
+            <div class="check-row">
+              <input id="propDarkVeilEnabled" type="checkbox" />
+              <label for="propDarkVeilEnabled">Activar velo oscuro</label>
+            </div>
+            <div class="control">
+              <label for="propDarkVeilIntensity">Intensidad <span id="propDarkVeilIntensityValue" class="value"></span></label>
+              <input id="propDarkVeilIntensity" type="range" min="0" max="100" step="1" />
+            </div>
+            <div class="control">
+              <label for="propDarkVeilColor">Color del velo</label>
+              <input id="propDarkVeilColor" type="color" />
+            </div>
+          </div>
+        </div>
+
         <div class="card" style="margin-top:14px">
           <h3 style="margin-bottom:12px">✨ Luz y materiales</h3>
 
@@ -1832,10 +1852,18 @@
         </div>
 
         <div id="frameHoleCard" class="card" style="margin-top:14px">
-          <h3 style="margin-bottom:8px">🪟 Hueco para OBS</h3>
-          <div class="reflection-note">El asset sigue teniendo lienzo rectangular. Esta herramienta solo vuelve transparente una ventana dentro de la imagen para que se vea la cámara o captura rectangular colocada debajo en OBS.</div>
+          <h3 style="margin-bottom:8px">🪟 Huecos para OBS</h3>
+          <div class="reflection-note">El asset sigue teniendo lienzo rectangular. Esta herramienta vuelve transparentes una o varias ventanas dentro de la imagen para que se vea la cámara, juego o captura rectangular colocada debajo en OBS.</div>
           <div id="frameHoleAvailabilityNote" class="notice hidden" style="margin-bottom:10px">⚠️ Esta herramienta se aplica únicamente a capas de tipo <b>Imagen</b>. Selecciona el marco/fondo que quieras perforar.</div>
           <div id="frameHoleControls">
+          <div class="row-wrap" style="margin-bottom:10px">
+            <button id="addFrameHoleBtn" class="btn btn-mini" type="button">➕ Nuevo hueco</button>
+            <button id="removeFrameHoleBtn" class="btn btn-mini btn-danger" type="button">🗑️ Eliminar hueco</button>
+          </div>
+          <div class="control">
+            <label for="propFrameHoleIndex">Hueco actual</label>
+            <select id="propFrameHoleIndex"></select>
+          </div>
           <div class="check-row">
             <input id="propFrameHoleEnabled" type="checkbox" />
             <label for="propFrameHoleEnabled">Activar hueco transparente</label>
@@ -1867,7 +1895,7 @@
             <label for="propFrameHoleRadius">Redondeo <span id="propFrameHoleRadiusValue" class="value"></span></label>
             <input id="propFrameHoleRadius" type="range" min="0" max="50" step="0.5" />
           </div>
-          <div class="notice">Para huecos completamente irregulares, usa un PNG con esa transparencia ya dibujada. MK Universe no tocará ninguna fuente de OBS.</div>
+          <div class="notice">Puedes crear varios huecos dentro del mismo marco. Para huecos completamente irregulares, usa un PNG con esa transparencia ya dibujada. MK Universe no tocará ninguna fuente de OBS.</div>
           </div>
         </div>
 
@@ -3229,6 +3257,7 @@
       rotation: document.getElementById("propRotation"),
       visible: document.getElementById("propVisible"),
       background: document.getElementById("propBackground"),
+      frameHoleIndex: document.getElementById("propFrameHoleIndex"),
       frameHoleEnabled: document.getElementById("propFrameHoleEnabled"),
       frameHoleShape: document.getElementById("propFrameHoleShape"),
       frameHoleX: document.getElementById("propFrameHoleX"),
@@ -3244,6 +3273,9 @@
       brightness: document.getElementById("propBrightness"),
       contrast: document.getElementById("propContrast"),
       saturation: document.getElementById("propSaturation"),
+      darkVeilEnabled: document.getElementById("propDarkVeilEnabled"),
+      darkVeilIntensity: document.getElementById("propDarkVeilIntensity"),
+      darkVeilColor: document.getElementById("propDarkVeilColor"),
       blend: document.getElementById("propBlend"),
       removeBlack: document.getElementById("propRemoveBlack"),
       threshold: document.getElementById("propThreshold"),
@@ -3359,6 +3391,7 @@
         brightness: 100,
         contrast: 100,
         saturation: 100,
+        darkVeil: { enabled: false, intensity: 45, color: "#000000" },
         blend: "normal",
         removeBlack: false,
         threshold: 12,
@@ -3389,6 +3422,16 @@
           height: 42,
           radius: 8
         },
+        frameHoles: [{
+          enabled: false,
+          shape: "rounded",
+          x: 50,
+          y: 50,
+          width: 72,
+          height: 42,
+          radius: 8
+        }],
+        frameHoleActiveIndex: 0,
         animationFocus: { enabled: false },
         vfx: { spread: 58, softness: 72, centerX: 50, centerY: 55 },
         glowEnabled: false,
@@ -4477,6 +4520,57 @@
       ctx.closePath();
     }
 
+
+    function makeDefaultFrameHole(enabled = false) {
+      return {
+        enabled,
+        shape: "rounded",
+        x: 50,
+        y: 50,
+        width: 72,
+        height: 42,
+        radius: 8
+      };
+    }
+
+    function ensureFrameHoleState(layer) {
+      if (!layer) return null;
+
+      if (!Array.isArray(layer.frameHoles) || !layer.frameHoles.length) {
+        if (layer.frameHole && typeof layer.frameHole === "object") {
+          layer.frameHoles = [{ ...makeDefaultFrameHole(false), ...layer.frameHole }];
+        } else {
+          layer.frameHoles = [makeDefaultFrameHole(false)];
+        }
+      } else {
+        layer.frameHoles = layer.frameHoles.map(hole => ({ ...makeDefaultFrameHole(false), ...(hole || {}) }));
+      }
+
+      const maxIndex = Math.max(0, layer.frameHoles.length - 1);
+      const safeIndex = Math.min(maxIndex, Math.max(0, Number(layer.frameHoleActiveIndex ?? 0) || 0));
+      layer.frameHoleActiveIndex = safeIndex;
+      layer.frameHole = layer.frameHoles[safeIndex];
+      return layer.frameHole;
+    }
+
+    function getFrameHoles(layer) {
+      ensureFrameHoleState(layer);
+      return Array.isArray(layer?.frameHoles) ? layer.frameHoles : [];
+    }
+
+    function populateFrameHoleSelect(layer) {
+      const select = controls.frameHoleIndex;
+      if (!select) return;
+      const holes = getFrameHoles(layer);
+      select.innerHTML = holes.map((hole, index) => {
+        const status = hole.enabled ? 'activo' : 'apagado';
+        return `<option value="${index}">Hueco ${index + 1} · ${status}</option>`;
+      }).join('');
+      select.value = String(layer.frameHoleActiveIndex ?? 0);
+      const removeBtn = document.getElementById('removeFrameHoleBtn');
+      if (removeBtn) removeBtn.disabled = holes.length <= 1;
+    }
+
     function punchFrameHole(ctx, width, height, frameHole = {}) {
       if (!frameHole?.enabled) return;
 
@@ -4507,8 +4601,11 @@
 
     function processImage(layer, img) {
       const needsRemoveBlack = Boolean(layer.removeBlack);
-      const needsFrameHole = Boolean(layer.frameHole?.enabled);
-      if (!needsRemoveBlack && !needsFrameHole) return img;
+      const frameHoles = getFrameHoles(layer);
+      const needsFrameHole = frameHoles.some(hole => Boolean(hole?.enabled));
+      const darkVeil = { enabled:false, intensity:45, color:"#000000", ...(layer.darkVeil || {}) };
+      const needsDarkVeil = Boolean(darkVeil.enabled) && Number(darkVeil.intensity) > 0;
+      if (!needsRemoveBlack && !needsFrameHole && !needsDarkVeil) return img;
 
       const canvas = document.createElement("canvas");
       canvas.width = img.naturalWidth || img.width;
@@ -4533,7 +4630,16 @@
         ctx.putImageData(imageData, 0, 0);
       }
 
-      punchFrameHole(ctx, canvas.width, canvas.height, layer.frameHole);
+      if (needsDarkVeil) {
+        ctx.save();
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.globalAlpha = Math.max(0, Math.min(100, Number(darkVeil.intensity) || 0)) / 100;
+        ctx.fillStyle = darkVeil.color || "#000000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+      }
+
+      frameHoles.forEach(hole => punchFrameHole(ctx, canvas.width, canvas.height, hole));
       return canvas;
     }
 
@@ -5580,18 +5686,23 @@
       controls.rotation.value = layer.rotation;
       controls.visible.checked = layer.visible;
       controls.background.checked = layer.background;
-      layer.frameHole = { enabled:false, shape:"rounded", x:50, y:50, width:72, height:42, radius:8, ...(layer.frameHole || {}) };
-      controls.frameHoleEnabled.checked = Boolean(layer.frameHole.enabled);
-      controls.frameHoleShape.value = layer.frameHole.shape || "rounded";
-      controls.frameHoleX.value = layer.frameHole.x ?? 50;
-      controls.frameHoleY.value = layer.frameHole.y ?? 50;
-      controls.frameHoleWidth.value = layer.frameHole.width ?? 72;
-      controls.frameHoleHeight.value = layer.frameHole.height ?? 42;
-      controls.frameHoleRadius.value = layer.frameHole.radius ?? 8;
+      const activeFrameHole = ensureFrameHoleState(layer) || makeDefaultFrameHole(false);
+      populateFrameHoleSelect(layer);
+      controls.frameHoleEnabled.checked = Boolean(activeFrameHole.enabled);
+      controls.frameHoleShape.value = activeFrameHole.shape || "rounded";
+      controls.frameHoleX.value = activeFrameHole.x ?? 50;
+      controls.frameHoleY.value = activeFrameHole.y ?? 50;
+      controls.frameHoleWidth.value = activeFrameHole.width ?? 72;
+      controls.frameHoleHeight.value = activeFrameHole.height ?? 42;
+      controls.frameHoleRadius.value = activeFrameHole.radius ?? 8;
       controls.opacity.value = layer.opacity;
       controls.brightness.value = layer.brightness;
       controls.contrast.value = layer.contrast;
       controls.saturation.value = layer.saturation;
+      layer.darkVeil = { enabled:false, intensity:45, color:"#000000", ...(layer.darkVeil || {}) };
+      controls.darkVeilEnabled.checked = Boolean(layer.darkVeil.enabled);
+      controls.darkVeilIntensity.value = layer.darkVeil.intensity ?? 45;
+      controls.darkVeilColor.value = layer.darkVeil.color || "#000000";
       controls.blend.value = layer.blend;
       controls.removeBlack.checked = layer.removeBlack;
       controls.threshold.value = layer.threshold;
@@ -5681,21 +5792,32 @@
       [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach(c => c.disabled = fireColorDisabled);
       controls.neonMode.value=layer.neon?.mode||"none";
       controls.neonSpeed.value=layer.neon?.speed??4;
+      const darkVeilAvailabilityNote=document.getElementById("darkVeilAvailabilityNote");
+      const darkVeilControls=document.getElementById("darkVeilControls");
+      const isImageLayer = layer.kind === "image";
+      if (darkVeilAvailabilityNote) darkVeilAvailabilityNote.classList.toggle("hidden", isImageLayer);
+      if (darkVeilControls) {
+        darkVeilControls.style.opacity = isImageLayer ? "1" : ".45";
+        darkVeilControls.style.pointerEvents = isImageLayer ? "auto" : "none";
+      }
+      [controls.darkVeilEnabled, controls.darkVeilIntensity, controls.darkVeilColor].forEach(control => {
+        if (control) control.disabled = !isImageLayer;
+      });
+
       const frameHoleCard=document.getElementById("frameHoleCard");
       const frameHoleAvailabilityNote=document.getElementById("frameHoleAvailabilityNote");
       const frameHoleControls=document.getElementById("frameHoleControls");
-      const isImageLayer = layer.kind === "image";
       if (frameHoleCard) frameHoleCard.classList.remove("hidden");
       if (frameHoleAvailabilityNote) frameHoleAvailabilityNote.classList.toggle("hidden", isImageLayer);
       if (frameHoleControls) {
         frameHoleControls.style.opacity = isImageLayer ? "1" : ".45";
         frameHoleControls.style.pointerEvents = isImageLayer ? "auto" : "none";
       }
-      [controls.frameHoleEnabled, controls.frameHoleShape, controls.frameHoleX, controls.frameHoleY, controls.frameHoleWidth, controls.frameHoleHeight, controls.frameHoleRadius].forEach(control => {
+      [controls.frameHoleIndex, controls.frameHoleEnabled, controls.frameHoleShape, controls.frameHoleX, controls.frameHoleY, controls.frameHoleWidth, controls.frameHoleHeight, controls.frameHoleRadius].forEach(control => {
         if (control) control.disabled = !isImageLayer;
       });
       const frameHoleRadiusControl=document.getElementById("frameHoleRadiusControl");
-      if (frameHoleRadiusControl) frameHoleRadiusControl.classList.toggle("hidden", (layer.frameHole?.shape || "rounded") === "ellipse");
+      if (frameHoleRadiusControl) frameHoleRadiusControl.classList.toggle("hidden", (activeFrameHole?.shape || "rounded") === "ellipse");
 
       const slotCard=document.getElementById("liveSlotInspector");
       if(layer.kind==="slot") {
@@ -5735,11 +5857,12 @@
         propBrightnessValue: `${layer.brightness}%`,
         propContrastValue: `${layer.contrast}%`,
         propSaturationValue: `${layer.saturation}%`,
-        propFrameHoleXValue: `${Number(layer.frameHole?.x ?? 50).toFixed(1)}%`,
-        propFrameHoleYValue: `${Number(layer.frameHole?.y ?? 50).toFixed(1)}%`,
-        propFrameHoleWidthValue: `${Number(layer.frameHole?.width ?? 72).toFixed(1)}%`,
-        propFrameHoleHeightValue: `${Number(layer.frameHole?.height ?? 42).toFixed(1)}%`,
-        propFrameHoleRadiusValue: `${Number(layer.frameHole?.radius ?? 8).toFixed(1)}%`,
+        propDarkVeilIntensityValue: `${Number(layer.darkVeil?.intensity ?? 45)}%`,
+        propFrameHoleXValue: `${Number((ensureFrameHoleState(layer) || {}).x ?? 50).toFixed(1)}%`,
+        propFrameHoleYValue: `${Number((ensureFrameHoleState(layer) || {}).y ?? 50).toFixed(1)}%`,
+        propFrameHoleWidthValue: `${Number((ensureFrameHoleState(layer) || {}).width ?? 72).toFixed(1)}%`,
+        propFrameHoleHeightValue: `${Number((ensureFrameHoleState(layer) || {}).height ?? 42).toFixed(1)}%`,
+        propFrameHoleRadiusValue: `${Number((ensureFrameHoleState(layer) || {}).radius ?? 8).toFixed(1)}%`,
         propThresholdValue: `${layer.threshold}`,
         propFeatherValue: `${layer.feather}`,
         propDurationValue: `${layer.duration}s`,
@@ -5847,6 +5970,7 @@
         rotation: "rotation",
         visible: "visible",
         background: "background",
+        frameHoleIndex: "frameHole.index",
         frameHoleEnabled: "frameHole.enabled",
         frameHoleShape: "frameHole.shape",
         frameHoleX: "frameHole.x",
@@ -5862,6 +5986,9 @@
         brightness: "brightness",
         contrast: "contrast",
         saturation: "saturation",
+        darkVeilEnabled: "darkVeil.enabled",
+        darkVeilIntensity: "darkVeil.intensity",
+        darkVeilColor: "darkVeil.color",
         blend: "blend",
         removeBlack: "removeBlack",
         threshold: "threshold",
@@ -5954,10 +6081,21 @@
               ? Number(control.value)
               : control.value;
 
-          if (prop.startsWith("frameHole.")) {
+          if (prop.startsWith("darkVeil.")) {
+            const veilProp = prop.split(".")[1];
+            layer.darkVeil = { enabled:false, intensity:45, color:"#000000", ...(layer.darkVeil || {}) };
+            layer.darkVeil[veilProp] = value;
+          } else if (prop.startsWith("frameHole.")) {
+            ensureFrameHoleState(layer);
             const holeProp = prop.split(".")[1];
-            layer.frameHole = { enabled:false, shape:"rounded", x:50, y:50, width:72, height:42, radius:8, ...(layer.frameHole || {}) };
-            layer.frameHole[holeProp] = value;
+            if (holeProp === "index") {
+              layer.frameHoleActiveIndex = Math.max(0, Math.min(layer.frameHoles.length - 1, Number(value) || 0));
+              layer.frameHole = layer.frameHoles[layer.frameHoleActiveIndex];
+            } else {
+              const activeHole = layer.frameHoles[layer.frameHoleActiveIndex] || layer.frameHoles[0] || makeDefaultFrameHole(false);
+              activeHole[holeProp] = value;
+              layer.frameHole = activeHole;
+            }
           } else if (prop.startsWith("liveSlot.")) {
             const slotProp = prop.split(".")[1];
             layer.liveSlot = { type:"camera", width:620, height:349, radius:18, ...(layer.liveSlot || {}) };
@@ -6027,6 +6165,38 @@
         control.addEventListener("change", handler);
       });
     }
+
+
+    document.getElementById("addFrameHoleBtn")?.addEventListener("click", () => {
+      const layer = selectedLayer();
+      if (!layer || layer.kind !== "image") return;
+      ensureFrameHoleState(layer);
+      layer.frameHoles.push(makeDefaultFrameHole(true));
+      layer.frameHoleActiveIndex = layer.frameHoles.length - 1;
+      layer.frameHole = layer.frameHoles[layer.frameHoleActiveIndex];
+      renderStage();
+      renderLayersList();
+      renderInspector();
+      saveProject();
+    });
+
+    document.getElementById("removeFrameHoleBtn")?.addEventListener("click", () => {
+      const layer = selectedLayer();
+      if (!layer || layer.kind !== "image") return;
+      ensureFrameHoleState(layer);
+      if (layer.frameHoles.length <= 1) {
+        layer.frameHoles = [makeDefaultFrameHole(false)];
+        layer.frameHoleActiveIndex = 0;
+      } else {
+        layer.frameHoles.splice(layer.frameHoleActiveIndex, 1);
+        layer.frameHoleActiveIndex = Math.max(0, Math.min(layer.frameHoleActiveIndex, layer.frameHoles.length - 1));
+      }
+      layer.frameHole = layer.frameHoles[layer.frameHoleActiveIndex];
+      renderStage();
+      renderLayersList();
+      renderInspector();
+      saveProject();
+    });
 
     const EFFECT_PALETTES = {
       mk: ["#ffd8ec", "#ff9fd5", "#efb4ff", "#d8c4ff", "#ff7fc8", "#f7ecff"],

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.9 — Reset estable + OBS HTML + Ear Idle · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.2.10 — Reset estable + OBS HTML + Frame Hole + Ear Idle · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1243,7 +1243,7 @@
   
 
 
-    /* MK Universe 4.2.9 · OBS HTML Runtime */
+    /* MK Universe 4.2.10 · OBS HTML Runtime */
     body.obs-runtime {
       display:block !important;
       width:100vw !important;
@@ -1827,6 +1827,43 @@
           </div>
         </div>
 
+        <div id="frameHoleCard" class="card" style="margin-top:14px">
+          <h3 style="margin-bottom:8px">🪟 Hueco para OBS</h3>
+          <div class="reflection-note">El asset sigue teniendo lienzo rectangular. Esta herramienta solo vuelve transparente una ventana dentro de la imagen para que se vea la cámara o captura rectangular colocada debajo en OBS.</div>
+          <div class="check-row">
+            <input id="propFrameHoleEnabled" type="checkbox" />
+            <label for="propFrameHoleEnabled">Activar hueco transparente</label>
+          </div>
+          <div class="control">
+            <label for="propFrameHoleShape">Forma del hueco</label>
+            <select id="propFrameHoleShape">
+              <option value="rounded">Rectángulo redondeado</option>
+              <option value="ellipse">Elipse / círculo</option>
+            </select>
+          </div>
+          <div class="control">
+            <label for="propFrameHoleX">Centro X <span id="propFrameHoleXValue" class="value"></span></label>
+            <input id="propFrameHoleX" type="range" min="0" max="100" step="0.5" />
+          </div>
+          <div class="control">
+            <label for="propFrameHoleY">Centro Y <span id="propFrameHoleYValue" class="value"></span></label>
+            <input id="propFrameHoleY" type="range" min="0" max="100" step="0.5" />
+          </div>
+          <div class="control">
+            <label for="propFrameHoleWidth">Ancho <span id="propFrameHoleWidthValue" class="value"></span></label>
+            <input id="propFrameHoleWidth" type="range" min="1" max="100" step="0.5" />
+          </div>
+          <div class="control">
+            <label for="propFrameHoleHeight">Alto <span id="propFrameHoleHeightValue" class="value"></span></label>
+            <input id="propFrameHoleHeight" type="range" min="1" max="100" step="0.5" />
+          </div>
+          <div id="frameHoleRadiusControl" class="control">
+            <label for="propFrameHoleRadius">Redondeo <span id="propFrameHoleRadiusValue" class="value"></span></label>
+            <input id="propFrameHoleRadius" type="range" min="0" max="50" step="0.5" />
+          </div>
+          <div class="notice">Para huecos completamente irregulares, usa un PNG con esa transparencia ya dibujada. MK Universe no tocará ninguna fuente de OBS.</div>
+        </div>
+
         <div class="card" style="margin-top:14px">
           <h3 style="margin-bottom:10px">🧩 Laboratorio de imagen</h3>
           <div class="reflection-note">Herramientas locales: quitar fondo, retocar bordes, separar objetos transparentes y elegir exactamente qué zona se anima.</div>
@@ -2339,7 +2376,7 @@
     }
 
     const defaultProject = {
-      version: 4.29,
+      version: 4.210,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -3185,6 +3222,13 @@
       rotation: document.getElementById("propRotation"),
       visible: document.getElementById("propVisible"),
       background: document.getElementById("propBackground"),
+      frameHoleEnabled: document.getElementById("propFrameHoleEnabled"),
+      frameHoleShape: document.getElementById("propFrameHoleShape"),
+      frameHoleX: document.getElementById("propFrameHoleX"),
+      frameHoleY: document.getElementById("propFrameHoleY"),
+      frameHoleWidth: document.getElementById("propFrameHoleWidth"),
+      frameHoleHeight: document.getElementById("propFrameHoleHeight"),
+      frameHoleRadius: document.getElementById("propFrameHoleRadius"),
       liveSlotType: document.getElementById("propLiveSlotType"),
       liveSlotWidth: document.getElementById("propLiveSlotWidth"),
       liveSlotHeight: document.getElementById("propLiveSlotHeight"),
@@ -3329,6 +3373,15 @@
         starStyle: "sparkle",
         originalSrc: null,
         maskSrc: null,
+        frameHole: {
+          enabled: false,
+          shape: "rounded",
+          x: 50,
+          y: 50,
+          width: 72,
+          height: 42,
+          radius: 8
+        },
         animationFocus: { enabled: false },
         vfx: { spread: 58, softness: 72, centerX: 50, centerY: 55 },
         glowEnabled: false,
@@ -4402,29 +4455,78 @@
       return Math.pow(free, exponent);
     }
 
-    function processImage(layer, img) {
-      if (!layer.removeBlack) return img;
+    function roundedRectPath(ctx, x, y, width, height, radius) {
+      const r = Math.max(0, Math.min(Number(radius) || 0, width / 2, height / 2));
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+      ctx.lineTo(x + r, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
 
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      ctx.drawImage(img, 0, 0);
+    function punchFrameHole(ctx, width, height, frameHole = {}) {
+      if (!frameHole?.enabled) return;
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      const threshold = Number(layer.threshold);
-      const feather = Math.max(1, Number(layer.feather));
+      const holeWidth = Math.max(1, Math.min(100, Number(frameHole.width ?? 72))) / 100 * width;
+      const holeHeight = Math.max(1, Math.min(100, Number(frameHole.height ?? 42))) / 100 * height;
+      const centerX = Math.max(0, Math.min(100, Number(frameHole.x ?? 50))) / 100 * width;
+      const centerY = Math.max(0, Math.min(100, Number(frameHole.y ?? 50))) / 100 * height;
+      const x = centerX - holeWidth / 2;
+      const y = centerY - holeHeight / 2;
 
-      for (let i = 0; i < data.length; i += 4) {
-        const luminance = Math.max(data[i], data[i + 1], data[i + 2]);
-        let alphaFactor = (luminance - threshold) / feather;
-        alphaFactor = Math.min(1, Math.max(0, alphaFactor));
-        alphaFactor = alphaFactor * alphaFactor * (3 - 2 * alphaFactor);
-        data[i + 3] = Math.round(data[i + 3] * alphaFactor);
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fillStyle = "rgba(0,0,0,1)";
+
+      if ((frameHole.shape || "rounded") === "ellipse") {
+        ctx.beginPath();
+        ctx.ellipse(centerX, centerY, holeWidth / 2, holeHeight / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const radiusPercent = Math.max(0, Math.min(50, Number(frameHole.radius ?? 8))) / 100;
+        const radiusPx = Math.min(holeWidth, holeHeight) * radiusPercent;
+        roundedRectPath(ctx, x, y, holeWidth, holeHeight, radiusPx);
+        ctx.fill();
       }
 
-      ctx.putImageData(imageData, 0, 0);
+      ctx.restore();
+    }
+
+    function processImage(layer, img) {
+      const needsRemoveBlack = Boolean(layer.removeBlack);
+      const needsFrameHole = Boolean(layer.frameHole?.enabled);
+      if (!needsRemoveBlack && !needsFrameHole) return img;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth || img.width;
+      canvas.height = img.naturalHeight || img.height;
+      const ctx = canvas.getContext("2d", { willReadFrequently: needsRemoveBlack });
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      if (needsRemoveBlack) {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        const threshold = Number(layer.threshold);
+        const feather = Math.max(1, Number(layer.feather));
+
+        for (let i = 0; i < data.length; i += 4) {
+          const luminance = Math.max(data[i], data[i + 1], data[i + 2]);
+          let alphaFactor = (luminance - threshold) / feather;
+          alphaFactor = Math.min(1, Math.max(0, alphaFactor));
+          alphaFactor = alphaFactor * alphaFactor * (3 - 2 * alphaFactor);
+          data[i + 3] = Math.round(data[i + 3] * alphaFactor);
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+      }
+
+      punchFrameHole(ctx, canvas.width, canvas.height, layer.frameHole);
       return canvas;
     }
 
@@ -5471,6 +5573,14 @@
       controls.rotation.value = layer.rotation;
       controls.visible.checked = layer.visible;
       controls.background.checked = layer.background;
+      layer.frameHole = { enabled:false, shape:"rounded", x:50, y:50, width:72, height:42, radius:8, ...(layer.frameHole || {}) };
+      controls.frameHoleEnabled.checked = Boolean(layer.frameHole.enabled);
+      controls.frameHoleShape.value = layer.frameHole.shape || "rounded";
+      controls.frameHoleX.value = layer.frameHole.x ?? 50;
+      controls.frameHoleY.value = layer.frameHole.y ?? 50;
+      controls.frameHoleWidth.value = layer.frameHole.width ?? 72;
+      controls.frameHoleHeight.value = layer.frameHole.height ?? 42;
+      controls.frameHoleRadius.value = layer.frameHole.radius ?? 8;
       controls.opacity.value = layer.opacity;
       controls.brightness.value = layer.brightness;
       controls.contrast.value = layer.contrast;
@@ -5564,6 +5674,11 @@
       [controls.fireColor1,controls.fireColor2,controls.fireColor3].forEach(c => c.disabled = fireColorDisabled);
       controls.neonMode.value=layer.neon?.mode||"none";
       controls.neonSpeed.value=layer.neon?.speed??4;
+      const frameHoleCard=document.getElementById("frameHoleCard");
+      if (frameHoleCard) frameHoleCard.classList.toggle("hidden", layer.kind !== "image");
+      const frameHoleRadiusControl=document.getElementById("frameHoleRadiusControl");
+      if (frameHoleRadiusControl) frameHoleRadiusControl.classList.toggle("hidden", (layer.frameHole?.shape || "rounded") === "ellipse");
+
       const slotCard=document.getElementById("liveSlotInspector");
       if(layer.kind==="slot") {
         slotCard?.classList.remove("hidden");
@@ -5602,6 +5717,11 @@
         propBrightnessValue: `${layer.brightness}%`,
         propContrastValue: `${layer.contrast}%`,
         propSaturationValue: `${layer.saturation}%`,
+        propFrameHoleXValue: `${Number(layer.frameHole?.x ?? 50).toFixed(1)}%`,
+        propFrameHoleYValue: `${Number(layer.frameHole?.y ?? 50).toFixed(1)}%`,
+        propFrameHoleWidthValue: `${Number(layer.frameHole?.width ?? 72).toFixed(1)}%`,
+        propFrameHoleHeightValue: `${Number(layer.frameHole?.height ?? 42).toFixed(1)}%`,
+        propFrameHoleRadiusValue: `${Number(layer.frameHole?.radius ?? 8).toFixed(1)}%`,
         propThresholdValue: `${layer.threshold}`,
         propFeatherValue: `${layer.feather}`,
         propDurationValue: `${layer.duration}s`,
@@ -5709,6 +5829,13 @@
         rotation: "rotation",
         visible: "visible",
         background: "background",
+        frameHoleEnabled: "frameHole.enabled",
+        frameHoleShape: "frameHole.shape",
+        frameHoleX: "frameHole.x",
+        frameHoleY: "frameHole.y",
+        frameHoleWidth: "frameHole.width",
+        frameHoleHeight: "frameHole.height",
+        frameHoleRadius: "frameHole.radius",
         liveSlotType: "liveSlot.type",
         liveSlotWidth: "liveSlot.width",
         liveSlotHeight: "liveSlot.height",
@@ -5809,7 +5936,11 @@
               ? Number(control.value)
               : control.value;
 
-          if (prop.startsWith("liveSlot.")) {
+          if (prop.startsWith("frameHole.")) {
+            const holeProp = prop.split(".")[1];
+            layer.frameHole = { enabled:false, shape:"rounded", x:50, y:50, width:72, height:42, radius:8, ...(layer.frameHole || {}) };
+            layer.frameHole[holeProp] = value;
+          } else if (prop.startsWith("liveSlot.")) {
             const slotProp = prop.split(".")[1];
             layer.liveSlot = { type:"camera", width:620, height:349, radius:18, ...(layer.liveSlot || {}) };
             layer.liveSlot[slotProp] = value;
@@ -7745,7 +7876,7 @@
         if (status) {
           status.textContent =
             `HTML OBS creado: ${filename}. ` +
-            `Fondo transparente, animaciones activas y guías ocultas.`;
+            `Fondo transparente, huecos OBS activos, animaciones activas y guías ocultas.`;
         }
       } catch (error) {
         console.error(error);

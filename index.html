@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.2.8 — Transition Workshop · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.3.1 — True Shape Frames + Ear Idle + OBS HTML · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -254,9 +254,9 @@
     }
 
     .project-card {
-      position: sticky;
-      top: 0;
-      z-index: 40;
+      position: relative;
+      top: auto;
+      z-index: 1;
       background: rgba(36, 23, 45, .97);
       backdrop-filter: blur(14px);
       box-shadow: 0 10px 30px rgba(0,0,0,.28);
@@ -1242,6 +1242,159 @@
 
   
 
+    /* MK Universe 4.2.9 · OBS HTML Runtime */
+    body.obs-runtime {
+      display:block !important;
+      width:100vw !important;
+      height:100vh !important;
+      min-height:0 !important;
+      margin:0 !important;
+      padding:0 !important;
+      overflow:hidden !important;
+      background:transparent !important;
+    }
+    body.obs-runtime > .panel,
+    body.obs-runtime .editor-zoom-bar,
+    body.obs-runtime .preview-exit,
+    body.obs-runtime #imageLabModal {
+      display:none !important;
+    }
+    body.obs-runtime .scene-shell {
+      position:fixed !important;
+      inset:0 !important;
+      width:100vw !important;
+      height:100vh !important;
+      min-width:0 !important;
+      min-height:0 !important;
+      margin:0 !important;
+      padding:0 !important;
+      border:0 !important;
+      border-radius:0 !important;
+      overflow:hidden !important;
+      display:grid !important;
+      place-items:start !important;
+      background:transparent !important;
+    }
+    body.obs-runtime .stage-viewport {
+      position:absolute !important;
+      left:0 !important;
+      top:0 !important;
+      margin:0 !important;
+      padding:0 !important;
+      overflow:visible !important;
+      background:transparent !important;
+    }
+    body.obs-runtime .stage-wrap {
+      margin:0 !important;
+      padding:0 !important;
+      border:0 !important;
+      border-radius:0 !important;
+      box-shadow:none !important;
+      overflow:visible !important;
+      background:transparent !important;
+      transform-origin:top left !important;
+    }
+    body.obs-runtime #stage {
+      background:transparent !important;
+      cursor:default !important;
+      pointer-events:none !important;
+    }
+    body.obs-runtime .stage-guides,
+    body.obs-runtime .stage-smart-guides,
+    body.obs-runtime .stage-selection-guides,
+    body.obs-runtime .live-slot-layer {
+      display:none !important;
+    }
+
+    /* MK Universe 4.3.1 · True Shape Smart Frames + Ear Idle */
+    .smart-frame-card {
+      border-color: rgba(255,155,207,.24);
+      background: linear-gradient(135deg,rgba(255,155,207,.07),rgba(182,141,255,.05));
+    }
+    .smart-frame-card .frame-status {
+      margin-top:8px;
+      padding:8px 9px;
+      border-radius:9px;
+      background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.07);
+      color:var(--muted);
+      font-size:11px;
+      line-height:1.4;
+    }
+    .frame-fit-shell {
+      position:relative;
+      width:100%;
+      overflow:visible;
+      pointer-events:none;
+    }
+    .frame-fit-mask {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      pointer-events:none;
+      -webkit-mask-repeat:no-repeat;
+      mask-repeat:no-repeat;
+      -webkit-mask-position:center;
+      mask-position:center;
+      -webkit-mask-size:100% 100%;
+      mask-size:100% 100%;
+      -webkit-mask-mode:alpha;
+      mask-mode:alpha;
+    }
+    .frame-fit-window {
+      position:absolute;
+      overflow:hidden;
+      pointer-events:none;
+    }
+    .frame-fit-window > img,
+    .frame-fit-window > canvas {
+      position:absolute!important;
+      inset:0!important;
+      width:100%!important;
+      height:100%!important;
+      max-width:none!important;
+      max-height:none!important;
+      object-fit:var(--frame-object-fit, cover)!important;
+      transform:none!important;
+    }
+    .frame-fit-slot-window {
+      position:absolute;
+      box-sizing:border-box;
+      border:2px dashed rgba(255,174,222,.82);
+      background:linear-gradient(135deg,rgba(255,112,194,.10),rgba(175,137,255,.07));
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 20px rgba(255,112,194,.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff5fb;
+      text-align:center;
+      font-weight:900;
+      pointer-events:auto;
+    }
+    .frame-fit-slot-window .slot-copy {
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:10px;
+      background:rgba(20,14,38,.60);
+      backdrop-filter:blur(4px);
+    }
+    .anim-earIdle {
+      transform-origin:50% 100%;
+      animation:foxEarIdle var(--duration,5s) var(--easing,ease-in-out) infinite;
+    }
+    @keyframes foxEarIdle {
+      0%,100% { transform:translateY(0) rotate(0deg) scaleY(1); }
+      20% { transform:translateY(-.4px) rotate(var(--ear-a,-1.1deg)) scaleY(1.002); }
+      47% { transform:translateY(-1px) rotate(var(--ear-b,1.8deg)) scaleY(1.006); }
+      66% { transform:translateY(-.35px) rotate(var(--ear-c,-.65deg)) scaleY(1.002); }
+      82% { transform:translateY(-.7px) rotate(var(--ear-d,.75deg)) scaleY(1.004); }
+    }
+
     /* MK Universe 4.1 — Live Layout Builder */
     .live-layout-card{margin-top:12px;padding:12px;border:1px solid rgba(255,166,214,.16);border-radius:14px;background:linear-gradient(135deg,rgba(255,126,198,.07),rgba(173,137,255,.055))}
     .live-layout-card h4{margin:0 0 5px;font-size:.92rem;color:#ffe9f6}
@@ -1285,8 +1438,8 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.2.8 · Transition Workshop 🌸</h1>
-    <p class="subtitle">Motor maestro vertical y horizontal: capas, máscaras, VFX, fondo transparente, exportación fiel, guías inteligentes y taller de Stinger para OBS.</p>
+    <h1>🌸 MK Universe 4.3.1 · True Shape Frames + Ear Idle 🌸</h1>
+    <p class="subtitle">Motor maestro vertical y horizontal: capas, marcos inteligentes, máscaras OBS, VFX, fondo transparente, Ear Idle, exportación HTML y taller de Stinger.</p>
 
     <div class="toolbar row-wrap">
       <button id="addImageBtn" class="btn btn-primary" type="button">➕ Imagen</button>
@@ -1364,6 +1517,7 @@
       <div class="row-wrap" style="margin-top:10px">
         <button id="saveBtn" class="btn" type="button">💾 Guardar</button>
         <button id="exportBtn" class="btn" type="button">📤 Exportar JSON</button>
+        <button id="exportObsHtmlBtn" class="btn btn-primary" type="button">🌐 Exportar HTML OBS</button>
         <button id="importBtn" class="btn" type="button">📥 Importar JSON</button>
         <button id="resetBtn" class="btn btn-danger" type="button">↩️ Restablecer</button>
       </div>
@@ -1434,6 +1588,7 @@
         <div id="videoStatus" class="status" aria-live="polite"></div>
       </details>
 
+      <div id="obsExportStatus" class="status" aria-live="polite"></div>
       <div id="projectStatus" class="status" aria-live="polite"></div>
     </section>
 
@@ -1581,6 +1736,35 @@
             <input id="propLiveSlotRadius" type="range" min="0" max="80" step="1" />
           </div>
           <small>Estas zonas son guías transparentes. Sirven para reservar el espacio de la webcam, juego, navegador o chat y no aparecen en el video exportado.</small>
+        </div>
+
+        <div id="smartFrameInspector" class="card smart-frame-card" style="margin-top:12px">
+          <h3 style="margin-bottom:8px">🖼️ Marco inteligente · forma real</h3>
+          <p class="notice">
+            Selecciona un PNG de marco con un hueco transparente interior. MK detecta la <strong>forma real del hueco</strong>
+            (circular, ovalada, redondeada o irregular) y recorta el contenido con esa misma silueta.
+            No convierte el marco en un rectángulo.
+          </p>
+          <div class="control">
+            <label for="frameTargetSelect">Contenido dentro del marco</label>
+            <select id="frameTargetSelect"></select>
+          </div>
+          <div class="control">
+            <label for="frameFitMode">Ajuste del contenido</label>
+            <select id="frameFitMode">
+              <option value="cover">Cubrir la figura completa</option>
+              <option value="contain">Mostrar contenido completo</option>
+            </select>
+          </div>
+          <div class="row-wrap">
+            <button id="detectFrameMaskBtn" class="btn btn-primary" type="button">✨ Detectar forma real + vincular</button>
+            <button id="syncFrameTargetBtn" class="btn" type="button">⤢ Actualizar vínculo</button>
+            <button id="exportFrameMaskBtn" class="btn" type="button">🎭 Máscara OBS</button>
+            <button id="clearFrameMaskBtn" class="btn btn-danger" type="button">Quitar vínculo</button>
+          </div>
+          <div id="frameMaskStatus" class="frame-status">
+            Selecciona una imagen de marco. El recorte seguirá el alfa real de su hueco interior.
+          </div>
         </div>
       </section>
 
@@ -1981,6 +2165,7 @@
             <option value="pulse">Pulso de luz</option>
             <option value="breathe">Respirar</option>
             <option value="sway">Balanceo</option>
+            <option value="earIdle">🦊 Orejitas idle · vaivén suave</option>
             <option value="fall">Caída simple</option>
             <option value="water">Agua</option>
             <option value="twinkle">Destello</option>
@@ -2204,6 +2389,8 @@
   <button id="exitPreviewBtn" class="btn preview-exit" type="button">🎛️ Volver al editor</button>
 
   <script>
+    const OBS_EXPORT_PAYLOAD = window.__MK_OBS_PAYLOAD__ || null;
+    const IS_OBS_EXPORT = Boolean(OBS_EXPORT_PAYLOAD?.obs);
     const STORAGE_KEY = "mkUniverse3DEngine_v1";
     const LEGACY_STORAGE_KEY = "mkUniverse2DEngine_v1";
     const MASTER_LOOP_SECONDS = 15;
@@ -2238,7 +2425,7 @@
     }
 
     const defaultProject = {
-      version: 4.28,
+      version: 4.31,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -2255,7 +2442,11 @@
       layers: []
     };
 
-    let project = migrateProject(loadProject() || structuredClone(defaultProject));
+    let project = migrateProject(
+      OBS_EXPORT_PAYLOAD?.project
+        ? structuredClone(OBS_EXPORT_PAYLOAD.project)
+        : (loadProject() || structuredClone(defaultProject))
+    );
     project.export = { ...(project.export || {}), duration: MASTER_LOOP_SECONDS };
     project.layers = (project.layers || []).map(layer => defaultLayer(layer));
     ensureSceneSystem();
@@ -3176,6 +3367,11 @@
       neonSpeed: document.getElementById("propNeonSpeed")
     };
 
+    const frameTargetSelect = document.getElementById("frameTargetSelect");
+    const frameFitMode = document.getElementById("frameFitMode");
+    const frameMaskStatus = document.getElementById("frameMaskStatus");
+    const smartFrameInspector = document.getElementById("smartFrameInspector");
+
     function newId(prefix = "layer") {
       return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     }
@@ -3267,6 +3463,8 @@
         fire: { enabled:false, mode:"hybrid", intensity:52, spread:62, turbulence:68, softness:48, speed:4, colors:["#fff1c7","#ff4fae","#8a63ff"] },
         neon: { mode:"none", speed:4 },
         liveSlot: { type:"camera", width:620, height:349, radius:18 },
+        frameMask: { enabled:false, targetId:null, maskSrc:null, bounds:null, detectedAt:null, maskVersion:2, sourceWidth:0, sourceHeight:0 },
+        frameFit: { enabled:false, frameId:null, mode:"cover" },
         reflection: {
           enabled: false,
           sourceLayerId: null,
@@ -3328,6 +3526,15 @@
         liveSlot: {
           type:"camera", width:620, height:349, radius:18,
           ...(overrides.liveSlot || {})
+        },
+        frameMask: {
+          enabled:false, targetId:null, maskSrc:null, bounds:null, detectedAt:null,
+          maskVersion:2, sourceWidth:0, sourceHeight:0,
+          ...(overrides.frameMask || {})
+        },
+        frameFit: {
+          enabled:false, frameId:null, mode:"cover",
+          ...(overrides.frameFit || {})
         },
         animationFocus: {
           enabled: false,
@@ -3640,7 +3847,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.28,
+        version: 4.31,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -3706,9 +3913,10 @@
     }
 
     function saveProject(message = "Proyecto guardado.") {
+      if (IS_OBS_EXPORT) return;
       syncActiveSceneFromProject();
       captureHistoryIfChanged();
-      project.version = 4.26;
+      project.version = 4.31;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -4006,6 +4214,462 @@
       saveProject("Cambios guardados automáticamente.");
     }
 
+    function frameCandidatesFor(frameLayer) {
+      if (!frameLayer) return [];
+      const frameIndex = project.layers.indexOf(frameLayer);
+      return project.layers
+        .filter(layer => layer.id !== frameLayer.id)
+        .filter(layer => ["image", "slot"].includes(layer.kind))
+        .filter(layer => layer.parentId === frameLayer.parentId)
+        .sort((a,b) => {
+          const ai = project.layers.indexOf(a), bi = project.layers.indexOf(b);
+          const aBelow = ai < frameIndex ? 0 : 1;
+          const bBelow = bi < frameIndex ? 0 : 1;
+          return aBelow - bBelow || Math.abs(frameIndex-ai) - Math.abs(frameIndex-bi);
+        });
+    }
+
+    function nearestFrameTarget(frameLayer) {
+      return frameCandidatesFor(frameLayer)[0] || null;
+    }
+
+    function renderFrameTargetOptions(frameLayer) {
+      if (!frameTargetSelect) return;
+      frameTargetSelect.innerHTML = "";
+      if (!frameLayer || frameLayer.kind !== "image") {
+        const opt=document.createElement("option");opt.value="";opt.textContent="Selecciona primero una imagen de marco";frameTargetSelect.appendChild(opt);return;
+      }
+      const auto=document.createElement("option");auto.value="";auto.textContent="Automático · capa compatible más cercana debajo";frameTargetSelect.appendChild(auto);
+      frameCandidatesFor(frameLayer).forEach(layer => {
+        const opt=document.createElement("option");opt.value=layer.id;
+        const icon=layer.kind==="slot"?liveSlotLabel(layer.liveSlot?.type||"camera").icon:"🖼️";
+        opt.textContent=`${icon} ${layer.name}`;frameTargetSelect.appendChild(opt);
+      });
+      if (frameLayer.frameMask?.targetId && layerById(frameLayer.frameMask.targetId)) frameTargetSelect.value=frameLayer.frameMask.targetId;
+      if (frameFitMode) frameFitMode.value=frameLayer.frameMask?.fitMode || layerById(frameLayer.frameMask?.targetId)?.frameFit?.mode || "cover";
+    }
+
+    async function detectLargestTransparentHole(src) {
+      const img = await loadImageSource(src);
+
+      const sw = img.naturalWidth || img.width || 1;
+      const sh = img.naturalHeight || img.height || 1;
+
+      /*
+        4.3.1 · TRUE SHAPE MASK
+
+        Trabajamos a una resolución suficientemente alta para conservar
+        curvas, círculos, óvalos, esquinas suaves y figuras irregulares.
+      */
+      const maxDim = 2048;
+      const ratio = Math.min(1, maxDim / Math.max(sw, sh));
+      const w = Math.max(8, Math.round(sw * ratio));
+      const h = Math.max(8, Math.round(sh * ratio));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext("2d", { willReadFrequently:true });
+      ctx.clearRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const image = ctx.getImageData(0, 0, w, h);
+      const data = image.data;
+
+      /*
+        Núcleo transparente:
+        se usa solo para resolver topología: exterior vs hueco interior.
+      */
+      const CORE_ALPHA = 32;
+      const transparentCore = new Uint8Array(w * h);
+
+      for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+        transparentCore[p] = data[i + 3] <= CORE_ALPHA ? 1 : 0;
+      }
+
+      /*
+        1) Transparencia exterior conectada a los bordes.
+        Cualquier región transparente que toca el borde NO es el hueco.
+      */
+      const outside = new Uint8Array(w * h);
+      const queue = new Int32Array(w * h);
+
+      let head = 0;
+      let tail = 0;
+
+      const enqueueOutside = (x, y) => {
+        if (x < 0 || x >= w || y < 0 || y >= h) return;
+
+        const idx = y * w + x;
+
+        if (!transparentCore[idx] || outside[idx]) return;
+
+        outside[idx] = 1;
+        queue[tail++] = idx;
+      };
+
+      for (let x = 0; x < w; x++) {
+        enqueueOutside(x, 0);
+        enqueueOutside(x, h - 1);
+      }
+
+      for (let y = 0; y < h; y++) {
+        enqueueOutside(0, y);
+        enqueueOutside(w - 1, y);
+      }
+
+      while (head < tail) {
+        const idx = queue[head++];
+        const x = idx % w;
+        const y = (idx / w) | 0;
+
+        enqueueOutside(x - 1, y);
+        enqueueOutside(x + 1, y);
+        enqueueOutside(x, y - 1);
+        enqueueOutside(x, y + 1);
+      }
+
+      /*
+        2) Buscar el componente transparente interior más grande.
+      */
+      const visited = new Uint8Array(w * h);
+      const componentQueue = new Int32Array(w * h);
+
+      let best = null;
+
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const start = y * w + x;
+
+          if (
+            !transparentCore[start] ||
+            outside[start] ||
+            visited[start]
+          ) {
+            continue;
+          }
+
+          let ch = 0;
+          let ct = 0;
+          let count = 0;
+
+          let minX = w;
+          let minY = h;
+          let maxX = -1;
+          let maxY = -1;
+
+          visited[start] = 1;
+          componentQueue[ct++] = start;
+
+          while (ch < ct) {
+            const idx = componentQueue[ch++];
+            const cx = idx % w;
+            const cy = (idx / w) | 0;
+
+            count++;
+
+            minX = Math.min(minX, cx);
+            minY = Math.min(minY, cy);
+            maxX = Math.max(maxX, cx);
+            maxY = Math.max(maxY, cy);
+
+            const neighbors = [
+              idx - 1,
+              idx + 1,
+              idx - w,
+              idx + w
+            ];
+
+            for (const n of neighbors) {
+              if (
+                n < 0 ||
+                n >= w * h ||
+                visited[n] ||
+                outside[n] ||
+                !transparentCore[n]
+              ) {
+                continue;
+              }
+
+              visited[n] = 1;
+              componentQueue[ct++] = n;
+            }
+          }
+
+          if (!best || count > best.count) {
+            best = {
+              count,
+              minX,
+              minY,
+              maxX,
+              maxY
+            };
+          }
+        }
+      }
+
+      if (
+        !best ||
+        best.count < Math.max(40, w * h * 0.002)
+      ) {
+        throw new Error(
+          "No se encontró un hueco transparente interior cerrado. El marco debe tener una abertura interior separada de la transparencia exterior."
+        );
+      }
+
+      /*
+        3) Reconstruir exactamente ese hueco.
+      */
+      let seed = -1;
+
+      outerSeed:
+      for (let yy = best.minY; yy <= best.maxY; yy++) {
+        for (let xx = best.minX; xx <= best.maxX; xx++) {
+          const idx = yy * w + xx;
+
+          if (
+            transparentCore[idx] &&
+            !outside[idx]
+          ) {
+            seed = idx;
+            break outerSeed;
+          }
+        }
+      }
+
+      if (seed < 0) {
+        throw new Error(
+          "No se pudo reconstruir la forma interior del marco."
+        );
+      }
+
+      const interior = new Uint8Array(w * h);
+
+      head = 0;
+      tail = 0;
+
+      interior[seed] = 1;
+      queue[tail++] = seed;
+
+      while (head < tail) {
+        const idx = queue[head++];
+
+        const neighbors = [
+          idx - 1,
+          idx + 1,
+          idx - w,
+          idx + w
+        ];
+
+        for (const n of neighbors) {
+          if (
+            n < 0 ||
+            n >= w * h ||
+            interior[n] ||
+            outside[n] ||
+            !transparentCore[n]
+          ) {
+            continue;
+          }
+
+          interior[n] = 1;
+          queue[tail++] = n;
+        }
+      }
+
+      /*
+        4) TRUE SHAPE GROW
+
+        Desde el hueco transparente permitimos que la máscara se meta
+        debajo de los píxeles SEMITRANSPARENTES del propio marco.
+
+        Esto tiene dos ventajas:
+        - conserva bordes antialias suaves;
+        - permite que una webcam/imagen exista debajo de brillos de cristal,
+          glow o cristal semitransparente sin "cortarse" antes de tiempo.
+
+        La expansión jamás puede entrar en la transparencia exterior,
+        por lo que la máscara NO se convierte en el rectángulo del PNG.
+      */
+      const SHAPE_PASS_ALPHA = 244;
+      const grown = new Uint8Array(interior);
+
+      head = 0;
+      tail = 0;
+
+      for (let i = 0; i < interior.length; i++) {
+        if (interior[i]) {
+          queue[tail++] = i;
+        }
+      }
+
+      while (head < tail) {
+        const idx = queue[head++];
+
+        const neighbors = [
+          idx - 1,
+          idx + 1,
+          idx - w,
+          idx + w
+        ];
+
+        for (const n of neighbors) {
+          if (
+            n < 0 ||
+            n >= w * h ||
+            grown[n] ||
+            outside[n]
+          ) {
+            continue;
+          }
+
+          const alpha = data[n * 4 + 3];
+
+          if (alpha >= SHAPE_PASS_ALPHA) {
+            continue;
+          }
+
+          grown[n] = 1;
+          queue[tail++] = n;
+        }
+      }
+
+      /*
+        5) Generar máscara alpha.
+        Blanco = visible.
+        Transparente = recortado.
+      */
+      const holeMask = document.createElement("canvas");
+      holeMask.width = w;
+      holeMask.height = h;
+
+      const hctx = holeMask.getContext("2d");
+      const out = hctx.createImageData(w, h);
+      const od = out.data;
+
+      let trueMinX = w;
+      let trueMinY = h;
+      let trueMaxX = -1;
+      let trueMaxY = -1;
+
+      for (let i = 0; i < grown.length; i++) {
+        if (!grown[i]) continue;
+
+        const x = i % w;
+        const y = (i / w) | 0;
+        const k = i * 4;
+
+        od[k] = 255;
+        od[k + 1] = 255;
+        od[k + 2] = 255;
+        od[k + 3] = 255;
+
+        trueMinX = Math.min(trueMinX, x);
+        trueMinY = Math.min(trueMinY, y);
+        trueMaxX = Math.max(trueMaxX, x);
+        trueMaxY = Math.max(trueMaxY, y);
+      }
+
+      if (trueMaxX < 0) {
+        throw new Error(
+          "La forma interior quedó vacía al generar la máscara."
+        );
+      }
+
+      hctx.putImageData(out, 0, 0);
+
+      /*
+        Bounds solo sirve para calcular cover/contain.
+        El RECORTE real siempre viene de maskSrc, no de este rectángulo.
+      */
+      const bounds = {
+        x: trueMinX / w,
+        y: trueMinY / h,
+        w: (trueMaxX - trueMinX + 1) / w,
+        h: (trueMaxY - trueMinY + 1) / h
+      };
+
+      return {
+        maskSrc: holeMask.toDataURL("image/png"),
+        bounds,
+        width: w,
+        height: h,
+        sourceWidth: sw,
+        sourceHeight: sh,
+        maskVersion: 2
+      };
+    }
+
+    function unlinkFrame(frameLayer) {
+      if (!frameLayer) return;
+      const targetId=frameLayer.frameMask?.targetId;
+      const target=layerById(targetId);
+      if(target?.frameFit?.frameId===frameLayer.id) target.frameFit={enabled:false,frameId:null,mode:target.frameFit?.mode||"cover"};
+      frameLayer.frameMask={enabled:false,targetId:null,maskSrc:null,bounds:null,detectedAt:null,fitMode:"cover",maskVersion:2,sourceWidth:0,sourceHeight:0};
+    }
+
+    async function detectAndLinkSelectedFrame() {
+      const frame=selectedLayer();
+      if(!frame || frame.kind!=="image" || !frame.src){projectStatus.textContent="Selecciona un PNG de marco primero.";return;}
+      if(frameMaskStatus)frameMaskStatus.textContent="Analizando transparencia del marco…";
+      try{
+        const detected=await detectLargestTransparentHole(frame.src);
+        let target=layerById(frameTargetSelect?.value)||nearestFrameTarget(frame);
+        if(!target) throw new Error("No hay una cámara, zona o imagen compatible cerca del marco.");
+        // Limpiar vínculo anterior de este target o frame.
+        project.layers.forEach(layer=>{if(layer.id!==frame.id && layer.frameMask?.targetId===target.id) unlinkFrame(layer);});
+        if(frame.frameMask?.targetId && frame.frameMask.targetId!==target.id){const old=layerById(frame.frameMask.targetId);if(old?.frameFit?.frameId===frame.id)old.frameFit={enabled:false,frameId:null,mode:old.frameFit?.mode||"cover"};}
+        const mode=frameFitMode?.value||"cover";
+        frame.frameMask={enabled:true,targetId:target.id,maskSrc:detected.maskSrc,bounds:detected.bounds,detectedAt:Date.now(),fitMode:mode,maskVersion:detected.maskVersion||2,sourceWidth:detected.sourceWidth||0,sourceHeight:detected.sourceHeight||0};
+        target.frameFit={enabled:true,frameId:frame.id,mode};
+        // El contenido debe vivir en el mismo espacio local que el marco.
+        target.parentId=frame.parentId||null;
+        renderAll();
+        if(frameMaskStatus)frameMaskStatus.textContent=`✅ Forma real detectada y vinculada con “${target.name}”. El contenido queda recortado por la silueta interior del PNG y seguirá la transformación del marco.`;
+      }catch(error){console.error(error);if(frameMaskStatus)frameMaskStatus.textContent=`❌ ${error.message||"No se pudo detectar el hueco."}`;}
+    }
+
+    function syncSelectedFrameTarget() {
+      const frame=selectedLayer();
+      if(!frame || frame.kind!=="image"){projectStatus.textContent="Selecciona un marco de imagen.";return;}
+      const target=layerById(frameTargetSelect?.value)||nearestFrameTarget(frame);
+      if(!target){if(frameMaskStatus)frameMaskStatus.textContent="No hay contenido compatible para vincular.";return;}
+      const mode=frameFitMode?.value||"cover";
+      if(!frame.frameMask?.maskSrc){detectAndLinkSelectedFrame();return;}
+      if(frame.frameMask?.targetId && frame.frameMask.targetId!==target.id){const old=layerById(frame.frameMask.targetId);if(old?.frameFit?.frameId===frame.id)old.frameFit={enabled:false,frameId:null,mode:old.frameFit?.mode||"cover"};}
+      frame.frameMask={...(frame.frameMask||{}),enabled:true,targetId:target.id,fitMode:mode};
+      target.frameFit={enabled:true,frameId:frame.id,mode};target.parentId=frame.parentId||null;
+      renderAll();if(frameMaskStatus)frameMaskStatus.textContent=`✅ “${target.name}” ahora se ajusta y recorta con la forma real de este marco.`;
+    }
+
+    async function exportSelectedFrameMask() {
+      const frame=selectedLayer();
+      if(!frame || frame.kind!=="image"){projectStatus.textContent="Selecciona el marco que quieres usar en OBS.";return;}
+      try{
+        if(!frame.frameMask?.maskSrc){const detected=await detectLargestTransparentHole(frame.src);frame.frameMask={...(frame.frameMask||{}),enabled:true,maskSrc:detected.maskSrc,bounds:detected.bounds,detectedAt:Date.now(),maskVersion:detected.maskVersion||2,sourceWidth:detected.sourceWidth||0,sourceHeight:detected.sourceHeight||0};}
+        const mask=await loadImageSource(frame.frameMask.maskSrc);const b=frame.frameMask.bounds||{x:0,y:0,w:1,h:1};
+        const sx=Math.max(0,Math.floor(b.x*mask.width)),sy=Math.max(0,Math.floor(b.y*mask.height));
+        const sw=Math.max(1,Math.ceil(b.w*mask.width)),sh=Math.max(1,Math.ceil(b.h*mask.height));
+        const outW=1920,outH=Math.max(64,Math.round(outW*(sh/sw)));const canvas=document.createElement("canvas");canvas.width=outW;canvas.height=outH;
+        const ctx=canvas.getContext("2d");ctx.clearRect(0,0,outW,outH);ctx.imageSmoothingEnabled=true;ctx.drawImage(mask,sx,sy,sw,sh,0,0,outW,outH);
+        const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+        downloadBlob(blob,`mk-mask-${safeFileName(frame.name||"marco")}.png`);
+        if(frameMaskStatus)frameMaskStatus.textContent=`🎭 Máscara OBS por forma real exportada (${outW} × ${outH}). Aplícala a la webcam con “Máscara de imagen/Mezcla”.`;
+      }catch(error){console.error(error);if(frameMaskStatus)frameMaskStatus.textContent=`❌ ${error.message||"No se pudo exportar la máscara."}`;}
+    }
+
+    function clearSelectedFrameLink() {
+      const frame=selectedLayer();if(!frame||frame.kind!=="image")return;unlinkFrame(frame);renderAll();if(frameMaskStatus)frameMaskStatus.textContent="Vínculo de marco eliminado. La imagen del marco permanece intacta.";
+    }
+
+    function linkedFrameFor(layer) {
+      if(!layer?.frameFit?.enabled||!layer.frameFit.frameId)return null;
+      const frame=layerById(layer.frameFit.frameId);
+      if(!frame||!frame.frameMask?.enabled||frame.frameMask.targetId!==layer.id||!frame.frameMask.maskSrc||!frame.frameMask.bounds)return null;
+      return frame;
+    }
+
     function renderStage() {
       syncLinkedReflections();
       updateSceneGeometry();
@@ -4067,14 +4731,62 @@
         motion.style.setProperty("--intensity-scale", layer.intensity / 100);
         motion.style.setProperty("--intensity-deg", `${Math.max(1, layer.intensity / 6)}deg`);
         motion.style.setProperty("--easing", easingFromPlasticity(layer.plasticity));
+        if (animationName === "earIdle") {
+          const amount = Math.max(.45, Math.min(3.2, Number(layer.intensity || 7) / 4));
+          const side = Number(layer.x || 0) < 0 ? -1 : 1;
+          motion.style.setProperty("--ear-a", `${(-.55 * amount * side).toFixed(3)}deg`);
+          motion.style.setProperty("--ear-b", `${(.90 * amount * side).toFixed(3)}deg`);
+          motion.style.setProperty("--ear-c", `${(-.32 * amount * side).toFixed(3)}deg`);
+          motion.style.setProperty("--ear-d", `${(.38 * amount * side).toFixed(3)}deg`);
+        }
         setMotionVariables(layer, motion);
       }
 
       function renderNode(layer) {
         const index = project.layers.indexOf(layer);
         const container = document.createElement("div");
+        const fittedFrame = linkedFrameFor(layer);
+
+        if (fittedFrame && layer.kind === "slot") {
+          if (IS_OBS_EXPORT) { container.style.display="none"; return container; }
+          configureContainerTransform(container, fittedFrame, index, false);
+          container.dataset.id=layer.id;container.classList.add("live-slot-layer","frame-fitted-layer");
+          container.style.zIndex=index;container.style.opacity=Math.max(0,Math.min(1,Number(layer.opacity??100)/100));
+          const fw=Math.max(1,Number(fittedFrame.intrinsicWidth||960));const fh=Math.max(1,Number(fittedFrame.intrinsicHeight||540));
+          const shell=document.createElement("div");shell.className="frame-fit-shell";shell.style.aspectRatio=`${fw} / ${fh}`;
+          const mask=document.createElement("div");mask.className="frame-fit-mask";
+          mask.style.webkitMaskImage=`url("${fittedFrame.frameMask.maskSrc}")`;mask.style.maskImage=`url("${fittedFrame.frameMask.maskSrc}")`;
+          const b=fittedFrame.frameMask.bounds;const guide=document.createElement("div");guide.className="frame-fit-slot-window";
+          guide.style.left=`${b.x*100}%`;guide.style.top=`${b.y*100}%`;guide.style.width=`${b.w*100}%`;guide.style.height=`${b.h*100}%`;
+          const info=liveSlotLabel(layer.liveSlot?.type||"camera");
+          guide.innerHTML=`<div class="slot-copy"><span class="slot-icon">${info.icon}</span><span>${info.title}</span><small>Forma real del marco · máscara OBS disponible</small></div>`;
+          mask.appendChild(guide);shell.appendChild(mask);container.appendChild(shell);
+          container.addEventListener("pointerdown",event=>{if(event.button!==undefined&&event.button!==0)return;project.selectedId=layer.id;renderLayersList();renderInspector();});
+          return container;
+        }
+
+        if (fittedFrame && layer.kind === "image") {
+          configureContainerTransform(container, fittedFrame, index, false);
+          container.dataset.id=layer.id;container.classList.add("frame-fitted-layer");
+          container.style.zIndex=index;container.style.opacity=Math.max(0,Math.min(1,Number(layer.opacity??100)/100));container.style.mixBlendMode=layer.blend||"normal";
+          const motion=document.createElement("div");configureMotion(motion,layer,true);
+          const fw=Math.max(1,Number(fittedFrame.intrinsicWidth||960));const fh=Math.max(1,Number(fittedFrame.intrinsicHeight||540));
+          const shell=document.createElement("div");shell.className="frame-fit-shell";shell.style.aspectRatio=`${fw} / ${fh}`;
+          const mask=document.createElement("div");mask.className="frame-fit-mask";
+          mask.style.webkitMaskImage=`url("${fittedFrame.frameMask.maskSrc}")`;mask.style.maskImage=`url("${fittedFrame.frameMask.maskSrc}")`;
+          const b=fittedFrame.frameMask.bounds;const windowEl=document.createElement("div");windowEl.className="frame-fit-window";
+          windowEl.style.left=`${b.x*100}%`;windowEl.style.top=`${b.y*100}%`;windowEl.style.width=`${b.w*100}%`;windowEl.style.height=`${b.h*100}%`;
+          windowEl.style.setProperty("--frame-object-fit",layer.frameFit?.mode==="contain"?"contain":"cover");
+          const img=new Image();img.alt=layer.name;img.onload=()=>{if(!layer.intrinsicWidth||!layer.intrinsicHeight){layer.intrinsicWidth=img.naturalWidth;layer.intrinsicHeight=img.naturalHeight;}
+            const processed=processImage(layer,img);styleVisual(layer,processed);processed.style.position="absolute";processed.style.inset="0";processed.style.width="100%";processed.style.height="100%";processed.style.objectFit=layer.frameFit?.mode==="contain"?"contain":"cover";windowEl.replaceChildren(processed);};img.src=layer.src;
+          mask.appendChild(windowEl);shell.appendChild(mask);motion.appendChild(shell);container.appendChild(motion);return container;
+        }
 
         if (layer.kind === "slot") {
+          if (IS_OBS_EXPORT) {
+            container.style.display = "none";
+            return container;
+          }
           configureContainerTransform(container, layer, index, false);
           container.classList.add("live-slot-layer");
           const width=Math.max(40,Number(layer.liveSlot?.width||620));
@@ -5457,6 +6169,17 @@
       } else {
         slotCard?.classList.add("hidden");
       }
+      if (smartFrameInspector) {
+        const frameUsable = layer.kind === "image" && Boolean(layer.src);
+        smartFrameInspector.classList.toggle("hidden", !frameUsable);
+        if (frameUsable) {
+          renderFrameTargetOptions(layer);
+          const target=layerById(layer.frameMask?.targetId);
+          if (frameMaskStatus) frameMaskStatus.textContent = layer.frameMask?.enabled && layer.frameMask?.maskSrc
+            ? `✅ Marco inteligente por forma real activo${target ? ` · contenido: ${target.name}` : ""}.`
+            : "Pulsa “Detectar forma real + vincular” para usar la silueta transparente interior de este PNG como máscara.";
+        }
+      }
       const eff=effectiveLayerState(layer);
       const di=document.getElementById("dimensionInfo");
       if(di) {
@@ -5571,6 +6294,14 @@
         });
       }
 
+      if (layer.frameMask?.targetId) {
+        const target=layerById(layer.frameMask.targetId);
+        if(target?.frameFit?.frameId===layer.id) target.frameFit={enabled:false,frameId:null,mode:target.frameFit?.mode||"cover"};
+      }
+      project.layers.forEach(item=>{
+        if(item.frameMask?.targetId===id) item.frameMask={...(item.frameMask||{}),enabled:false,targetId:null};
+        if(item.frameFit?.frameId===id) item.frameFit={enabled:false,frameId:null,mode:item.frameFit?.mode||"cover"};
+      });
       groupSelection.delete(id);
       project.layers = project.layers.filter(item => item.id !== id);
       if (project.selectedId === id) project.selectedId = null;
@@ -5741,6 +6472,12 @@
           } else {
             layer[prop] = value;
             if (prop === "particleType") applyParticleTypeDefaults(layer, value);
+            if (prop === "animation" && value === "earIdle") {
+              layer.duration = 5;
+              layer.intensity = 7;
+              layer.plasticity = 95;
+              layer.motionRandomStart = false;
+            }
           }
 
           updateReflectionLinkOffsets(layer, prop);
@@ -6172,7 +6909,7 @@
 
     function updateSceneGeometry() {
       const logical = getLogicalSize();
-      stageWrap.style.background = project.canvas?.background || "#000000";
+      stageWrap.style.background = IS_OBS_EXPORT ? "transparent" : (project.canvas?.background || "#000000");
       stageWrap.style.setProperty("--logical-width", `${logical.width}px`);
       stageWrap.style.setProperty("--logical-height", `${logical.height}px`);
       stageWrap.style.width = `${logical.width}px`;
@@ -6182,6 +6919,16 @@
       stage.setAttribute("aria-label", `Escena ${project.canvas.orientation} ${project.canvas.outputWidth} por ${project.canvas.outputHeight}`);
 
       requestAnimationFrame(() => {
+        if (IS_OBS_EXPORT) {
+          const viewportW = Math.max(1, window.innerWidth);
+          const viewportH = Math.max(1, window.innerHeight);
+          editorScale = Math.min(viewportW / logical.width, viewportH / logical.height);
+          stageWrap.style.setProperty("--editor-scale", editorScale);
+          stageViewport.style.width = `${logical.width * editorScale}px`;
+          stageViewport.style.height = `${logical.height * editorScale}px`;
+          return;
+        }
+
         const availableW = Math.max(100, sceneShell.clientWidth - 28);
         const availableH = Math.max(100, sceneShell.clientHeight - 28);
         editorScale = Math.min(1, availableW / logical.width, availableH / logical.height) * editorZoom;
@@ -7488,6 +8235,96 @@
       renderAll();
     }
 
+    function safeFileName(value = "overlay") {
+      return String(value || "overlay")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .toLowerCase() || "overlay";
+    }
+
+    function buildObsProjectSnapshot() {
+      syncActiveSceneFromProject();
+      const active = activeSceneRecord();
+      if (!active) throw new Error("No hay una escena activa para exportar.");
+
+      const scene = structuredClone(active);
+      scene.layers = (scene.layers || []).map(layer => defaultLayer(structuredClone(layer)));
+
+      const snapshot = {
+        version: 4.31,
+        selectedId: null,
+        canvas: structuredClone(scene.canvas),
+        export: { ...(project.export || {}), duration: MASTER_LOOP_SECONDS },
+        layout: structuredClone(scene.layout || { type: "scene" }),
+        scenes: [scene],
+        activeSceneId: scene.id,
+        layers: scene.layers
+      };
+
+      return snapshot;
+    }
+
+    function cleanDocumentCloneForObsExport(clone) {
+      const clearSelectors = [
+        "#stage",
+        "#layersList",
+        "#sceneQuickTabs",
+        "#sceneSelector"
+      ];
+
+      clearSelectors.forEach(selector => {
+        const node = clone.querySelector(selector);
+        if (node) node.innerHTML = "";
+      });
+
+      clone.querySelectorAll('input[type="file"]').forEach(input => {
+        input.removeAttribute("value");
+      });
+
+      clone.querySelectorAll(".stage-selection-guides,.stage-smart-guides,.stage-guides").forEach(node => node.remove());
+      clone.querySelector("body")?.classList.remove("preview-mode", "paused", "obs-runtime");
+      return clone;
+    }
+
+    function exportActiveSceneHtml() {
+      const status = document.getElementById("obsExportStatus");
+      const button = document.getElementById("exportObsHtmlBtn");
+      if (button) button.disabled = true;
+
+      try {
+        const snapshot = buildObsProjectSnapshot();
+        const scene = activeSceneRecord();
+        const payload = {
+          obs: true,
+          exportedAt: new Date().toISOString(),
+          sceneName: scene?.name || "Overlay MK",
+          project: snapshot
+        };
+
+        const clone = cleanDocumentCloneForObsExport(document.documentElement.cloneNode(true));
+        const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
+        const bootstrap = document.createElement("script");
+        bootstrap.textContent = `window.__MK_OBS_PAYLOAD__=${payloadJson};`;
+        clone.querySelector("head").appendChild(bootstrap);
+
+        const html = "<!DOCTYPE html>\n" + clone.outerHTML;
+        const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+        const filename = `mk-overlay-${safeFileName(scene?.name || "escena")}.html`;
+        downloadBlob(blob, filename);
+
+        if (status) {
+          status.textContent = `HTML OBS creado: ${filename}. Fondo transparente, animaciones activas y guías de cámara/chat ocultas.`;
+        }
+      } catch (error) {
+        console.error(error);
+        if (status) status.textContent = "No se pudo crear el HTML para OBS.";
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
     function exportProject() {
       syncActiveSceneFromProject();
       const blob = new Blob([JSON.stringify(project, null, 2)], { type: "application/json" });
@@ -7589,6 +8426,12 @@
 
     document.getElementById("saveBtn").addEventListener("click", () => saveProject());
     document.getElementById("exportBtn").addEventListener("click", exportProject);
+    document.getElementById("exportObsHtmlBtn").addEventListener("click", exportActiveSceneHtml);
+    document.getElementById("detectFrameMaskBtn")?.addEventListener("click", detectAndLinkSelectedFrame);
+    document.getElementById("syncFrameTargetBtn")?.addEventListener("click", syncSelectedFrameTarget);
+    document.getElementById("exportFrameMaskBtn")?.addEventListener("click", exportSelectedFrameMask);
+    document.getElementById("clearFrameMaskBtn")?.addEventListener("click", clearSelectedFrameLink);
+    frameFitMode?.addEventListener("change",()=>{const frame=selectedLayer();const target=layerById(frame?.frameMask?.targetId);if(frame?.frameMask)frame.frameMask.fitMode=frameFitMode.value;if(target?.frameFit)target.frameFit.mode=frameFitMode.value;renderStage();saveProject("Ajuste del marco actualizado.");});
     document.getElementById("importBtn").addEventListener("click", () => jsonPicker.click());
     jsonPicker.addEventListener("change", () => {
       importProject(jsonPicker.files[0]);
@@ -7762,1243 +8605,19 @@
       moveSelectedLayer(...moves[event.key]);
     });
 
+    if (IS_OBS_EXPORT) {
+      document.body.classList.add("obs-runtime");
+      document.documentElement.style.background = "transparent";
+      document.body.style.background = "transparent";
+      project.selectedId = null;
+      groupSelection.clear();
+    }
+
     setupAnimationInspectorLayout();
     bindInspector();
     initHistory();
     updateSceneGeometry();
     renderAll();
   </script>
-  <script>
-/* =========================================================
-   MK Universe 4.2.8 · OBS HTML Export Add-on
-
-   Exporta la escena ACTIVA como:
-   - HTML autocontenido
-   - fondo transparente real
-   - animaciones activas
-   - imágenes incluidas
-   - VFX incluidos
-   - grupos incluidos
-   - zonas Cámara / Chat / Juego ocultas
-
-   El HTML resultante puede cargarse directamente
-   como Browser Source / Archivo local en OBS.
-   ========================================================= */
-
-(() => {
-
-  const OBS_PAYLOAD =
-    window.__MK_OBS_PAYLOAD__ ||
-    null;
-
-
-  /* =======================================================
-     NOMBRE DE ARCHIVO SEGURO
-     ======================================================= */
-
-  function safeFileName(
-    value = "overlay"
-  ) {
-
-    return String(
-      value ||
-      "overlay"
-    )
-      .normalize("NFD")
-
-      .replace(
-        /[\u0300-\u036f]/g,
-        ""
-      )
-
-      .replace(
-        /[^a-zA-Z0-9_-]+/g,
-        "-"
-      )
-
-      .replace(
-        /^-+|-+$/g,
-        ""
-      )
-
-      .toLowerCase() ||
-      "overlay";
-  }
-
-
-  /* =======================================================
-     DESCARGAR HTML
-     ======================================================= */
-
-  function downloadHtml(
-    text,
-    filename
-  ) {
-
-    const blob =
-      new Blob(
-        [text],
-        {
-          type:
-            "text/html;charset=utf-8"
-        }
-      );
-
-
-    const url =
-      URL.createObjectURL(
-        blob
-      );
-
-
-    const a =
-      document.createElement(
-        "a"
-      );
-
-
-    a.href =
-      url;
-
-    a.download =
-      filename;
-
-
-    document.body
-      .appendChild(
-        a
-      );
-
-
-    a.click();
-
-    a.remove();
-
-
-    setTimeout(
-      () => {
-        URL.revokeObjectURL(
-          url
-        );
-      },
-      2000
-    );
-  }
-
-
-  /* =======================================================
-     CSS EXCLUSIVO PARA OBS
-
-     El editor desaparece por completo.
-
-     IMPORTANTE:
-     El fondo negro del editor NO se exporta.
-     ======================================================= */
-
-  function obsRuntimeCss() {
-
-    return `
-
-      html,
-      body {
-
-        width:
-          100% !important;
-
-        height:
-          100% !important;
-
-        margin:
-          0 !important;
-
-        padding:
-          0 !important;
-
-        overflow:
-          hidden !important;
-
-        background:
-          transparent !important;
-
-      }
-
-
-      body {
-
-        display:
-          block !important;
-
-        min-height:
-          0 !important;
-
-      }
-
-
-      /*
-       * Ocultar absolutamente
-       * todo el editor.
-       */
-
-      body > .panel,
-      .editor-zoom-bar,
-      .preview-exit,
-      #imageLabModal {
-
-        display:
-          none !important;
-
-      }
-
-
-      /*
-       * La escena ocupa
-       * toda la Browser Source.
-       */
-
-      .scene-shell {
-
-        position:
-          fixed !important;
-
-        inset:
-          0 !important;
-
-        width:
-          100vw !important;
-
-        height:
-          100vh !important;
-
-        min-width:
-          0 !important;
-
-        min-height:
-          0 !important;
-
-        margin:
-          0 !important;
-
-        padding:
-          0 !important;
-
-        border:
-          0 !important;
-
-        border-radius:
-          0 !important;
-
-        overflow:
-          hidden !important;
-
-        display:
-          block !important;
-
-        background:
-          transparent !important;
-
-      }
-
-
-      .stage-viewport {
-
-        position:
-          absolute !important;
-
-        margin:
-          0 !important;
-
-        padding:
-          0 !important;
-
-        overflow:
-          visible !important;
-
-        background:
-          transparent !important;
-
-      }
-
-
-      .stage-wrap {
-
-        margin:
-          0 !important;
-
-        padding:
-          0 !important;
-
-        border:
-          0 !important;
-
-        border-radius:
-          0 !important;
-
-        box-shadow:
-          none !important;
-
-        overflow:
-          visible !important;
-
-        background:
-          transparent !important;
-
-        transform-origin:
-          top left !important;
-
-      }
-
-
-      #stage {
-
-        background:
-          transparent !important;
-
-        cursor:
-          default !important;
-
-        pointer-events:
-          none !important;
-
-      }
-
-
-      /*
-       * NO mostrar en OBS:
-       *
-       * - guías centrales
-       * - Smart Guides
-       * - selección
-       * - rectángulos Cámara
-       * - rectángulos Chat
-       * - Juego
-       * - Video/Web
-       */
-
-      .stage-guides,
-      .stage-smart-guides,
-      .stage-selection-guides,
-      .live-slot-layer {
-
-        display:
-          none !important;
-
-      }
-
-    `;
-  }
-
-
-  /* =======================================================
-     AJUSTAR ESCENA AL TAMAÑO DE OBS
-     ======================================================= */
-
-  function fitObsStage() {
-
-    if (
-      typeof project ===
-        "undefined" ||
-
-      typeof stageWrap ===
-        "undefined" ||
-
-      typeof stageViewport ===
-        "undefined"
-    ) {
-
-      return;
-    }
-
-
-    const logicalWidth =
-      Number(
-        project.canvas
-          ?.logicalWidth ||
-        960
-      );
-
-
-    const logicalHeight =
-      Number(
-        project.canvas
-          ?.logicalHeight ||
-        540
-      );
-
-
-    const viewportWidth =
-      Math.max(
-        1,
-        window.innerWidth
-      );
-
-
-    const viewportHeight =
-      Math.max(
-        1,
-        window.innerHeight
-      );
-
-
-    /*
-     * Horizontal:
-     *
-     * 960 × 540
-     *     ↓
-     * 1920 × 1080
-     *
-     * scale = 2
-     *
-     *
-     * Vertical:
-     *
-     * 540 × 960
-     *     ↓
-     * 1080 × 1920
-     *
-     * scale = 2
-     */
-
-    const scale =
-      Math.min(
-
-        viewportWidth /
-        logicalWidth,
-
-        viewportHeight /
-        logicalHeight
-
-      );
-
-
-    const renderedWidth =
-      logicalWidth *
-      scale;
-
-
-    const renderedHeight =
-      logicalHeight *
-      scale;
-
-
-    stageWrap.style
-      .setProperty(
-        "--editor-scale",
-        scale
-      );
-
-
-    stageWrap.style
-      .background =
-      "transparent";
-
-
-    stageViewport.style
-      .width =
-      `${renderedWidth}px`;
-
-
-    stageViewport.style
-      .height =
-      `${renderedHeight}px`;
-
-
-    /*
-     * Si por alguna razón OBS
-     * usa otra relación de aspecto,
-     * dejamos la escena centrada.
-     */
-
-    stageViewport.style
-      .left =
-      `${
-        (
-          viewportWidth -
-          renderedWidth
-        ) /
-        2
-      }px`;
-
-
-    stageViewport.style
-      .top =
-      `${
-        (
-          viewportHeight -
-          renderedHeight
-        ) /
-        2
-      }px`;
-  }
-
-
-  /* =======================================================
-     ARRANCAR HTML EXPORTADO EN MODO OBS
-     ======================================================= */
-
-  function bootObsRuntime(
-    payload
-  ) {
-
-    /*
-     * Inyectar CSS transparente.
-     */
-
-    const style =
-      document.createElement(
-        "style"
-      );
-
-
-    style.id =
-      "mkObsRuntimeStyle";
-
-
-    style.textContent =
-      obsRuntimeCss();
-
-
-    document.head
-      .appendChild(
-        style
-      );
-
-
-    document.documentElement
-      .style
-      .background =
-      "transparent";
-
-
-    document.body
-      .style
-      .background =
-      "transparent";
-
-
-    document.body
-      .classList
-      .remove(
-        "preview-mode",
-        "paused"
-      );
-
-
-    document.body
-      .classList
-      .add(
-        "mk-obs-runtime"
-      );
-
-
-    try {
-
-      /*
-       * Estas funciones YA existen
-       * dentro de MK Universe 4.2.8.
-       *
-       * No estamos creando
-       * un motor paralelo.
-       *
-       * Estamos reutilizando
-       * TU MISMO MOTOR.
-       */
-
-      project =
-        migrateProject(
-
-          structuredClone(
-            payload.project
-          )
-
-        );
-
-
-      project.layers =
-        (
-          project.layers ||
-          []
-        ).map(
-
-          layer =>
-            defaultLayer(
-              layer
-            )
-
-        );
-
-
-      ensureSceneSystem();
-
-
-      project.selectedId =
-        null;
-
-
-      if (
-        typeof groupSelection !==
-        "undefined"
-      ) {
-
-        groupSelection
-          .clear();
-
-      }
-
-
-      /*
-       * El HTML para OBS
-       * NO debe alterar
-       * localStorage.
-       */
-
-      saveProject =
-        () => {};
-
-
-      /*
-       * Render normal del motor.
-       *
-       * Esto conserva:
-       *
-       * - animaciones
-       * - grupos
-       * - reflejos
-       * - glow
-       * - backlight
-       * - metal
-       * - fuego
-       * - neón
-       * - partículas
-       * - máscaras
-       * - movimiento orgánico
-       */
-
-      renderAll();
-
-
-      /*
-       * Ajustar tamaño.
-       */
-
-      fitObsStage();
-
-
-      requestAnimationFrame(
-        fitObsStage
-      );
-
-
-      setTimeout(
-        fitObsStage,
-        80
-      );
-
-
-      setTimeout(
-        fitObsStage,
-        350
-      );
-
-
-      /*
-       * Si OBS cambia
-       * la resolución:
-       */
-
-      window
-        .addEventListener(
-          "resize",
-          () => {
-
-            requestAnimationFrame(
-              fitObsStage
-            );
-
-          }
-        );
-
-
-    } catch (
-      error
-    ) {
-
-      console.error(
-        "MK OBS Runtime: no se pudo cargar la escena exportada.",
-        error
-      );
-
-    }
-  }
-
-
-  /* =======================================================
-     CREAR SNAPSHOT SOLO DE LA ESCENA ACTIVA
-     ======================================================= */
-
-  function buildActiveSceneSnapshot() {
-
-    /*
-     * Sincronizar primero
-     * los últimos cambios.
-     */
-
-    syncActiveSceneFromProject();
-
-
-    const active =
-      activeSceneRecord();
-
-
-    if (!active) {
-
-      throw new Error(
-        "No hay una escena activa para exportar."
-      );
-
-    }
-
-
-    /*
-     * Solo copiamos ESTA escena.
-     *
-     * Inicio no arrastra Juego.
-     * Juego no arrastra BRB.
-     * Cámara no arrastra Final.
-     */
-
-    const scene =
-      structuredClone(
-        active
-      );
-
-
-    scene.layers =
-      (
-        scene.layers ||
-        []
-      ).map(
-
-        layer =>
-          defaultLayer(
-
-            structuredClone(
-              layer
-            )
-
-          )
-
-      );
-
-
-    return {
-
-      version:
-        4.28,
-
-
-      selectedId:
-        null,
-
-
-      canvas:
-        structuredClone(
-          scene.canvas
-        ),
-
-
-      export: {
-
-        ...(
-          project.export ||
-          {}
-        ),
-
-        duration:
-          MASTER_LOOP_SECONDS
-
-      },
-
-
-      layout:
-        structuredClone(
-
-          scene.layout ||
-          {
-            type:
-              "scene"
-          }
-
-        ),
-
-
-      /*
-       * El runtime conserva
-       * el sistema de escenas,
-       * pero con UNA sola escena.
-       */
-
-      scenes:
-        [
-          scene
-        ],
-
-
-      activeSceneId:
-        scene.id,
-
-
-      layers:
-        scene.layers
-
-    };
-  }
-
-
-  /* =======================================================
-     LIMPIAR COPIA DEL EDITOR
-
-     Evita duplicar imágenes DataURL
-     que ya estarán guardadas
-     dentro del proyecto exportado.
-     ======================================================= */
-
-  function cleanCloneForExport(
-    clone
-  ) {
-
-    [
-      "#stage",
-      "#layersList",
-      "#sceneQuickTabs",
-      "#sceneSelector"
-
-    ].forEach(
-      selector => {
-
-        const node =
-          clone.querySelector(
-            selector
-          );
-
-
-        if (node) {
-
-          node.innerHTML =
-            "";
-
-        }
-
-      }
-    );
-
-
-    clone
-      .querySelectorAll(
-        'input[type="file"]'
-      )
-      .forEach(
-        input => {
-
-          input.removeAttribute(
-            "value"
-          );
-
-        }
-      );
-
-
-    clone
-      .querySelectorAll(
-        ".stage-guides,.stage-smart-guides,.stage-selection-guides"
-      )
-      .forEach(
-        node => {
-
-          node.remove();
-
-        }
-      );
-
-
-    const cloneBody =
-      clone.querySelector(
-        "body"
-      );
-
-
-    cloneBody
-      ?.classList
-      .remove(
-        "preview-mode",
-        "paused",
-        "mk-obs-runtime"
-      );
-
-
-    return clone;
-  }
-
-
-  /* =======================================================
-     EXPORTAR ESCENA ACTIVA COMO HTML OBS
-     ======================================================= */
-
-  function exportActiveSceneAsObsHtml() {
-
-    const button =
-      document.getElementById(
-        "exportObsHtmlBtn"
-      );
-
-
-    const status =
-      document.getElementById(
-        "obsExportStatus"
-      );
-
-
-    if (button) {
-
-      button.disabled =
-        true;
-
-    }
-
-
-    if (status) {
-
-      status.textContent =
-        "Preparando HTML transparente para OBS…";
-
-    }
-
-
-    try {
-
-      const active =
-        activeSceneRecord();
-
-
-      const snapshot =
-        buildActiveSceneSnapshot();
-
-
-      /*
-       * Todo el proyecto
-       * queda DENTRO del HTML.
-       *
-       * Esto incluye DataURL
-       * de los PNG.
-       */
-
-      const payload = {
-
-        obs:
-          true,
-
-
-        sceneName:
-          active?.name ||
-          "Overlay MK",
-
-
-        exportedAt:
-          new Date()
-            .toISOString(),
-
-
-        project:
-          snapshot
-
-      };
-
-
-      /*
-       * Clonamos el mismo
-       * MK Universe.
-       *
-       * Por eso el HTML exportado
-       * utiliza exactamente
-       * las mismas animaciones.
-       */
-
-      const clone =
-        cleanCloneForExport(
-
-          document.documentElement
-            .cloneNode(
-              true
-            )
-
-        );
-
-
-      /*
-       * Este pequeño script
-       * se pone en <head>.
-       *
-       * Así el HTML sabe
-       * qué escena debe cargar.
-       */
-
-      const bootstrap =
-        document.createElement(
-          "script"
-        );
-
-
-      const payloadJson =
-        JSON.stringify(
-          payload
-        )
-          .replace(
-            /</g,
-            "\\u003c"
-          );
-
-
-      bootstrap.textContent =
-        `window.__MK_OBS_PAYLOAD__=${payloadJson};`;
-
-
-      clone
-        .querySelector(
-          "head"
-        )
-        .appendChild(
-          bootstrap
-        );
-
-
-      const html =
-        "<!DOCTYPE html>\n" +
-        clone.outerHTML;
-
-
-      const filename =
-        `mk-overlay-${
-          safeFileName(
-            active?.name ||
-            "escena"
-          )
-        }.html`;
-
-
-      /*
-       * Descargar archivo
-       * generado directamente
-       * por TU navegador.
-       */
-
-      downloadHtml(
-        html,
-        filename
-      );
-
-
-      if (status) {
-
-        status.textContent =
-          `✅ ${filename} creado. Transparencia real + animaciones + guías ocultas.`;
-
-      }
-
-
-    } catch (
-      error
-    ) {
-
-      console.error(
-        error
-      );
-
-
-      if (status) {
-
-        status.textContent =
-          "❌ No se pudo crear el HTML para OBS.";
-
-      }
-
-
-    } finally {
-
-      if (button) {
-
-        button.disabled =
-          false;
-
-      }
-
-    }
-  }
-
-
-  /* =======================================================
-     AÑADIR BOTÓN AL MK UNIVERSE
-     ======================================================= */
-
-  function installObsExportButton() {
-
-    /*
-     * Si ya existe,
-     * no duplicarlo.
-     */
-
-    if (
-      document.getElementById(
-        "exportObsHtmlBtn"
-      )
-    ) {
-
-      return;
-    }
-
-
-    const jsonButton =
-      document.getElementById(
-        "exportBtn"
-      );
-
-
-    if (!jsonButton) {
-
-      return;
-    }
-
-
-    const button =
-      document.createElement(
-        "button"
-      );
-
-
-    button.id =
-      "exportObsHtmlBtn";
-
-
-    button.className =
-      "btn btn-primary";
-
-
-    button.type =
-      "button";
-
-
-    button.textContent =
-      "🌐 Exportar HTML OBS";
-
-
-    button.title =
-      "Exporta la escena activa como overlay HTML transparente y animado para OBS";
-
-
-    /*
-     * Lo ponemos junto
-     * a Exportar JSON.
-     */
-
-    jsonButton
-      .insertAdjacentElement(
-        "afterend",
-        button
-      );
-
-
-    button
-      .addEventListener(
-        "click",
-        exportActiveSceneAsObsHtml
-      );
-
-
-    /*
-     * Texto de estado.
-     */
-
-    const projectCard =
-      jsonButton.closest(
-        ".project-card"
-      );
-
-
-    if (
-      projectCard &&
-      !document.getElementById(
-        "obsExportStatus"
-      )
-    ) {
-
-      const status =
-        document.createElement(
-          "div"
-        );
-
-
-      status.id =
-        "obsExportStatus";
-
-
-      status.className =
-        "status";
-
-
-      status.setAttribute(
-        "aria-live",
-        "polite"
-      );
-
-
-      projectCard
-        .appendChild(
-          status
-        );
-
-    }
-  }
-
-
-  /* =======================================================
-     ARRANQUE
-     ======================================================= */
-
-  /*
-   * CASO 1
-   *
-   * Estamos dentro
-   * de un HTML exportado:
-   *
-   * → iniciar modo OBS.
-   */
-
-  if (
-    OBS_PAYLOAD?.obs &&
-    OBS_PAYLOAD?.project
-  ) {
-
-    bootObsRuntime(
-      OBS_PAYLOAD
-    );
-
-  }
-
-
-  /*
-   * CASO 2
-   *
-   * Estamos dentro
-   * del editor normal:
-   *
-   * → añadir botón Exportar.
-   */
-
-  else {
-
-    installObsExportButton();
-
-  }
-
-})();
-</script>
 </body>
 </html>

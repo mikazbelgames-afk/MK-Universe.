@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🌸 MK Universe 4.3.1 — True Shape Frames + Ear Idle + OBS HTML · Motor maestro de overlays</title>
+  <title>🌸 MK Universe 4.3.2 — Adaptive Shape Containers + Ear Idle + OBS HTML · Motor maestro de overlays</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -1306,7 +1306,7 @@
       display:none !important;
     }
 
-    /* MK Universe 4.3.1 · True Shape Smart Frames + Ear Idle */
+    /* MK Universe 4.3.2 · Adaptive Shape Containers + Ear Idle */
     .smart-frame-card {
       border-color: rgba(255,155,207,.24);
       background: linear-gradient(135deg,rgba(255,155,207,.07),rgba(182,141,255,.05));
@@ -1438,7 +1438,7 @@
 
 <body>
   <aside class="panel left-panel">
-    <h1>🌸 MK Universe 4.3.1 · True Shape Frames + Ear Idle 🌸</h1>
+    <h1>🌸 MK Universe 4.3.2 · Adaptive Shape Containers + Ear Idle 🌸</h1>
     <p class="subtitle">Motor maestro vertical y horizontal: capas, marcos inteligentes, máscaras OBS, VFX, fondo transparente, Ear Idle, exportación HTML y taller de Stinger.</p>
 
     <div class="toolbar row-wrap">
@@ -1750,14 +1750,22 @@
             <select id="frameTargetSelect"></select>
           </div>
           <div class="control">
+            <label for="frameMaskMode">Forma a seguir</label>
+            <select id="frameMaskMode">
+              <option value="auto">Automático · hueco interior o silueta</option>
+              <option value="hole">Hueco interior del marco</option>
+              <option value="silhouette">Silueta visible de la figura</option>
+            </select>
+          </div>
+          <div class="control">
             <label for="frameFitMode">Ajuste del contenido</label>
             <select id="frameFitMode">
-              <option value="cover">Cubrir la figura completa</option>
+              <option value="cover">Cubrir toda la figura</option>
               <option value="contain">Mostrar contenido completo</option>
             </select>
           </div>
           <div class="row-wrap">
-            <button id="detectFrameMaskBtn" class="btn btn-primary" type="button">✨ Detectar forma real + vincular</button>
+            <button id="detectFrameMaskBtn" class="btn btn-primary" type="button">✨ Adaptar contenido a la figura</button>
             <button id="syncFrameTargetBtn" class="btn" type="button">⤢ Actualizar vínculo</button>
             <button id="exportFrameMaskBtn" class="btn" type="button">🎭 Máscara OBS</button>
             <button id="clearFrameMaskBtn" class="btn btn-danger" type="button">Quitar vínculo</button>
@@ -2425,7 +2433,7 @@
     }
 
     const defaultProject = {
-      version: 4.31,
+      version: 4.32,
       selectedId: null,
       canvas: {
         orientation: "vertical",
@@ -3368,6 +3376,7 @@
     };
 
     const frameTargetSelect = document.getElementById("frameTargetSelect");
+    const frameMaskMode = document.getElementById("frameMaskMode");
     const frameFitMode = document.getElementById("frameFitMode");
     const frameMaskStatus = document.getElementById("frameMaskStatus");
     const smartFrameInspector = document.getElementById("smartFrameInspector");
@@ -3463,7 +3472,7 @@
         fire: { enabled:false, mode:"hybrid", intensity:52, spread:62, turbulence:68, softness:48, speed:4, colors:["#fff1c7","#ff4fae","#8a63ff"] },
         neon: { mode:"none", speed:4 },
         liveSlot: { type:"camera", width:620, height:349, radius:18 },
-        frameMask: { enabled:false, targetId:null, maskSrc:null, bounds:null, detectedAt:null, maskVersion:2, sourceWidth:0, sourceHeight:0 },
+        frameMask: { enabled:false, targetId:null, maskSrc:null, bounds:null, detectedAt:null, maskVersion:3, sourceWidth:0, sourceHeight:0, shapeMode:"auto", resolvedMode:null },
         frameFit: { enabled:false, frameId:null, mode:"cover" },
         reflection: {
           enabled: false,
@@ -3529,7 +3538,7 @@
         },
         frameMask: {
           enabled:false, targetId:null, maskSrc:null, bounds:null, detectedAt:null,
-          maskVersion:2, sourceWidth:0, sourceHeight:0,
+          maskVersion:3, sourceWidth:0, sourceHeight:0, shapeMode:"auto", resolvedMode:null,
           ...(overrides.frameMask || {})
         },
         frameFit: {
@@ -3847,7 +3856,7 @@
       const next = {
         ...structuredClone(defaultProject),
         ...(raw || {}),
-        version: 4.31,
+        version: 4.32,
         canvas: {
           ...structuredClone(defaultProject.canvas),
           ...((raw || {}).canvas || {})
@@ -3916,7 +3925,7 @@
       if (IS_OBS_EXPORT) return;
       syncActiveSceneFromProject();
       captureHistoryIfChanged();
-      project.version = 4.31;
+      project.version = 4.32;
       project.layers.forEach(layer => { layer.effectPalette = normalizedPalette(layer); layer.petalPalette = layer.effectPalette.slice(); });
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)); } catch {}
       projectStatus.textContent = message;
@@ -4247,358 +4256,229 @@
       });
       if (frameLayer.frameMask?.targetId && layerById(frameLayer.frameMask.targetId)) frameTargetSelect.value=frameLayer.frameMask.targetId;
       if (frameFitMode) frameFitMode.value=frameLayer.frameMask?.fitMode || layerById(frameLayer.frameMask?.targetId)?.frameFit?.mode || "cover";
+      if (frameMaskMode) frameMaskMode.value=frameLayer.frameMask?.shapeMode || "auto";
     }
 
-    async function detectLargestTransparentHole(src) {
+    async function detectLargestTransparentHole(src, requestedMode="auto") {
       const img = await loadImageSource(src);
 
       const sw = img.naturalWidth || img.width || 1;
       const sh = img.naturalHeight || img.height || 1;
 
-      /*
-        4.3.1 · TRUE SHAPE MASK
-
-        Trabajamos a una resolución suficientemente alta para conservar
-        curvas, círculos, óvalos, esquinas suaves y figuras irregulares.
-      */
-      const maxDim = 2048;
+      const maxDim = 1600;
       const ratio = Math.min(1, maxDim / Math.max(sw, sh));
-      const w = Math.max(8, Math.round(sw * ratio));
-      const h = Math.max(8, Math.round(sh * ratio));
+      const w = Math.max(16, Math.round(sw * ratio));
+      const h = Math.max(16, Math.round(sh * ratio));
 
       const canvas = document.createElement("canvas");
       canvas.width = w;
       canvas.height = h;
 
       const ctx = canvas.getContext("2d", { willReadFrequently:true });
-      ctx.clearRect(0, 0, w, h);
-      ctx.drawImage(img, 0, 0, w, h);
+      ctx.clearRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
 
-      const image = ctx.getImageData(0, 0, w, h);
-      const data = image.data;
+      const rgba = ctx.getImageData(0,0,w,h);
+      const data = rgba.data;
+      const count = w*h;
 
-      /*
-        Núcleo transparente:
-        se usa solo para resolver topología: exterior vs hueco interior.
-      */
-      const CORE_ALPHA = 32;
-      const transparentCore = new Uint8Array(w * h);
+      const alpha = new Uint8Array(count);
+      for(let p=0, i=3; p<count; p++, i+=4) alpha[p]=data[i];
 
-      for (let i = 0, p = 0; i < data.length; i += 4, p++) {
-        transparentCore[p] = data[i + 3] <= CORE_ALPHA ? 1 : 0;
+      function buildSilhouetteMask() {
+        const outCanvas=document.createElement("canvas");
+        outCanvas.width=w; outCanvas.height=h;
+        const octx=outCanvas.getContext("2d");
+        const out=octx.createImageData(w,h);
+        let minX=w,minY=h,maxX=-1,maxY=-1, pixels=0;
+
+        for(let p=0;p<count;p++){
+          const a=alpha[p];
+          if(a < 8) continue;
+          const x=p%w, y=(p/w)|0, k=p*4;
+          out.data[k]=255; out.data[k+1]=255; out.data[k+2]=255;
+          out.data[k+3]=a;
+          pixels++;
+          minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);
+        }
+
+        if(pixels < Math.max(20,count*.0005)){
+          throw new Error("La figura no tiene suficiente información de transparencia para crear una máscara.");
+        }
+
+        octx.putImageData(out,0,0);
+        return {
+          maskSrc:outCanvas.toDataURL("image/png"),
+          bounds:{
+            x:minX/w,y:minY/h,
+            w:(maxX-minX+1)/w,h:(maxY-minY+1)/h
+          },
+          width:w,height:h,sourceWidth:sw,sourceHeight:sh,
+          maskVersion:3,resolvedMode:"silhouette"
+        };
       }
 
-      /*
-        1) Transparencia exterior conectada a los bordes.
-        Cualquier región transparente que toca el borde NO es el hueco.
-      */
-      const outside = new Uint8Array(w * h);
-      const queue = new Int32Array(w * h);
+      function buildHoleMask() {
+        /*
+          El marco NO tiene que ser perfectamente opaco.
+          Convertimos su alfa en una barrera y cerramos pequeñas fugas
+          antes de decidir qué transparencia corresponde al exterior.
+        */
+        const baseBarrier=new Uint8Array(count);
+        const barrierAlpha=18;
+        for(let p=0;p<count;p++) baseBarrier[p]=alpha[p]>=barrierAlpha?1:0;
 
-      let head = 0;
-      let tail = 0;
+        const radius=Math.max(1,Math.min(7,Math.round(Math.max(w,h)*.0025)));
+        const barrier=new Uint8Array(count);
 
-      const enqueueOutside = (x, y) => {
-        if (x < 0 || x >= w || y < 0 || y >= h) return;
-
-        const idx = y * w + x;
-
-        if (!transparentCore[idx] || outside[idx]) return;
-
-        outside[idx] = 1;
-        queue[tail++] = idx;
-      };
-
-      for (let x = 0; x < w; x++) {
-        enqueueOutside(x, 0);
-        enqueueOutside(x, h - 1);
-      }
-
-      for (let y = 0; y < h; y++) {
-        enqueueOutside(0, y);
-        enqueueOutside(w - 1, y);
-      }
-
-      while (head < tail) {
-        const idx = queue[head++];
-        const x = idx % w;
-        const y = (idx / w) | 0;
-
-        enqueueOutside(x - 1, y);
-        enqueueOutside(x + 1, y);
-        enqueueOutside(x, y - 1);
-        enqueueOutside(x, y + 1);
-      }
-
-      /*
-        2) Buscar el componente transparente interior más grande.
-      */
-      const visited = new Uint8Array(w * h);
-      const componentQueue = new Int32Array(w * h);
-
-      let best = null;
-
-      for (let y = 1; y < h - 1; y++) {
-        for (let x = 1; x < w - 1; x++) {
-          const start = y * w + x;
-
-          if (
-            !transparentCore[start] ||
-            outside[start] ||
-            visited[start]
-          ) {
-            continue;
-          }
-
-          let ch = 0;
-          let ct = 0;
-          let count = 0;
-
-          let minX = w;
-          let minY = h;
-          let maxX = -1;
-          let maxY = -1;
-
-          visited[start] = 1;
-          componentQueue[ct++] = start;
-
-          while (ch < ct) {
-            const idx = componentQueue[ch++];
-            const cx = idx % w;
-            const cy = (idx / w) | 0;
-
-            count++;
-
-            minX = Math.min(minX, cx);
-            minY = Math.min(minY, cy);
-            maxX = Math.max(maxX, cx);
-            maxY = Math.max(maxY, cy);
-
-            const neighbors = [
-              idx - 1,
-              idx + 1,
-              idx - w,
-              idx + w
-            ];
-
-            for (const n of neighbors) {
-              if (
-                n < 0 ||
-                n >= w * h ||
-                visited[n] ||
-                outside[n] ||
-                !transparentCore[n]
-              ) {
-                continue;
+        // Dilatación sencilla para cerrar micro-cortes en cristal, glow y antialias.
+        for(let y=0;y<h;y++){
+          for(let x=0;x<w;x++){
+            const p=y*w+x;
+            if(!baseBarrier[p]) continue;
+            for(let yy=Math.max(0,y-radius);yy<=Math.min(h-1,y+radius);yy++){
+              const row=yy*w;
+              for(let xx=Math.max(0,x-radius);xx<=Math.min(w-1,x+radius);xx++){
+                if((xx-x)*(xx-x)+(yy-y)*(yy-y)<=radius*radius) barrier[row+xx]=1;
               }
+            }
+          }
+        }
 
-              visited[n] = 1;
-              componentQueue[ct++] = n;
+        // Exterior = zonas NO barrera conectadas al borde.
+        const outside=new Uint8Array(count);
+        const queue=new Int32Array(count);
+        let head=0,tail=0;
+
+        const pushOutside=(x,y)=>{
+          if(x<0||x>=w||y<0||y>=h)return;
+          const p=y*w+x;
+          if(barrier[p]||outside[p])return;
+          outside[p]=1;queue[tail++]=p;
+        };
+
+        for(let x=0;x<w;x++){pushOutside(x,0);pushOutside(x,h-1);}
+        for(let y=0;y<h;y++){pushOutside(0,y);pushOutside(w-1,y);}
+
+        while(head<tail){
+          const p=queue[head++],x=p%w,y=(p/w)|0;
+          pushOutside(x-1,y);pushOutside(x+1,y);pushOutside(x,y-1);pushOutside(x,y+1);
+        }
+
+        // Componentes interiores; elegimos el más grande.
+        const visited=new Uint8Array(count);
+        const compQ=new Int32Array(count);
+        let best=null;
+
+        for(let start=0;start<count;start++){
+          if(outside[start]||barrier[start]||visited[start])continue;
+
+          let ch=0,ct=0,area=0,minX=w,minY=h,maxX=-1,maxY=-1;
+          visited[start]=1;compQ[ct++]=start;
+
+          while(ch<ct){
+            const p=compQ[ch++],x=p%w,y=(p/w)|0;
+            area++;minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);
+
+            const ns=[p-1,p+1,p-w,p+w];
+            for(const n of ns){
+              if(n<0||n>=count||visited[n]||outside[n]||barrier[n])continue;
+              const nx=n%w, ny=(n/w)|0;
+              if(Math.abs(nx-x)+Math.abs(ny-y)!==1)continue;
+              visited[n]=1;compQ[ct++]=n;
             }
           }
 
-          if (!best || count > best.count) {
-            best = {
-              count,
-              minX,
-              minY,
-              maxX,
-              maxY
-            };
+          if(!best||area>best.area)best={area,minX,minY,maxX,maxY,start};
+        }
+
+        if(!best || best.area < Math.max(40,count*.0015)){
+          throw new Error("No se detectó un hueco interior cerrado.");
+        }
+
+        // Recuperar el componente elegido.
+        const interior=new Uint8Array(count);
+        head=0;tail=0;
+        interior[best.start]=1;queue[tail++]=best.start;
+
+        while(head<tail){
+          const p=queue[head++],x=p%w,y=(p/w)|0;
+          const candidates=[
+            [x-1,y],[x+1,y],[x,y-1],[x,y+1]
+          ];
+          for(const [nx,ny] of candidates){
+            if(nx<0||nx>=w||ny<0||ny>=h)continue;
+            const n=ny*w+nx;
+            if(interior[n]||outside[n]||barrier[n])continue;
+            interior[n]=1;queue[tail++]=n;
           }
         }
-      }
 
-      if (
-        !best ||
-        best.count < Math.max(40, w * h * 0.002)
-      ) {
-        throw new Error(
-          "No se encontró un hueco transparente interior cerrado. El marco debe tener una abertura interior separada de la transparencia exterior."
-        );
-      }
+        /*
+          Recuperamos borde suave: expandimos unos px desde el hueco
+          hacia el marco original. Esto deja el contenido debajo del borde,
+          pero no lo deja escapar al exterior.
+        */
+        let grown=new Uint8Array(interior);
+        const edgeGrow=Math.max(1,Math.min(5,Math.round(Math.max(w,h)*.0018)));
 
-      /*
-        3) Reconstruir exactamente ese hueco.
-      */
-      let seed = -1;
-
-      outerSeed:
-      for (let yy = best.minY; yy <= best.maxY; yy++) {
-        for (let xx = best.minX; xx <= best.maxX; xx++) {
-          const idx = yy * w + xx;
-
-          if (
-            transparentCore[idx] &&
-            !outside[idx]
-          ) {
-            seed = idx;
-            break outerSeed;
+        for(let pass=0;pass<edgeGrow;pass++){
+          const next=new Uint8Array(grown);
+          for(let y=1;y<h-1;y++){
+            for(let x=1;x<w-1;x++){
+              const p=y*w+x;
+              if(grown[p]||outside[p])continue;
+              if(
+                grown[p-1]||grown[p+1]||grown[p-w]||grown[p+w]
+              ){
+                // Nunca cruzar una zona claramente sólida y gruesa del marco.
+                if(alpha[p] < 245) next[p]=1;
+              }
+            }
           }
+          grown=next;
         }
-      }
 
-      if (seed < 0) {
-        throw new Error(
-          "No se pudo reconstruir la forma interior del marco."
-        );
-      }
+        const outCanvas=document.createElement("canvas");
+        outCanvas.width=w;outCanvas.height=h;
+        const octx=outCanvas.getContext("2d");
+        const out=octx.createImageData(w,h);
 
-      const interior = new Uint8Array(w * h);
-
-      head = 0;
-      tail = 0;
-
-      interior[seed] = 1;
-      queue[tail++] = seed;
-
-      while (head < tail) {
-        const idx = queue[head++];
-
-        const neighbors = [
-          idx - 1,
-          idx + 1,
-          idx - w,
-          idx + w
-        ];
-
-        for (const n of neighbors) {
-          if (
-            n < 0 ||
-            n >= w * h ||
-            interior[n] ||
-            outside[n] ||
-            !transparentCore[n]
-          ) {
-            continue;
-          }
-
-          interior[n] = 1;
-          queue[tail++] = n;
+        let minX=w,minY=h,maxX=-1,maxY=-1,pixels=0;
+        for(let p=0;p<count;p++){
+          if(!grown[p])continue;
+          const x=p%w,y=(p/w)|0,k=p*4;
+          out.data[k]=255;out.data[k+1]=255;out.data[k+2]=255;out.data[k+3]=255;
+          pixels++;
+          minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);
         }
+
+        if(!pixels)throw new Error("El hueco interior quedó vacío.");
+        octx.putImageData(out,0,0);
+
+        return {
+          maskSrc:outCanvas.toDataURL("image/png"),
+          bounds:{
+            x:minX/w,y:minY/h,
+            w:(maxX-minX+1)/w,h:(maxY-minY+1)/h
+          },
+          width:w,height:h,sourceWidth:sw,sourceHeight:sh,
+          maskVersion:3,resolvedMode:"hole"
+        };
       }
 
-      /*
-        4) TRUE SHAPE GROW
+      if(requestedMode==="silhouette") return buildSilhouetteMask();
+      if(requestedMode==="hole") return buildHoleMask();
 
-        Desde el hueco transparente permitimos que la máscara se meta
-        debajo de los píxeles SEMITRANSPARENTES del propio marco.
-
-        Esto tiene dos ventajas:
-        - conserva bordes antialias suaves;
-        - permite que una webcam/imagen exista debajo de brillos de cristal,
-          glow o cristal semitransparente sin "cortarse" antes de tiempo.
-
-        La expansión jamás puede entrar en la transparencia exterior,
-        por lo que la máscara NO se convierte en el rectángulo del PNG.
-      */
-      const SHAPE_PASS_ALPHA = 244;
-      const grown = new Uint8Array(interior);
-
-      head = 0;
-      tail = 0;
-
-      for (let i = 0; i < interior.length; i++) {
-        if (interior[i]) {
-          queue[tail++] = i;
-        }
+      // AUTO: preferimos hueco interior; si no existe, usamos la figura misma.
+      try{
+        return buildHoleMask();
+      }catch(holeError){
+        const result=buildSilhouetteMask();
+        result.autoFallback=true;
+        result.holeError=String(holeError?.message||holeError||"");
+        return result;
       }
-
-      while (head < tail) {
-        const idx = queue[head++];
-
-        const neighbors = [
-          idx - 1,
-          idx + 1,
-          idx - w,
-          idx + w
-        ];
-
-        for (const n of neighbors) {
-          if (
-            n < 0 ||
-            n >= w * h ||
-            grown[n] ||
-            outside[n]
-          ) {
-            continue;
-          }
-
-          const alpha = data[n * 4 + 3];
-
-          if (alpha >= SHAPE_PASS_ALPHA) {
-            continue;
-          }
-
-          grown[n] = 1;
-          queue[tail++] = n;
-        }
-      }
-
-      /*
-        5) Generar máscara alpha.
-        Blanco = visible.
-        Transparente = recortado.
-      */
-      const holeMask = document.createElement("canvas");
-      holeMask.width = w;
-      holeMask.height = h;
-
-      const hctx = holeMask.getContext("2d");
-      const out = hctx.createImageData(w, h);
-      const od = out.data;
-
-      let trueMinX = w;
-      let trueMinY = h;
-      let trueMaxX = -1;
-      let trueMaxY = -1;
-
-      for (let i = 0; i < grown.length; i++) {
-        if (!grown[i]) continue;
-
-        const x = i % w;
-        const y = (i / w) | 0;
-        const k = i * 4;
-
-        od[k] = 255;
-        od[k + 1] = 255;
-        od[k + 2] = 255;
-        od[k + 3] = 255;
-
-        trueMinX = Math.min(trueMinX, x);
-        trueMinY = Math.min(trueMinY, y);
-        trueMaxX = Math.max(trueMaxX, x);
-        trueMaxY = Math.max(trueMaxY, y);
-      }
-
-      if (trueMaxX < 0) {
-        throw new Error(
-          "La forma interior quedó vacía al generar la máscara."
-        );
-      }
-
-      hctx.putImageData(out, 0, 0);
-
-      /*
-        Bounds solo sirve para calcular cover/contain.
-        El RECORTE real siempre viene de maskSrc, no de este rectángulo.
-      */
-      const bounds = {
-        x: trueMinX / w,
-        y: trueMinY / h,
-        w: (trueMaxX - trueMinX + 1) / w,
-        h: (trueMaxY - trueMinY + 1) / h
-      };
-
-      return {
-        maskSrc: holeMask.toDataURL("image/png"),
-        bounds,
-        width: w,
-        height: h,
-        sourceWidth: sw,
-        sourceHeight: sh,
-        maskVersion: 2
-      };
     }
 
     function unlinkFrame(frameLayer) {
@@ -4606,7 +4486,7 @@
       const targetId=frameLayer.frameMask?.targetId;
       const target=layerById(targetId);
       if(target?.frameFit?.frameId===frameLayer.id) target.frameFit={enabled:false,frameId:null,mode:target.frameFit?.mode||"cover"};
-      frameLayer.frameMask={enabled:false,targetId:null,maskSrc:null,bounds:null,detectedAt:null,fitMode:"cover",maskVersion:2,sourceWidth:0,sourceHeight:0};
+      frameLayer.frameMask={enabled:false,targetId:null,maskSrc:null,bounds:null,detectedAt:null,fitMode:"cover",maskVersion:3,sourceWidth:0,sourceHeight:0,shapeMode:"auto",resolvedMode:null};
     }
 
     async function detectAndLinkSelectedFrame() {
@@ -4614,19 +4494,20 @@
       if(!frame || frame.kind!=="image" || !frame.src){projectStatus.textContent="Selecciona un PNG de marco primero.";return;}
       if(frameMaskStatus)frameMaskStatus.textContent="Analizando transparencia del marco…";
       try{
-        const detected=await detectLargestTransparentHole(frame.src);
+        const requestedMode=frameMaskMode?.value||"auto";
+        const detected=await detectLargestTransparentHole(frame.src,requestedMode);
         let target=layerById(frameTargetSelect?.value)||nearestFrameTarget(frame);
         if(!target) throw new Error("No hay una cámara, zona o imagen compatible cerca del marco.");
         // Limpiar vínculo anterior de este target o frame.
         project.layers.forEach(layer=>{if(layer.id!==frame.id && layer.frameMask?.targetId===target.id) unlinkFrame(layer);});
         if(frame.frameMask?.targetId && frame.frameMask.targetId!==target.id){const old=layerById(frame.frameMask.targetId);if(old?.frameFit?.frameId===frame.id)old.frameFit={enabled:false,frameId:null,mode:old.frameFit?.mode||"cover"};}
         const mode=frameFitMode?.value||"cover";
-        frame.frameMask={enabled:true,targetId:target.id,maskSrc:detected.maskSrc,bounds:detected.bounds,detectedAt:Date.now(),fitMode:mode,maskVersion:detected.maskVersion||2,sourceWidth:detected.sourceWidth||0,sourceHeight:detected.sourceHeight||0};
+        frame.frameMask={enabled:true,targetId:target.id,maskSrc:detected.maskSrc,bounds:detected.bounds,detectedAt:Date.now(),fitMode:mode,maskVersion:detected.maskVersion||3,sourceWidth:detected.sourceWidth||0,sourceHeight:detected.sourceHeight||0,shapeMode:requestedMode,resolvedMode:detected.resolvedMode||requestedMode};
         target.frameFit={enabled:true,frameId:frame.id,mode};
         // El contenido debe vivir en el mismo espacio local que el marco.
         target.parentId=frame.parentId||null;
         renderAll();
-        if(frameMaskStatus)frameMaskStatus.textContent=`✅ Forma real detectada y vinculada con “${target.name}”. El contenido queda recortado por la silueta interior del PNG y seguirá la transformación del marco.`;
+        if(frameMaskStatus)frameMaskStatus.textContent=`✅ “${target.name}” adaptado a ${detected.resolvedMode==="hole"?"el hueco interior":"la silueta visible"} del marco. El recorte ahora es raster real, no solo CSS.`;
       }catch(error){console.error(error);if(frameMaskStatus)frameMaskStatus.textContent=`❌ ${error.message||"No se pudo detectar el hueco."}`;}
     }
 
@@ -4638,7 +4519,7 @@
       const mode=frameFitMode?.value||"cover";
       if(!frame.frameMask?.maskSrc){detectAndLinkSelectedFrame();return;}
       if(frame.frameMask?.targetId && frame.frameMask.targetId!==target.id){const old=layerById(frame.frameMask.targetId);if(old?.frameFit?.frameId===frame.id)old.frameFit={enabled:false,frameId:null,mode:old.frameFit?.mode||"cover"};}
-      frame.frameMask={...(frame.frameMask||{}),enabled:true,targetId:target.id,fitMode:mode};
+      frame.frameMask={...(frame.frameMask||{}),enabled:true,targetId:target.id,fitMode:mode,shapeMode:frameMaskMode?.value||frame.frameMask?.shapeMode||"auto"};
       target.frameFit={enabled:true,frameId:frame.id,mode};target.parentId=frame.parentId||null;
       renderAll();if(frameMaskStatus)frameMaskStatus.textContent=`✅ “${target.name}” ahora se ajusta y recorta con la forma real de este marco.`;
     }
@@ -4647,7 +4528,7 @@
       const frame=selectedLayer();
       if(!frame || frame.kind!=="image"){projectStatus.textContent="Selecciona el marco que quieres usar en OBS.";return;}
       try{
-        if(!frame.frameMask?.maskSrc){const detected=await detectLargestTransparentHole(frame.src);frame.frameMask={...(frame.frameMask||{}),enabled:true,maskSrc:detected.maskSrc,bounds:detected.bounds,detectedAt:Date.now(),maskVersion:detected.maskVersion||2,sourceWidth:detected.sourceWidth||0,sourceHeight:detected.sourceHeight||0};}
+        if(!frame.frameMask?.maskSrc){const requestedMode=frameMaskMode?.value||frame.frameMask?.shapeMode||"auto";const detected=await detectLargestTransparentHole(frame.src,requestedMode);frame.frameMask={...(frame.frameMask||{}),enabled:true,maskSrc:detected.maskSrc,bounds:detected.bounds,detectedAt:Date.now(),maskVersion:detected.maskVersion||3,sourceWidth:detected.sourceWidth||0,sourceHeight:detected.sourceHeight||0,shapeMode:requestedMode,resolvedMode:detected.resolvedMode||requestedMode};}
         const mask=await loadImageSource(frame.frameMask.maskSrc);const b=frame.frameMask.bounds||{x:0,y:0,w:1,h:1};
         const sx=Math.max(0,Math.floor(b.x*mask.width)),sy=Math.max(0,Math.floor(b.y*mask.height));
         const sw=Math.max(1,Math.ceil(b.w*mask.width)),sh=Math.max(1,Math.ceil(b.h*mask.height));
@@ -4661,6 +4542,41 @@
 
     function clearSelectedFrameLink() {
       const frame=selectedLayer();if(!frame||frame.kind!=="image")return;unlinkFrame(frame);renderAll();if(frameMaskStatus)frameMaskStatus.textContent="Vínculo de marco eliminado. La imagen del marco permanece intacta.";
+    }
+
+    async function createAdaptiveShapeCanvas(frameLayer, targetLayer, sourceElement) {
+      const maskImg=await loadImageSource(frameLayer.frameMask.maskSrc);
+      const mw=Math.max(1,maskImg.naturalWidth||maskImg.width||1);
+      const mh=Math.max(1,maskImg.naturalHeight||maskImg.height||1);
+
+      const canvas=document.createElement("canvas");
+      canvas.width=mw;canvas.height=mh;
+
+      const ctx=canvas.getContext("2d");
+      ctx.clearRect(0,0,mw,mh);
+      ctx.imageSmoothingEnabled=true;
+      ctx.imageSmoothingQuality="high";
+
+      const b=frameLayer.frameMask.bounds||{x:0,y:0,w:1,h:1};
+      const bx=b.x*mw,by=b.y*mh,bw=Math.max(1,b.w*mw),bh=Math.max(1,b.h*mh);
+
+      const sw=Math.max(1,sourceElement.naturalWidth||sourceElement.videoWidth||sourceElement.width||1);
+      const sh=Math.max(1,sourceElement.naturalHeight||sourceElement.videoHeight||sourceElement.height||1);
+
+      const mode=targetLayer.frameFit?.mode==="contain"?"contain":"cover";
+      const scale=mode==="contain"?Math.min(bw/sw,bh/sh):Math.max(bw/sw,bh/sh);
+      const dw=sw*scale,dh=sh*scale;
+      const dx=bx+(bw-dw)/2,dy=by+(bh-dh)/2;
+
+      ctx.drawImage(sourceElement,dx,dy,dw,dh);
+
+      // Esta composición raster es la clave 4.3.2:
+      // el resultado queda REALMENTE recortado, no depende del CSS mask del navegador.
+      ctx.globalCompositeOperation="destination-in";
+      ctx.drawImage(maskImg,0,0,mw,mh);
+      ctx.globalCompositeOperation="source-over";
+
+      return canvas;
     }
 
     function linkedFrameFor(layer) {
@@ -4751,7 +4667,7 @@
           if (IS_OBS_EXPORT) { container.style.display="none"; return container; }
           configureContainerTransform(container, fittedFrame, index, false);
           container.dataset.id=layer.id;container.classList.add("live-slot-layer","frame-fitted-layer");
-          container.style.zIndex=index;container.style.opacity=Math.max(0,Math.min(1,Number(layer.opacity??100)/100));
+          const frameIndex=project.layers.indexOf(fittedFrame);container.style.zIndex=Math.max(0,frameIndex-.25);container.style.opacity=Math.max(0,Math.min(1,Number(layer.opacity??100)/100));
           const fw=Math.max(1,Number(fittedFrame.intrinsicWidth||960));const fh=Math.max(1,Number(fittedFrame.intrinsicHeight||540));
           const shell=document.createElement("div");shell.className="frame-fit-shell";shell.style.aspectRatio=`${fw} / ${fh}`;
           const mask=document.createElement("div");mask.className="frame-fit-mask";
@@ -4767,19 +4683,45 @@
 
         if (fittedFrame && layer.kind === "image") {
           configureContainerTransform(container, fittedFrame, index, false);
-          container.dataset.id=layer.id;container.classList.add("frame-fitted-layer");
-          container.style.zIndex=index;container.style.opacity=Math.max(0,Math.min(1,Number(layer.opacity??100)/100));container.style.mixBlendMode=layer.blend||"normal";
-          const motion=document.createElement("div");configureMotion(motion,layer,true);
-          const fw=Math.max(1,Number(fittedFrame.intrinsicWidth||960));const fh=Math.max(1,Number(fittedFrame.intrinsicHeight||540));
-          const shell=document.createElement("div");shell.className="frame-fit-shell";shell.style.aspectRatio=`${fw} / ${fh}`;
-          const mask=document.createElement("div");mask.className="frame-fit-mask";
-          mask.style.webkitMaskImage=`url("${fittedFrame.frameMask.maskSrc}")`;mask.style.maskImage=`url("${fittedFrame.frameMask.maskSrc}")`;
-          const b=fittedFrame.frameMask.bounds;const windowEl=document.createElement("div");windowEl.className="frame-fit-window";
-          windowEl.style.left=`${b.x*100}%`;windowEl.style.top=`${b.y*100}%`;windowEl.style.width=`${b.w*100}%`;windowEl.style.height=`${b.h*100}%`;
-          windowEl.style.setProperty("--frame-object-fit",layer.frameFit?.mode==="contain"?"contain":"cover");
-          const img=new Image();img.alt=layer.name;img.onload=()=>{if(!layer.intrinsicWidth||!layer.intrinsicHeight){layer.intrinsicWidth=img.naturalWidth;layer.intrinsicHeight=img.naturalHeight;}
-            const processed=processImage(layer,img);styleVisual(layer,processed);processed.style.position="absolute";processed.style.inset="0";processed.style.width="100%";processed.style.height="100%";processed.style.objectFit=layer.frameFit?.mode==="contain"?"contain":"cover";windowEl.replaceChildren(processed);};img.src=layer.src;
-          mask.appendChild(windowEl);shell.appendChild(mask);motion.appendChild(shell);container.appendChild(motion);return container;
+          container.dataset.id=layer.id;
+          container.classList.add("frame-fitted-layer");
+          // El contenido siempre queda inmediatamente debajo del marco visual.
+          const frameIndex=project.layers.indexOf(fittedFrame);
+          container.style.zIndex=Math.max(0,frameIndex-.25);
+          container.style.opacity=Math.max(0,Math.min(1,Number(layer.opacity??100)/100));
+          container.style.mixBlendMode=layer.blend||"normal";
+
+          const motion=document.createElement("div");
+          configureMotion(motion,layer,true);
+
+          const img=new Image();
+          img.alt=layer.name;
+          img.onload=async()=>{
+            try{
+              if(!layer.intrinsicWidth||!layer.intrinsicHeight){
+                layer.intrinsicWidth=img.naturalWidth;
+                layer.intrinsicHeight=img.naturalHeight;
+              }
+
+              const processed=processImage(layer,img);
+              const clipped=await createAdaptiveShapeCanvas(fittedFrame,layer,processed);
+
+              styleVisual(layer,clipped);
+              clipped.style.display="block";
+              clipped.style.width="100%";
+              clipped.style.height="auto";
+              clipped.style.pointerEvents="none";
+
+              motion.replaceChildren(clipped);
+            }catch(error){
+              console.error("No se pudo adaptar la imagen a la figura:",error);
+              if(frameMaskStatus)frameMaskStatus.textContent=`❌ No se pudo adaptar “${layer.name}” a la figura.`;
+            }
+          };
+          img.src=layer.src;
+
+          container.appendChild(motion);
+          return container;
         }
 
         if (layer.kind === "slot") {
@@ -6176,8 +6118,8 @@
           renderFrameTargetOptions(layer);
           const target=layerById(layer.frameMask?.targetId);
           if (frameMaskStatus) frameMaskStatus.textContent = layer.frameMask?.enabled && layer.frameMask?.maskSrc
-            ? `✅ Marco inteligente por forma real activo${target ? ` · contenido: ${target.name}` : ""}.`
-            : "Pulsa “Detectar forma real + vincular” para usar la silueta transparente interior de este PNG como máscara.";
+            ? `✅ Contenedor adaptativo activo${target ? ` · contenido: ${target.name}` : ""} · ${layer.frameMask?.resolvedMode==="silhouette"?"silueta":"hueco interior"}.`
+            : "Pulsa “Adaptar contenido a la figura”. Automático usa el hueco interior y, si no existe, la silueta visible del PNG.";
         }
       }
       const eff=effectiveLayerState(layer);
@@ -8253,7 +8195,7 @@
       scene.layers = (scene.layers || []).map(layer => defaultLayer(structuredClone(layer)));
 
       const snapshot = {
-        version: 4.31,
+        version: 4.32,
         selectedId: null,
         canvas: structuredClone(scene.canvas),
         export: { ...(project.export || {}), duration: MASTER_LOOP_SECONDS },
@@ -8431,6 +8373,19 @@
     document.getElementById("syncFrameTargetBtn")?.addEventListener("click", syncSelectedFrameTarget);
     document.getElementById("exportFrameMaskBtn")?.addEventListener("click", exportSelectedFrameMask);
     document.getElementById("clearFrameMaskBtn")?.addEventListener("click", clearSelectedFrameLink);
+    frameMaskMode?.addEventListener("change",()=>{
+      const frame=selectedLayer();
+      if(frame?.frameMask){
+        frame.frameMask.shapeMode=frameMaskMode.value;
+        // Obliga a recalcular la forma la próxima vez que se pulse Adaptar.
+        frame.frameMask.maskSrc=null;
+        frame.frameMask.bounds=null;
+        frame.frameMask.resolvedMode=null;
+      }
+      saveProject("Modo de figura actualizado.");
+      if(frameMaskStatus)frameMaskStatus.textContent="Modo cambiado. Pulsa “Adaptar contenido a la figura” para recalcular.";
+    });
+
     frameFitMode?.addEventListener("change",()=>{const frame=selectedLayer();const target=layerById(frame?.frameMask?.targetId);if(frame?.frameMask)frame.frameMask.fitMode=frameFitMode.value;if(target?.frameFit)target.frameFit.mode=frameFitMode.value;renderStage();saveProject("Ajuste del marco actualizado.");});
     document.getElementById("importBtn").addEventListener("click", () => jsonPicker.click());
     jsonPicker.addEventListener("change", () => {
